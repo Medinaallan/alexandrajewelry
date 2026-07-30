@@ -28,7 +28,7 @@ export function FeaturesSection() {
   const { t } = useLanguage();
 
   return (
-    <section className="py-12 bg-[--bg]" style={{ borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)' }}>
+    <section className="py-16 lg:py-20 bg-[--bg]" style={{ borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)' }}>
       <div className="page-container">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-10">
           {features.map(({ Icon, titleKey, descKey }) => (
@@ -37,10 +37,10 @@ export function FeaturesSection() {
                 <Icon size={20} style={{ color: 'var(--gold)' }} strokeWidth={1.5} />
               </div>
               <div>
-                <p style={{ fontFamily: 'var(--font-sans)', fontSize: '0.8125rem', fontWeight: 500, color: 'var(--text)', marginBottom: '3px' }}>
+                <p style={{ fontFamily: 'var(--font-sans)', fontSize: '0.9375rem', fontWeight: 500, color: 'var(--text)', marginBottom: '4px' }}>
                   {t(titleKey)}
                 </p>
-                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>
+                <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', lineHeight: 1.6 }}>
                   {t(descKey)}
                 </p>
               </div>

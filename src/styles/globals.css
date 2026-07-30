@@ -62,14 +62,18 @@
 /* ─── Base Reset ─────────────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; font-size: 18px; }
+
+@media (max-width: 768px) {
+  html { font-size: 16px; }
+}
 
 body {
   font-family: var(--font-sans);
   background-color: var(--bg);
   color: var(--text);
   transition: background-color 0.3s, color 0.3s;
-  line-height: 1.6;
+  line-height: 1.7;
 }
 
 img { display: block; max-width: 100%; }
@@ -103,7 +107,7 @@ h1, h2, h3, h4, h5 {
 /* ─── Section Labels ────────────────────────────────────────────────────── */
 .section-label {
   font-family: var(--font-sans);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 500;
   letter-spacing: 0.2em;
   text-transform: uppercase;
@@ -213,7 +217,7 @@ h1, h2, h3, h4, h5 {
   background: var(--gold);
   color: white;
   font-family: var(--font-sans);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 500;
   letter-spacing: 0.15em;
   text-transform: uppercase;
@@ -236,7 +240,7 @@ h1, h2, h3, h4, h5 {
   background: transparent;
   color: var(--text);
   font-family: var(--font-sans);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 500;
   letter-spacing: 0.15em;
   text-transform: uppercase;
@@ -256,7 +260,7 @@ h1, h2, h3, h4, h5 {
   border: 1px solid var(--border);
   color: var(--text);
   font-family: var(--font-sans);
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
   transition: border-color 0.2s;
 }
 .form-input:focus {

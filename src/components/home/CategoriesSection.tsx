@@ -45,7 +45,7 @@ export function CategoriesSection() {
                 <span
                   style={{
                     fontFamily: 'var(--font-sans)',
-                    fontSize: '0.6875rem',
+                    fontSize: '0.75rem',
                     letterSpacing: '0.14em',
                     textTransform: 'uppercase',
                     fontWeight: 500,
@@ -65,7 +65,7 @@ export function CategoriesSection() {
         <div className="text-center mt-10">
           <Link
             to="/catalog"
-            className="inline-flex items-center gap-2 text-[10px] font-medium uppercase tracking-[0.18em] text-[--text-muted] hover:text-[--gold] transition-colors"
+            className="inline-flex items-center gap-2 text-[0.75rem] font-medium uppercase tracking-[0.18em] text-[--text-muted] hover:text-[--gold] transition-colors"
           >
             {t('categories.viewAll')} <ArrowRight size={12} />
           </Link>

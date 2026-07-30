@@ -29,7 +29,7 @@ export function FeaturedProducts() {
 
         {/* CTA */}
         <div className="text-center mt-14">
-          <Link to="/catalog" className="btn-outline inline-flex items-center gap-2">
+          <Link to="/catalog" className="btn-outline">
             {t('featured.viewAll')} <ArrowRight size={14} />
           </Link>
         </div>

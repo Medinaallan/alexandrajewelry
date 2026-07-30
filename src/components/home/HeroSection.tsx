@@ -61,9 +61,9 @@ export function HeroSection() {
             className="animate-fade-up mt-5"
             style={{
               color: 'rgba(250,250,250,0.8)',
-              fontSize: '0.9375rem',
+              fontSize: '1.0625rem',
               lineHeight: 1.7,
-              maxWidth: '380px',
+              maxWidth: '420px',
               animationDelay: '0.35s',
               opacity: 0,
               animationFillMode: 'forwards',

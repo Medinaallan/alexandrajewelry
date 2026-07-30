@@ -40,7 +40,7 @@ export function TestimonialsSection() {
                 <p
                   style={{
                     fontFamily: 'var(--font-serif)',
-                    fontSize: '1.0625rem',
+                    fontSize: '1.125rem',
                     fontWeight: 300,
                     lineHeight: 1.7,
                     color: 'var(--text)',
@@ -62,8 +62,8 @@ export function TestimonialsSection() {
                     }}
                   />
                   <div>
-                    <p style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text)' }}>{t_.name}</p>
-                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{location}</p>
+                    <p style={{ fontSize: '0.9375rem', fontWeight: 500, color: 'var(--text)' }}>{t_.name}</p>
+                    <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>{location}</p>
                   </div>
                 </div>
               </div>

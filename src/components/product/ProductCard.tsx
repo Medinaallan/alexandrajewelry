@@ -91,13 +91,13 @@ export function ProductCard({ product, className }: ProductCardProps) {
 
         {/* Info */}
         <div className="pt-4 flex flex-col gap-1">
-          <span className="section-label text-[10px]">
+          <span className="section-label" style={{ fontSize: '0.75rem' }}>
             {language === 'es' ? product.categoryNameEs : product.categoryName}
           </span>
           <h3
             style={{
               fontFamily: 'var(--font-serif)',
-              fontSize: '1.0625rem',
+              fontSize: '1.125rem',
               fontWeight: 400,
               color: 'var(--text)',
               lineHeight: 1.3,
@@ -108,11 +108,11 @@ export function ProductCard({ product, className }: ProductCardProps) {
             {name}
           </h3>
           <div className="flex items-center gap-2 mt-1">
-            <span style={{ fontFamily: 'var(--font-sans)', fontSize: '0.875rem', fontWeight: 500, color: 'var(--text)' }}>
+            <span style={{ fontFamily: 'var(--font-sans)', fontSize: '1rem', fontWeight: 500, color: 'var(--text)' }}>
               {formatPrice(product.price)}
             </span>
             {product.originalPrice && (
-              <span style={{ fontFamily: 'var(--font-sans)', fontSize: '0.8125rem', color: 'var(--text-muted)', textDecoration: 'line-through' }}>
+              <span style={{ fontFamily: 'var(--font-sans)', fontSize: '0.9375rem', color: 'var(--text-muted)', textDecoration: 'line-through' }}>
                 {formatPrice(product.originalPrice)}
               </span>
             )}
@@ -125,7 +125,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
         onClick={handleAdd}
         disabled={!product.available}
         className={cn(
-          'mt-3 w-full py-2.5 text-[10px] font-medium tracking-[0.15em] uppercase border transition-colors hidden sm:flex items-center justify-center gap-2',
+              'mt-3 w-full py-2.5 text-[0.75rem] font-medium tracking-[0.15em] uppercase border transition-colors hidden sm:flex items-center justify-center gap-2',
           product.available
             ? added
               ? 'border-[--gold] bg-[--gold] text-white'
@@ -143,7 +143,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
 
       <Link
         to={`/product/${product.slug}`}
-        className="mt-1 w-full py-2 text-[10px] font-medium tracking-[0.15em] uppercase border border-transparent text-[--text-muted] hover:text-[--gold] transition-colors hidden sm:flex items-center justify-center gap-2"
+        className="mt-1 w-full py-2 text-[0.75rem] font-medium tracking-[0.15em] uppercase border border-transparent text-[--text-muted] hover:text-[--gold] transition-colors hidden sm:flex items-center justify-center gap-2"
       >
         <Eye size={11} />
         {t('product.viewDetail')}

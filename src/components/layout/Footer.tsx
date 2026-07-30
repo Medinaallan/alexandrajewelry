@@ -53,7 +53,7 @@ export function Footer() {
               <div
                 style={{
                   fontFamily: 'var(--font-sans)',
-                  fontSize: '0.6rem',
+                  fontSize: '0.6875rem',
                   letterSpacing: '0.22em',
                   color: 'var(--gold)',
                 }}
@@ -61,7 +61,7 @@ export function Footer() {
                 JEWELRY
               </div>
             </div>
-            <p style={{ fontSize: '0.8125rem', lineHeight: '1.7', color: 'var(--gray-500)' }}>
+            <p style={{ fontSize: '0.875rem', lineHeight: '1.7', color: 'var(--gray-500)' }}>
               {t('footer.tagline')}
             </p>
             {/* Socials */}
@@ -98,11 +98,11 @@ export function Footer() {
       {/* Bottom bar */}
       <div style={{ borderTop: '1px solid #1A1A1A' }}>
         <div className="page-container py-5 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <p style={{ fontSize: '0.75rem', color: 'var(--gray-600)' }}>
+          <p style={{ fontSize: '0.8125rem', color: 'var(--gray-600)' }}>
             {t('footer.copyright').replace('2026', String(year))}
           </p>
           <p
-            style={{ fontSize: '0.75rem', color: 'var(--gray-700)', display: 'flex', alignItems: 'center', gap: '4px' }}
+            style={{ fontSize: '0.8125rem', color: 'var(--gray-700)', display: 'flex', alignItems: 'center', gap: '4px' }}
           >
             Made with <Heart size={11} style={{ color: 'var(--gold)' }} /> by Alexandra
           </p>
@@ -118,7 +118,7 @@ function FooterColumn({ title, links }: { title: string; links: { to: string; la
       <h4
         style={{
           fontFamily: 'var(--font-sans)',
-          fontSize: '0.6rem',
+          fontSize: '0.6875rem',
           letterSpacing: '0.2em',
           textTransform: 'uppercase',
           color: 'var(--gray-300)',
@@ -132,7 +132,7 @@ function FooterColumn({ title, links }: { title: string; links: { to: string; la
           <li key={label}>
             <Link
               to={to}
-              style={{ fontSize: '0.8125rem', color: 'var(--gray-500)', transition: 'color 0.2s' }}
+              style={{ fontSize: '0.875rem', color: 'var(--gray-500)', transition: 'color 0.2s' }}
               className="hover:text-[--gold]"
             >
               {label}

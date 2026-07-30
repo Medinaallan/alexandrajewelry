@@ -42,8 +42,8 @@ export function BannerSection() {
         <p
           style={{
             color: 'rgba(255,255,255,0.75)',
-            fontSize: '1rem',
-            maxWidth: '440px',
+            fontSize: '1.125rem',
+            maxWidth: '480px',
             margin: '0 auto 2.5rem',
             lineHeight: 1.7,
           }}

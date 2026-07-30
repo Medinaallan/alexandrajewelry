@@ -9,8 +9,8 @@ export function TopBar() {
         background: 'var(--black)',
         color: 'var(--gray-300)',
         textAlign: 'center',
-        padding: '0.6rem 1rem',
-        fontSize: '0.6875rem',
+        padding: '0.75rem 1rem',
+        fontSize: '0.75rem',
         letterSpacing: '0.1em',
         fontWeight: 400,
       }}

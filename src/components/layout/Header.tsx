@@ -55,10 +55,10 @@ export function Header() {
         className={cn(
           'sticky top-0 z-30 transition-all duration-300',
           scrolled
-            ? 'bg-[--bg] shadow-[0_2px_20px_rgba(0,0,0,0.08)]'
+            ? 'bg-[--bg]/95 backdrop-blur-md shadow-[0_2px_20px_rgba(0,0,0,0.1)]'
             : 'bg-[--bg]'
         )}
-        style={{ borderBottom: '1px solid var(--border)' }}
+        style={{ borderBottom: `1px solid ${scrolled ? 'var(--border)' : 'var(--border)'}` }}
       >
         <div className="page-container flex items-center justify-between h-16 lg:h-20">
 
@@ -102,7 +102,7 @@ export function Header() {
                 end={to === '/'}
                 style={({ isActive }) => ({
                   fontFamily: 'var(--font-sans)',
-                  fontSize: '0.6875rem',
+                  fontSize: '0.75rem',
                   letterSpacing: '0.14em',
                   fontWeight: 500,
                   textTransform: 'uppercase',
