@@ -12,12 +12,14 @@ import type { Subcategory } from '../../types';
 type SubcategoryForm = {
   categoryId: number | '';
   name: string;
+  nameEn: string;
   description: string;
+  descriptionEn: string;
   active: boolean;
 };
 
 const BLANK: SubcategoryForm = {
-  categoryId: '', name: '', description: '', active: true,
+  categoryId: '', name: '', nameEn: '', description: '', descriptionEn: '', active: true,
 };
 
 export default function AdminSubcategoriesPage() {
@@ -34,7 +36,7 @@ export default function AdminSubcategoriesPage() {
   const openAdd = () => { setEditing(null); setForm(BLANK); setModalOpen(true); };
   const openEdit = (sub: Subcategory) => {
     setEditing(sub);
-    setForm({ categoryId: sub.categoryId, name: sub.name, description: sub.description, active: sub.active });
+    setForm({ categoryId: sub.categoryId, name: sub.name, nameEn: sub.nameEn, description: sub.description, descriptionEn: sub.descriptionEn, active: sub.active });
     setModalOpen(true);
   };
 
@@ -43,8 +45,10 @@ export default function AdminSubcategoriesPage() {
     const payload = {
       categoryId: form.categoryId as number,
       name: form.name,
+      nameEn: form.nameEn,
       slug,
       description: form.description,
+      descriptionEn: form.descriptionEn,
       active: form.active,
     };
     if (editing) await api.admin.subcategories.update(token!, editing.id, payload);

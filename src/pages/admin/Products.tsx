@@ -13,9 +13,11 @@ import type { Product, ProductImage } from '../../types';
 type ProductForm = {
   code: string;
   name: string;
+  nameEn: string;
   categoryId: number | '';
   subcategoryId: number | '';
   description: string;
+  descriptionEn: string;
   cost: number | null;
   price: number;
   tax: number;
@@ -26,8 +28,8 @@ type ProductForm = {
 };
 
 const BLANK: ProductForm = {
-  code: '', name: '', categoryId: '', subcategoryId: '',
-  description: '', cost: null, price: 0, tax: 0,
+  code: '', name: '', nameEn: '', categoryId: '', subcategoryId: '',
+  description: '', descriptionEn: '', cost: null, price: 0, tax: 0,
   stock: 0, minStock: 0, featured: false, active: true,
 };
 
@@ -72,9 +74,11 @@ export default function AdminProductsPage() {
     setForm({
       code: product.code,
       name: product.name,
+      nameEn: product.nameEn,
       categoryId: product.categoryId,
       subcategoryId: product.subcategoryId,
       description: product.description,
+      descriptionEn: product.descriptionEn,
       cost: product.cost ?? null,
       price: product.price,
       tax: product.tax,
@@ -96,10 +100,12 @@ export default function AdminProductsPage() {
       const payload = {
         code: form.code,
         name: form.name,
+        nameEn: form.nameEn,
         slug,
         categoryId: form.categoryId as number,
         subcategoryId: form.subcategoryId as number,
         description: form.description,
+        descriptionEn: form.descriptionEn,
         cost: form.cost,
         price: form.price,
         tax: form.tax,

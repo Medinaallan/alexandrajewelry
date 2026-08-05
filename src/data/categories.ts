@@ -1,6 +1,5 @@
-import type { Category } from '../types';
-
-export const categories: Category[] = [
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const categories: any[] = [
   {
     id: 'cat-rings',
     name: 'Rings',

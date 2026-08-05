@@ -75,7 +75,7 @@ export default function CatalogPage() {
   };
 
   const clearFilters = () => {
-    setFilters({ category: '', minPrice: 0, maxPrice: MAX_PRICE, sort: 'newest', search: '' });
+    setFilters({ category: '', subcategory: '', minPrice: 0, maxPrice: MAX_PRICE, sort: 'newest', search: '' });
     setSearchParams({});
   };
 

@@ -21,8 +21,8 @@ export function TestimonialsSection() {
         {/* Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {testimonials.map((t_) => {
-            const text = language === 'es' ? t_.textEs : t_.text;
-            const location = language === 'es' ? t_.locationEs : t_.location;
+            const text = language === 'es' ? t_.text : t_.textEn;
+            const location = language === 'es' ? t_.location : t_.locationEn;
 
             return (
               <div

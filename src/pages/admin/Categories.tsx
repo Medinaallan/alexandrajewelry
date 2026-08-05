@@ -12,14 +12,16 @@ import type { Category } from '../../types';
 
 type CategoryForm = {
   name: string;
+  nameEn: string;
   slug: string;
   image: string;
   description: string;
+  descriptionEn: string;
   active: boolean;
 };
 
 const BLANK: CategoryForm = {
-  name: '', slug: '', image: '', description: '', active: true,
+  name: '', nameEn: '', slug: '', image: '', description: '', descriptionEn: '', active: true,
 };
 
 export default function AdminCategoriesPage() {
@@ -35,7 +37,7 @@ export default function AdminCategoriesPage() {
   const openAdd = () => { setEditing(null); setForm(BLANK); setModalOpen(true); };
   const openEdit = (cat: Category) => {
     setEditing(cat);
-    setForm({ name: cat.name, slug: cat.slug, image: cat.image, description: cat.description, active: cat.active });
+    setForm({ name: cat.name, nameEn: cat.nameEn, slug: cat.slug, image: cat.image, description: cat.description, descriptionEn: cat.descriptionEn, active: cat.active });
     setModalOpen(true);
   };
 
