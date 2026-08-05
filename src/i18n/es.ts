@@ -177,6 +177,10 @@ export const es: Record<string, string> = {
   'admin.categories.title': 'Categorías',
   'admin.categories.add': 'Agregar Categoría',
   'admin.categories.edit': 'Editar Categoría',
+  'admin.subcategories.title': 'Subcategorías',
+  'admin.subcategories.add': 'Agregar Subcategoría',
+  'admin.subcategories.edit': 'Editar Subcategoría',
+  'admin.subcategories.confirmDelete': '¿Estás seguro de que quieres eliminar esta subcategoría?',
   'admin.logout': 'Cerrar Sesión',
 
   // ─── Common ───────────────────────────────────────────────────────────────

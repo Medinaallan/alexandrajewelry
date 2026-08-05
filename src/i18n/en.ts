@@ -177,6 +177,10 @@ export const en: Record<string, string> = {
   'admin.categories.title': 'Categories',
   'admin.categories.add': 'Add Category',
   'admin.categories.edit': 'Edit Category',
+  'admin.subcategories.title': 'Subcategories',
+  'admin.subcategories.add': 'Add Subcategory',
+  'admin.subcategories.edit': 'Edit Subcategory',
+  'admin.subcategories.confirmDelete': 'Are you sure you want to delete this subcategory?',
   'admin.logout': 'Logout',
 
   // ─── Common ───────────────────────────────────────────────────────────────

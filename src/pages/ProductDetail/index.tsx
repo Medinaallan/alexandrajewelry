@@ -1,7 +1,7 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ShoppingBag, Share2, ChevronLeft, ChevronRight } from 'lucide-react';
-import { getProductBySlug, getRelatedProducts } from '../../data/products';
+import { useData } from '../../contexts/DataContext';
 import { useCart } from '../../contexts/CartContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { formatPrice } from '../../utils/formatPrice';
@@ -14,11 +14,20 @@ export default function ProductDetailPage() {
   const { t, language } = useLanguage();
   const { addItem } = useCart();
   const navigate = useNavigate();
+  const { getProductBySlug, getRelatedProducts, categories, loading } = useData();
 
   const product = slug ? getProductBySlug(slug) : null;
   const [activeImage, setActiveImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
+
+  if (loading) {
+    return (
+      <div className="page-container py-32 text-center">
+        <p style={{ color: 'var(--text-muted)' }}>Loading...</p>
+      </div>
+    );
+  }
 
   if (!product) {
     return (
@@ -33,12 +42,11 @@ export default function ProductDetailPage() {
     );
   }
 
-  const name = language === 'es' ? product.nameEs : product.name;
-  const description = language === 'es' ? product.descriptionEs : product.description;
-  const additionalInfo = language === 'es' ? product.additionalInfoEs : product.additionalInfo;
-  const material = language === 'es' ? product.materialEs : product.material;
-  const color = language === 'es' ? product.colorEs : product.color;
+  const name = language === 'es' ? product.name : product.nameEn;
+  const description = language === 'es' ? product.description : product.descriptionEn;
   const related = getRelatedProducts(product, 4);
+  const category = categories.find((c) => c.id === product.categoryId);
+  const categoryName = language === 'es' ? category?.name : category?.nameEn;
 
   const handleAdd = () => {
     addItem(product, quantity);
@@ -73,7 +81,7 @@ export default function ProductDetailPage() {
       <div className="page-container py-14">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 xl:gap-20">
 
-          {/* ── Image Gallery ───────────────────────────────────────────────── */}
+          {/* â”€â”€ Image Gallery â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
           <div className="flex flex-col gap-4">
             {/* Main image */}
             <div
@@ -81,17 +89,18 @@ export default function ProductDetailPage() {
               style={{ aspectRatio: '1/1' }}
             >
               <img
-                src={product.images[activeImage]}
+                src={product.images[activeImage]?.data || ''}
                 alt={name}
                 className="w-full h-full object-cover transition-opacity duration-300"
                 key={activeImage}
                 style={{ animation: 'fadeIn 0.3s ease' }}
               />
-              {/* Badges */}
-              <div className="absolute top-4 left-4 flex flex-col gap-2">
-                {product.isNew && <Badge label={t('product.new')} variant="new" />}
-                {product.onSale && <Badge label={t('product.sale')} variant="sale" />}
-              </div>
+              {/* Featured badge */}
+              {product.featured && (
+                <div className="absolute top-4 left-4">
+                  <Badge label={t('product.popular')} variant="popular" />
+                </div>
+              )}
 
               {/* Nav arrows */}
               {product.images.length > 1 && (
@@ -119,7 +128,7 @@ export default function ProductDetailPage() {
                   <button
                     key={i}
                     onClick={() => setActiveImage(i)}
-                    className="flex-shrink-0 overflow-hidden"
+                    className="shrink-0 overflow-hidden"
                     style={{
                       width: '80px',
                       aspectRatio: '1/1',
@@ -127,19 +136,17 @@ export default function ProductDetailPage() {
                       transition: 'border-color 0.2s',
                     }}
                   >
-                    <img src={img} alt={`${name} ${i + 1}`} className="w-full h-full object-cover" />
+                    <img src={img.data || ''} alt={`${name} ${i + 1}`} className="w-full h-full object-cover" />
                   </button>
                 ))}
               </div>
             )}
           </div>
 
-          {/* ── Product Info ─────────────────────────────────────────────────── */}
+          {/* â”€â”€ Product Info â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
           <div className="flex flex-col gap-6">
             {/* Category */}
-            <span className="section-label">
-              {language === 'es' ? product.categoryNameEs : product.categoryName}
-            </span>
+            <span className="section-label">{categoryName}</span>
 
             {/* Name */}
             <h1
@@ -158,17 +165,6 @@ export default function ProductDetailPage() {
               <span style={{ fontFamily: 'var(--font-serif)', fontSize: '1.75rem', color: 'var(--text)' }}>
                 {formatPrice(product.price)}
               </span>
-              {product.originalPrice && (
-                <>
-                  <span style={{ fontSize: '1.125rem', color: 'var(--text-muted)', textDecoration: 'line-through' }}>
-                    {formatPrice(product.originalPrice)}
-                  </span>
-                  <Badge
-                    label={`-${Math.round((1 - product.price / product.originalPrice) * 100)}%`}
-                    variant="sale"
-                  />
-                </>
-              )}
             </div>
 
             {/* Divider */}
@@ -179,36 +175,24 @@ export default function ProductDetailPage() {
               {description}
             </p>
 
-            {/* Details table */}
+            {/* Details */}
             <div className="flex flex-col gap-3">
-              {[
-                { label: t('detail.material'), value: material },
-                { label: t('detail.color'), value: color },
-                {
-                  label: t('detail.availability'),
-                  value: product.available ? t('detail.available') : t('detail.unavailable'),
-                  gold: product.available,
-                },
-              ].map(({ label, value, gold }) => (
-                <div
-                  key={label}
-                  className="flex items-center gap-4 py-2.5"
-                  style={{ borderBottom: '1px solid var(--border)' }}
-                >
-                  <span className="w-28 flex-shrink-0 text-xs uppercase tracking-widest text-[--text-muted]">
-                    {label}
+              <div className="flex items-center gap-4 py-2.5" style={{ borderBottom: '1px solid var(--border)' }}>
+                <span className="w-28 shrink-0 text-xs uppercase tracking-widest text-[--text-muted]">
+                  {t('detail.availability')}
+                </span>
+                <span style={{ fontSize: '0.875rem', color: product.active ? 'var(--gold)' : 'var(--text-muted)', fontWeight: product.active ? 500 : 400 }}>
+                  {product.active ? t('detail.available') : t('detail.unavailable')}
+                </span>
+              </div>
+              {product.code && (
+                <div className="flex items-center gap-4 py-2.5" style={{ borderBottom: '1px solid var(--border)' }}>
+                  <span className="w-28 shrink-0 text-xs uppercase tracking-widest text-[--text-muted]">
+                    {t('detail.category')}
                   </span>
-                  <span
-                    style={{
-                      fontSize: '0.875rem',
-                      color: gold ? 'var(--gold)' : 'var(--text)',
-                      fontWeight: gold ? 500 : 400,
-                    }}
-                  >
-                    {value}
-                  </span>
+                  <span style={{ fontSize: '0.875rem', color: 'var(--text)' }}>{product.code}</span>
                 </div>
-              ))}
+              )}
             </div>
 
             {/* Quantity + Add to cart */}
@@ -222,7 +206,7 @@ export default function ProductDetailPage() {
                     onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                     className="px-4 py-2.5 hover:text-[--gold] transition-colors text-lg leading-none"
                   >
-                    −
+                    âˆ’
                   </button>
                   <span className="px-5 py-2 text-sm font-medium" style={{ borderInline: '1px solid var(--border)' }}>
                     {quantity}
@@ -240,7 +224,7 @@ export default function ProductDetailPage() {
                 <Button
                   variant="gold"
                   className="flex-1 justify-center"
-                  disabled={!product.available}
+                  disabled={!product.active}
                   onClick={handleAdd}
                 >
                   <ShoppingBag size={15} />
@@ -254,16 +238,6 @@ export default function ProductDetailPage() {
                   <Share2 size={17} />
                 </button>
               </div>
-            </div>
-
-            {/* Additional info */}
-            <div className="pt-4" style={{ borderTop: '1px solid var(--border)' }}>
-              <p className="section-label mb-3" style={{ display: 'block' }}>
-                {t('detail.additionalInfo')}
-              </p>
-              <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', lineHeight: 1.7 }}>
-                {additionalInfo}
-              </p>
             </div>
           </div>
         </div>

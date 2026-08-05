@@ -1,9 +1,10 @@
 import { Star } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { testimonials } from '../../data/testimonials';
+import { useData } from '../../contexts/DataContext';
 
 export function TestimonialsSection() {
   const { t, language } = useLanguage();
+  const { testimonials } = useData();
 
   return (
     <section className="py-24 bg-[--bg]">

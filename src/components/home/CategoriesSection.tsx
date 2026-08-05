@@ -1,10 +1,11 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { categories } from '../../data/categories';
+import { useData } from '../../contexts/DataContext';
 
 export function CategoriesSection() {
   const { t, language } = useLanguage();
+  const { categories } = useData();
 
   return (
     <section className="py-24 bg-[--bg]">
@@ -21,7 +22,7 @@ export function CategoriesSection() {
         {/* Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           {categories.filter((c) => c.active).map((cat) => {
-            const name = language === 'es' ? cat.nameEs : cat.name;
+            const name = language === 'es' ? cat.name : cat.nameEn;
             return (
               <Link
                 key={cat.id}

@@ -1,11 +1,12 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { getFeaturedProducts } from '../../data/products';
+import { useData } from '../../contexts/DataContext';
 import { ProductCard } from '../product/ProductCard';
 
 export function FeaturedProducts() {
   const { t } = useLanguage();
+  const { getFeaturedProducts } = useData();
   const featured = getFeaturedProducts().slice(0, 8);
 
   return (

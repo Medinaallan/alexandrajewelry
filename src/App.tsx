@@ -3,6 +3,7 @@ import { CartProvider } from './contexts/CartContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { AdminProvider } from './contexts/AdminContext';
+import { DataProvider } from './contexts/DataContext';
 import { AppRoutes } from './routes';
 
 function App() {
@@ -11,9 +12,11 @@ function App() {
       <ThemeProvider>
         <LanguageProvider>
           <AdminProvider>
-            <CartProvider>
-              <AppRoutes />
-            </CartProvider>
+            <DataProvider>
+              <CartProvider>
+                <AppRoutes />
+              </CartProvider>
+            </DataProvider>
           </AdminProvider>
         </LanguageProvider>
       </ThemeProvider>

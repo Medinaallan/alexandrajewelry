@@ -16,6 +16,7 @@ const AdminLoginPage   = lazy(() => import('../pages/admin/Login'));
 const AdminDashboard   = lazy(() => import('../pages/admin/Dashboard'));
 const AdminProducts    = lazy(() => import('../pages/admin/Products'));
 const AdminCategories  = lazy(() => import('../pages/admin/Categories'));
+const AdminSubcategories = lazy(() => import('../pages/admin/Subcategories'));
 
 function PageLoader() {
   return (
@@ -117,6 +118,14 @@ export function AppRoutes() {
           element={
             <AdminRoute>
               <AdminCategories />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/subcategories"
+          element={
+            <AdminRoute>
+              <AdminSubcategories />
             </AdminRoute>
           }
         />

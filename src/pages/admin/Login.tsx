@@ -27,7 +27,7 @@ export default function AdminLoginPage() {
     setError('');
     setLoading(true);
     await new Promise((r) => setTimeout(r, 600));
-    const ok = login(username, password);
+    const ok = await login(username, password);
     setLoading(false);
     if (ok) {
       navigate('/admin/dashboard', { replace: true });

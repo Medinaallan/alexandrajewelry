@@ -1,8 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { SlidersHorizontal, X, ChevronDown } from 'lucide-react';
-import { products } from '../../data/products';
-import { categories } from '../../data/categories';
+import { useData } from '../../contexts/DataContext';
 import { ProductCard } from '../../components/product/ProductCard';
 import { ProductGridSkeleton } from '../../components/ui/Skeleton';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -12,12 +11,13 @@ const MAX_PRICE = 4000;
 
 export default function CatalogPage() {
   const { t, language } = useLanguage();
+  const { products, categories, loading } = useData();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [loading, setLoading] = useState(true);
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   const [filters, setFilters] = useState<CatalogFilters>({
-    category: searchParams.get('category') || '',
+    category: searchParams.get('category') ? Number(searchParams.get('category')) : '',
+    subcategory: '',
     minPrice: 0,
     maxPrice: MAX_PRICE,
     sort: (searchParams.get('sort') as SortOption) || 'newest',
@@ -28,17 +28,10 @@ export default function CatalogPage() {
   useEffect(() => {
     setFilters((prev) => ({
       ...prev,
-      category: searchParams.get('category') || '',
+      category: searchParams.get('category') ? Number(searchParams.get('category')) : '',
       search: searchParams.get('search') || '',
     }));
   }, [searchParams]);
-
-  // Simulate loading
-  useEffect(() => {
-    setLoading(true);
-    const t = setTimeout(() => setLoading(false), 600);
-    return () => clearTimeout(t);
-  }, [filters]);
 
   const filtered = useMemo(() => {
     let result = products.filter((p) => p.active);
@@ -51,8 +44,7 @@ export default function CatalogPage() {
       result = result.filter(
         (p) =>
           p.name.toLowerCase().includes(q) ||
-          p.nameEs.toLowerCase().includes(q) ||
-          p.categoryName.toLowerCase().includes(q)
+          p.nameEn.toLowerCase().includes(q)
       );
     }
     result = result.filter(
@@ -168,7 +160,7 @@ export default function CatalogPage() {
         <div className="flex gap-10">
           {/* Sidebar filters */}
           <aside
-            className={`flex-shrink-0 w-56 ${filtersOpen ? 'block' : 'hidden'} lg:block`}
+            className={`shrink-0 w-56 ${filtersOpen ? 'block' : 'hidden'} lg:block`}
             style={{ position: 'sticky', top: '88px', alignSelf: 'flex-start', height: 'fit-content' }}
           >
             <div className="flex flex-col gap-7">
@@ -191,7 +183,7 @@ export default function CatalogPage() {
                     </button>
                   </li>
                   {categories.filter((c) => c.active).map((cat) => {
-                    const name = language === 'es' ? cat.nameEs : cat.name;
+                    const name = language === 'es' ? cat.name : cat.nameEn;
                     return (
                       <li key={cat.id}>
                         <button

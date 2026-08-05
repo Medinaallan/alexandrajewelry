@@ -1,10 +1,10 @@
 import { Package, Tag, CheckCircle, Star } from 'lucide-react';
-import { useAdmin } from '../../contexts/AdminContext';
+import { useData } from '../../contexts/DataContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { AdminSidebar } from '../../components/admin/AdminSidebar';
 
 export default function AdminDashboard() {
-  const { products, categories } = useAdmin();
+  const { products, categories } = useData();
   const { t } = useLanguage();
 
   const stats = [
@@ -125,14 +125,16 @@ export default function AdminDashboard() {
                   >
                     <td className="px-6 py-3">
                       <div className="w-10 h-10 overflow-hidden" style={{ background: 'var(--gray-100)' }}>
-                        <img src={p.images[0]} alt={p.name} className="w-full h-full object-cover" />
+                        <img src={p.images[0]?.data || ''} alt={p.name} className="w-full h-full object-cover" />
                       </div>
                     </td>
                     <td className="px-6 py-3" style={{ maxWidth: '200px' }}>
                       <span className="truncate block" style={{ color: 'var(--text)' }}>{p.name}</span>
                     </td>
                     <td className="px-6 py-3">
-                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{p.categoryName}</span>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                        {categories.find((c) => c.id === p.categoryId)?.name || '—'}
+                      </span>
                     </td>
                     <td className="px-6 py-3">
                       <span style={{ fontWeight: 500, color: 'var(--text)' }}>${p.price.toLocaleString()}</span>

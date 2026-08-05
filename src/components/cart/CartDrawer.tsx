@@ -2,12 +2,14 @@ import { useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { X, ShoppingBag, Plus, Minus, Trash2, ArrowRight } from 'lucide-react';
 import { useCart } from '../../contexts/CartContext';
+import { useData } from '../../contexts/DataContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { formatPrice } from '../../utils/formatPrice';
 import { Button } from '../ui/Button';
 
 export function CartDrawer() {
   const { items, isOpen, closeCart, removeItem, updateQuantity, clearCart, subtotal, total, totalItems } = useCart();
+  const { categories } = useData();
   const { t, language } = useLanguage();
   const navigate = useNavigate();
   const drawerRef = useRef<HTMLDivElement>(null);
@@ -84,16 +86,19 @@ export function CartDrawer() {
           ) : (
             <ul className="divide-y divide-[--border]">
               {items.map(({ product, quantity }) => {
-                const name = language === 'es' ? product.nameEs : product.name;
+                const name = language === 'es' ? product.name : product.nameEn;
+                const category = categories.find((c) => c.id === product.categoryId);
+                const catName = language === 'es' ? category?.name : category?.nameEn;
+                const imageSrc = product.images?.[0]?.data || '';
                 return (
                   <li key={product.id} className="flex gap-4 px-6 py-4">
                     <Link
                       to={`/product/${product.slug}`}
                       onClick={closeCart}
-                      className="flex-shrink-0 w-20 h-24 overflow-hidden bg-[--gray-100]"
+                      className="shrink-0 w-20 h-24 overflow-hidden bg-[--gray-100]"
                     >
                       <img
-                        src={product.images[0]}
+                      src={imageSrc}
                         alt={name}
                         className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                       />
@@ -108,7 +113,7 @@ export function CartDrawer() {
                         {name}
                       </Link>
                       <span className="section-label text-[9px]">
-                        {language === 'es' ? product.categoryNameEs : product.categoryName}
+                      {catName}
                       </span>
                       <div className="flex items-center justify-between mt-auto pt-2">
                         {/* Quantity */}
@@ -137,7 +142,7 @@ export function CartDrawer() {
                     </div>
                     <button
                       onClick={() => removeItem(product.id)}
-                      className="flex-shrink-0 p-1.5 hover:text-red-500 transition-colors text-[--text-subtle] self-start"
+                      className="shrink-0 p-1.5 hover:text-red-500 transition-colors text-[--text-subtle] self-start"
                       aria-label={t('cart.remove')}
                     >
                       <Trash2 size={14} />

@@ -254,11 +254,11 @@ export default function CheckoutPage() {
                 </div>
                 <ul className="divide-y divide-[--border]">
                   {items.map(({ product, quantity }) => {
-                    const name = language === 'es' ? product.nameEs : product.name;
+                    const name = language === 'es' ? product.name : product.nameEn;
                     return (
                       <li key={product.id} className="flex gap-3 px-6 py-4">
-                        <div className="w-14 h-16 flex-shrink-0 overflow-hidden bg-[--gray-100]">
-                          <img src={product.images[0]} alt={name} className="w-full h-full object-cover" />
+                        <div className="w-14 h-16 shrink-0 overflow-hidden bg-[--gray-100]">
+                          <img src={product.images?.[0]?.data || ''} alt={name} className="w-full h-full object-cover" />
                         </div>
                         <div className="flex-1 flex flex-col gap-0.5 min-w-0">
                           <p style={{ fontSize: '0.875rem', lineHeight: 1.3 }} className="line-clamp-2">{name}</p>

@@ -1,48 +1,72 @@
 // ─── Core Domain Types ────────────────────────────────────────────────────────
 
 export interface Category {
-  id: string;
+  id: number;
   name: string;
-  nameEs: string;
+  nameEn: string;
   slug: string;
   image: string;
   description: string;
-  descriptionEs: string;
+  descriptionEn: string;
   active: boolean;
-  productCount?: number;
+  createdAt: string;
+}
+
+export interface Subcategory {
+  id: number;
+  categoryId: number;
+  name: string;
+  nameEn: string;
+  slug: string;
+  description: string;
+  descriptionEn: string;
+  active: boolean;
+  createdAt: string;
+}
+
+export interface ProductImage {
+  id: number;
+  productId: number;
+  filename: string;
+  data?: string | null;  // base64 data URI when uploaded via API
+  displayOrder: number;
+  createdAt: string;
 }
 
 export interface Product {
-  id: string;
+  id: number;
+  code: string;
   name: string;
-  nameEs: string;
+  nameEn: string;
   slug: string;
-  categoryId: string;
-  categoryName: string;
-  categoryNameEs: string;
-  price: number;
-  originalPrice?: number;
+  categoryId: number;
+  subcategoryId: number;
   description: string;
-  descriptionEs: string;
-  additionalInfo: string;
-  additionalInfoEs: string;
-  material: string;
-  materialEs: string;
-  color: string;
-  colorEs: string;
-  images: string[];
-  available: boolean;
-  active: boolean;
+  descriptionEn: string;
+  cost?: number | null;
+  price: number;
+  tax: number;
+  stock: number;
+  minStock: number;
   featured: boolean;
-  isNew: boolean;
-  onSale: boolean;
-  tags: string[];
+  active: boolean;
+  images: ProductImage[];
   createdAt: string;
+  updatedAt: string;
 }
 
 export interface CartItem {
   product: Product;
   quantity: number;
+}
+
+export interface CatalogFilters {
+  category: number | '';
+  subcategory: number | '';
+  minPrice: number;
+  maxPrice: number;
+  sort: SortOption;
+  search: string;
 }
 
 export interface CheckoutForm {
@@ -56,42 +80,38 @@ export interface CheckoutForm {
 }
 
 export interface Testimonial {
-  id: string;
+  id: number;
   name: string;
   location: string;
-  locationEs: string;
+  locationEn: string;
   rating: number;
   text: string;
-  textEs: string;
+  textEn: string;
   avatar: string;
-  date: string;
+  status: 'pending' | 'approved' | 'rejected';
+  createdAt: string;
 }
 
 export interface AdminUser {
+  id: number;
   username: string;
-  password: string;
-  displayName: string;
+  email: string;
+  role: string;
+  active: boolean;
+  createdAt: string;
 }
 
 // ─── Filter/Sort Types ─────────────────────────────────────────────────────────
 
 export type SortOption = 'newest' | 'price-asc' | 'price-desc' | 'name-asc';
 
-export interface CatalogFilters {
-  category: string;
-  minPrice: number;
-  maxPrice: number;
-  sort: SortOption;
-  search: string;
-}
-
 // ─── Context Types ─────────────────────────────────────────────────────────────
 
 export interface CartContextType {
   items: CartItem[];
   addItem: (product: Product, quantity?: number) => void;
-  removeItem: (productId: string) => void;
-  updateQuantity: (productId: string, quantity: number) => void;
+  removeItem: (productId: number) => void;
+  updateQuantity: (productId: number, quantity: number) => void;
   clearCart: () => void;
   totalItems: number;
   subtotal: number;
@@ -116,14 +136,7 @@ export interface LanguageContextType {
 
 export interface AdminContextType {
   isAuthenticated: boolean;
-  login: (username: string, password: string) => boolean;
+  token: string | null;
+  login: (username: string, password: string) => Promise<boolean>;
   logout: () => void;
-  products: Product[];
-  categories: Category[];
-  addProduct: (product: Omit<Product, 'id' | 'createdAt'>) => void;
-  updateProduct: (id: string, product: Partial<Product>) => void;
-  deleteProduct: (id: string) => void;
-  addCategory: (category: Omit<Category, 'id'>) => void;
-  updateCategory: (id: string, category: Partial<Category>) => void;
-  deleteCategory: (id: string) => void;
 }

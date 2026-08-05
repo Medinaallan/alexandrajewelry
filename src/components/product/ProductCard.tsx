@@ -3,10 +3,13 @@ import { Link } from 'react-router-dom';
 import { ShoppingBag, Eye } from 'lucide-react';
 import type { Product } from '../../types';
 import { useCart } from '../../contexts/CartContext';
+import { useData } from '../../contexts/DataContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { formatPrice } from '../../utils/formatPrice';
 import { Badge } from '../ui/Badge';
 import { cn } from '../../utils/cn';
+
+const FALLBACK_IMG = 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&w=800&q=80';
 
 interface ProductCardProps {
   product: Product;
@@ -15,26 +18,23 @@ interface ProductCardProps {
 
 export function ProductCard({ product, className }: ProductCardProps) {
   const { addItem } = useCart();
+  const { categories } = useData();
   const { t, language } = useLanguage();
   const [added, setAdded] = useState(false);
   const [imgError, setImgError] = useState(false);
 
-  const name = language === 'es' ? product.nameEs : product.name;
+  const name = language === 'es' ? product.name : product.nameEn;
+  const imageSrc = product.images?.[0]?.data || FALLBACK_IMG;
+  const category = categories.find((c) => c.id === product.categoryId);
+  const categoryName = language === 'es' ? category?.name : category?.nameEn;
 
   const handleAdd = (e: React.MouseEvent) => {
     e.preventDefault();
-    if (!product.available) return;
+    if (!product.active) return;
     addItem(product);
     setAdded(true);
     setTimeout(() => setAdded(false), 1800);
   };
-
-  const badge = product.isNew ? 'new' : product.onSale ? 'sale' : product.featured ? 'popular' : null;
-  const badgeLabel = product.isNew
-    ? t('product.new')
-    : product.onSale
-    ? t('product.sale')
-    : t('product.popular');
 
   return (
     <article className={cn('group flex flex-col', className)}>
@@ -45,7 +45,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
           style={{ aspectRatio: '3/4' }}
         >
           <img
-            src={imgError ? 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&w=800&q=80' : product.images[0]}
+            src={imgError ? FALLBACK_IMG : imageSrc}
             alt={name}
             loading="lazy"
             className="w-full h-full object-cover"
@@ -53,12 +53,9 @@ export function ProductCard({ product, className }: ProductCardProps) {
           />
 
           {/* Badge */}
-          {badge && (
+          {product.featured && (
             <div className="absolute top-3 left-3">
-              <Badge
-                label={badgeLabel}
-                variant={product.isNew ? 'new' : product.onSale ? 'sale' : 'popular'}
-              />
+              <Badge label={t('product.popular')} variant="popular" />
             </div>
           )}
 
@@ -69,10 +66,10 @@ export function ProductCard({ product, className }: ProductCardProps) {
           >
             <button
               onClick={handleAdd}
-              disabled={!product.available}
+              disabled={!product.active}
               className={cn(
                 'w-full py-3 text-[10px] font-medium tracking-[0.15em] uppercase transition-colors flex items-center justify-center gap-2',
-                product.available
+                product.active
                   ? added
                     ? 'bg-[--gold] text-white'
                     : 'bg-white text-[--black] hover:bg-[--gold] hover:text-white'
@@ -80,7 +77,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
               )}
             >
               <ShoppingBag size={12} />
-              {!product.available
+              {!product.active
                 ? t('product.outOfStock')
                 : added
                 ? t('product.addedToCart')
@@ -92,7 +89,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
         {/* Info */}
         <div className="pt-4 flex flex-col gap-1">
           <span className="section-label" style={{ fontSize: '0.75rem' }}>
-            {language === 'es' ? product.categoryNameEs : product.categoryName}
+            {categoryName}
           </span>
           <h3
             style={{
@@ -111,11 +108,6 @@ export function ProductCard({ product, className }: ProductCardProps) {
             <span style={{ fontFamily: 'var(--font-sans)', fontSize: '1rem', fontWeight: 500, color: 'var(--text)' }}>
               {formatPrice(product.price)}
             </span>
-            {product.originalPrice && (
-              <span style={{ fontFamily: 'var(--font-sans)', fontSize: '0.9375rem', color: 'var(--text-muted)', textDecoration: 'line-through' }}>
-                {formatPrice(product.originalPrice)}
-              </span>
-            )}
           </div>
         </div>
       </Link>
@@ -123,10 +115,10 @@ export function ProductCard({ product, className }: ProductCardProps) {
       {/* Desktop quick action */}
       <button
         onClick={handleAdd}
-        disabled={!product.available}
+        disabled={!product.active}
         className={cn(
-              'mt-3 w-full py-2.5 text-[0.75rem] font-medium tracking-[0.15em] uppercase border transition-colors hidden sm:flex items-center justify-center gap-2',
-          product.available
+          'mt-3 w-full py-2.5 text-[0.75rem] font-medium tracking-[0.15em] uppercase border transition-colors hidden sm:flex items-center justify-center gap-2',
+          product.active
             ? added
               ? 'border-[--gold] bg-[--gold] text-white'
               : 'border-[--border] text-[--text-muted] hover:border-[--gold] hover:text-[--gold]'
@@ -134,7 +126,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
         )}
       >
         <ShoppingBag size={11} />
-        {!product.available
+        {!product.active
           ? t('product.outOfStock')
           : added
           ? t('product.addedToCart')

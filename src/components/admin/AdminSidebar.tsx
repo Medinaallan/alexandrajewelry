@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Package, Tag, LogOut, Gem } from 'lucide-react';
+import { LayoutDashboard, Package, Tag, Layers, LogOut, Gem } from 'lucide-react';
 import { useAdmin } from '../../contexts/AdminContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 
@@ -7,6 +7,7 @@ const navItems = [
   { to: '/admin/dashboard', Icon: LayoutDashboard, labelKey: 'admin.dashboard.title' },
   { to: '/admin/products', Icon: Package, labelKey: 'admin.products.title' },
   { to: '/admin/categories', Icon: Tag, labelKey: 'admin.categories.title' },
+  { to: '/admin/subcategories', Icon: Layers, labelKey: 'admin.subcategories.title' },
 ];
 
 export function AdminSidebar() {
