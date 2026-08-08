@@ -7,10 +7,10 @@ export function TestimonialsSection() {
   const { testimonials } = useData();
 
   return (
-    <section className="py-24 bg-[--bg]">
+    <section className="py-28 lg:py-32 bg-[--bg]">
       <div className="page-container">
         {/* Header */}
-        <div className="text-center mb-14">
+        <div className="text-center mb-20">
           <p className="section-label mb-3">{t('testimonials.label')}</p>
           <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(1.875rem, 4vw, 3rem)', fontWeight: 300 }}>
             {t('testimonials.title')}
@@ -19,7 +19,7 @@ export function TestimonialsSection() {
         </div>
 
         {/* Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-10">
           {testimonials.map((t_) => {
             const text = language === 'es' ? t_.text : t_.textEn;
             const location = language === 'es' ? t_.location : t_.locationEn;
@@ -27,7 +27,7 @@ export function TestimonialsSection() {
             return (
               <div
                 key={t_.id}
-                className="flex flex-col gap-5 p-8"
+                className="flex flex-col gap-6 p-10"
                 style={{ border: '1px solid var(--border)', background: 'var(--bg-subtle)' }}
               >
                 {/* Stars */}
@@ -43,7 +43,7 @@ export function TestimonialsSection() {
                     fontFamily: 'var(--font-serif)',
                     fontSize: '1.125rem',
                     fontWeight: 300,
-                    lineHeight: 1.7,
+                    lineHeight: 1.8,
                     color: 'var(--text)',
                     fontStyle: 'italic',
                   }}
@@ -52,7 +52,7 @@ export function TestimonialsSection() {
                 </p>
 
                 {/* Author */}
-                <div className="flex items-center gap-3 pt-2" style={{ borderTop: '1px solid var(--border)' }}>
+                <div className="flex items-center gap-3 pt-4" style={{ borderTop: '1px solid var(--border)' }}>
                   <img
                     src={t_.avatar}
                     alt={t_.name}

@@ -89,10 +89,10 @@ export default function CatalogPage() {
   ];
 
   return (
-    <main className="pb-24 pt-12">
+    <main className="pb-32 pt-20">
       <div className="page-container">
         {/* Header */}
-        <div className="text-center mb-14">
+<div className="text-center mb-20">
           <p className="section-label mb-3">{t('catalog.subtitle')}</p>
           <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(2rem, 5vw, 3.5rem)', fontWeight: 300 }}>
             {t('catalog.title')}
@@ -102,7 +102,7 @@ export default function CatalogPage() {
 
         {/* Filter bar */}
         <div
-          className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 mb-10 pb-5"
+          className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 mb-12 pb-6"
           style={{ borderBottom: '1px solid var(--border)' }}
         >
           <div className="flex items-center gap-4 flex-wrap">
@@ -157,13 +157,13 @@ export default function CatalogPage() {
           </div>
         </div>
 
-        <div className="flex gap-10">
+        <div className="flex gap-14">
           {/* Sidebar filters */}
           <aside
             className={`shrink-0 w-56 ${filtersOpen ? 'block' : 'hidden'} lg:block`}
             style={{ position: 'sticky', top: '88px', alignSelf: 'flex-start', height: 'fit-content' }}
           >
-            <div className="flex flex-col gap-7">
+              <div className="flex flex-col gap-10">
               {/* Category */}
               <div>
                 <h3
@@ -176,7 +176,7 @@ export default function CatalogPage() {
                   <li>
                     <button
                       onClick={() => setFilter('category', '')}
-                      className="flex items-center justify-between w-full py-1.5 text-sm text-left transition-colors"
+                      className="flex items-center justify-between w-full py-2.5 text-sm text-left transition-colors"
                       style={{ color: !filters.category ? 'var(--gold)' : 'var(--text-muted)' }}
                     >
                       {t('catalog.filter.allCategories')}
@@ -188,7 +188,7 @@ export default function CatalogPage() {
                       <li key={cat.id}>
                         <button
                           onClick={() => setFilter('category', cat.id)}
-                          className="flex items-center justify-between w-full py-1.5 text-sm text-left transition-colors"
+                          className="flex items-center justify-between w-full py-2.5 text-sm text-left transition-colors"
                           style={{ color: filters.category === cat.id ? 'var(--gold)' : 'var(--text-muted)' }}
                         >
                           {name}
@@ -251,7 +251,7 @@ export default function CatalogPage() {
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-5 lg:gap-8">
+              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-8 lg:gap-10">
                 {filtered.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}

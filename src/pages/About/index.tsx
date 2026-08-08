@@ -23,14 +23,14 @@ export default function AboutPage() {
   const es = language === 'es';
 
   return (
-    <main className="pb-24">
+    <main className="pb-32">
       {/* Hero */}
       <section className="relative h-72 lg:h-96 overflow-hidden flex items-end">
         <div className="absolute inset-0">
           <img src={HERO_IMG} alt="About Alexandra Jewelry" className="w-full h-full object-cover" />
           <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.55)' }} />
         </div>
-        <div className="relative page-container pb-12">
+        <div className="relative page-container pb-16">
           <p className="section-label mb-3" style={{ color: 'var(--gold-light)' }}>Alexandra Jewelry</p>
           <h1
             style={{
@@ -48,10 +48,10 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <div className="page-container py-20">
+      <div className="page-container py-28">
         {/* Mission & Vision */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-20">
-          <div className="flex flex-col gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-16 mb-28">
+          <div className="flex flex-col gap-6">
             <p className="section-label">{t('about.mission.title')}</p>
             <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.875rem', fontWeight: 300 }}>
               {es
@@ -64,7 +64,7 @@ export default function AboutPage() {
                 : 'Founded in 2010 with a single workbench and a passionate vision, Alexandra Jewelry was born from a deep love of craftsmanship. Today, more than a decade later, every piece that leaves our atelier carries that same spirit: the relentless pursuit of perfection.'}
             </p>
           </div>
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-6">
             <p className="section-label">{t('about.vision.title')}</p>
             <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.875rem', fontWeight: 300 }}>
               {es
@@ -80,17 +80,17 @@ export default function AboutPage() {
         </div>
 
         {/* Values */}
-        <div className="mb-20">
-          <div className="text-center mb-12">
+        <div className="mb-28">
+          <div className="text-center mb-16">
             <p className="section-label mb-3">{t('about.values.title')}</p>
             <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(1.5rem, 3vw, 2.25rem)', fontWeight: 300 }}>
               {es ? 'Lo que nos define' : 'What defines us'}
             </h2>
             <div className="gold-line mt-5" />
           </div>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-10">
             {values.map((v) => (
-              <div key={v.title} className="flex flex-col gap-3 p-6" style={{ border: '1px solid var(--border)' }}>
+              <div key={v.title} className="flex flex-col gap-5 p-8" style={{ border: '1px solid var(--border)' }}>
                 <div style={{ width: '32px', height: '2px', background: 'var(--gold)' }} />
                 <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.25rem' }}>
                   {es ? v.titleEs : v.title}
@@ -105,7 +105,7 @@ export default function AboutPage() {
 
         {/* Craft process */}
         <div>
-          <div className="text-center mb-12">
+          <div className="text-center mb-16">
             <p className="section-label mb-3">{t('about.process.subtitle')}</p>
             <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(1.5rem, 3vw, 2.25rem)', fontWeight: 300 }}>
               {t('about.process.title')}
@@ -113,10 +113,10 @@ export default function AboutPage() {
             <div className="gold-line mt-5" />
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-12">
-            <div className="grid grid-cols-1 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-12">
+            <div className="grid grid-cols-1 gap-8">
               {processSteps.map((step) => (
-                <div key={step.num} className="flex gap-5">
+                <div key={step.num} className="flex gap-6">
                   <span
                     style={{
                       fontFamily: 'var(--font-serif)',
@@ -132,7 +132,7 @@ export default function AboutPage() {
                     {step.num}
                   </span>
                   <div>
-                    <h4 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.125rem', marginBottom: '0.375rem' }}>
+                    <h4 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.125rem', marginBottom: '0.625rem' }}>
                       {es ? step.titleEs : step.title}
                     </h4>
                     <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', lineHeight: 1.7 }}>

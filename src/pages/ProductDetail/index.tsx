@@ -68,7 +68,7 @@ export default function ProductDetailPage() {
   return (
     <main className="pb-24">
       {/* Breadcrumb */}
-      <div className="page-container py-5" style={{ borderBottom: '1px solid var(--border)' }}>
+      <div className="page-container py-6" style={{ borderBottom: '1px solid var(--border)' }}>
         <nav className="flex items-center gap-2 text-xs text-[--text-muted]">
           <Link to="/" className="hover:text-[--gold] transition-colors">{t('nav.home')}</Link>
           <span>/</span>
@@ -78,8 +78,8 @@ export default function ProductDetailPage() {
         </nav>
       </div>
 
-      <div className="page-container py-14">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 xl:gap-20">
+      <div className="page-container py-20">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 xl:gap-28">
 
           {/* â”€â”€ Image Gallery â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
           <div className="flex flex-col gap-4">
@@ -123,7 +123,7 @@ export default function ProductDetailPage() {
 
             {/* Thumbnails */}
             {product.images.length > 1 && (
-              <div className="flex gap-3">
+              <div className="flex gap-4">
                 {product.images.map((img, i) => (
                   <button
                     key={i}
@@ -144,7 +144,7 @@ export default function ProductDetailPage() {
           </div>
 
           {/* â”€â”€ Product Info â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-8">
             {/* Category */}
             <span className="section-label">{categoryName}</span>
 
@@ -177,7 +177,7 @@ export default function ProductDetailPage() {
 
             {/* Details */}
             <div className="flex flex-col gap-3">
-              <div className="flex items-center gap-4 py-2.5" style={{ borderBottom: '1px solid var(--border)' }}>
+              <div className="flex items-center gap-4 py-4" style={{ borderBottom: '1px solid var(--border)' }}>
                 <span className="w-28 shrink-0 text-xs uppercase tracking-widest text-[--text-muted]">
                   {t('detail.availability')}
                 </span>
@@ -186,7 +186,7 @@ export default function ProductDetailPage() {
                 </span>
               </div>
               {product.code && (
-                <div className="flex items-center gap-4 py-2.5" style={{ borderBottom: '1px solid var(--border)' }}>
+                <div className="flex items-center gap-4 py-4" style={{ borderBottom: '1px solid var(--border)' }}>
                   <span className="w-28 shrink-0 text-xs uppercase tracking-widest text-[--text-muted]">
                     {t('detail.category')}
                   </span>
@@ -196,7 +196,7 @@ export default function ProductDetailPage() {
             </div>
 
             {/* Quantity + Add to cart */}
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-6">
               <div className="flex items-center gap-4">
                 <span className="text-xs uppercase tracking-widest text-[--text-muted]">
                   {t('detail.quantity')}
@@ -204,23 +204,23 @@ export default function ProductDetailPage() {
                 <div className="flex items-center" style={{ border: '1px solid var(--border)' }}>
                   <button
                     onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                    className="px-4 py-2.5 hover:text-[--gold] transition-colors text-lg leading-none"
+                    className="px-4 py-3 hover:text-[--gold] transition-colors text-lg leading-none"
                   >
-                    âˆ’
+                    -
                   </button>
-                  <span className="px-5 py-2 text-sm font-medium" style={{ borderInline: '1px solid var(--border)' }}>
+                  <span className="px-6 py-3 text-sm font-medium" style={{ borderInline: '1px solid var(--border)' }}>
                     {quantity}
                   </span>
                   <button
                     onClick={() => setQuantity((q) => q + 1)}
-                    className="px-4 py-2.5 hover:text-[--gold] transition-colors text-lg leading-none"
+                    className="px-4 py-3 hover:text-[--gold] transition-colors text-lg leading-none"
                   >
                     +
                   </button>
                 </div>
               </div>
 
-              <div className="flex gap-3">
+              <div className="flex gap-4">
                 <Button
                   variant="gold"
                   className="flex-1 justify-center"
@@ -232,7 +232,7 @@ export default function ProductDetailPage() {
                 </Button>
                 <button
                   onClick={handleShare}
-                  className="p-3 border border-[--border] hover:border-[--gold] hover:text-[--gold] transition-colors"
+                  className="p-4 border border-[--border] hover:border-[--gold] hover:text-[--gold] transition-colors"
                   aria-label={t('detail.share')}
                 >
                   <Share2 size={17} />
@@ -244,14 +244,14 @@ export default function ProductDetailPage() {
 
         {/* Related products */}
         {related.length > 0 && (
-          <section className="mt-24">
-            <div className="text-center mb-12">
+          <section className="mt-32">
+            <div className="text-center mb-16">
               <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(1.5rem, 3vw, 2.25rem)', fontWeight: 300 }}>
                 {t('detail.related')}
               </h2>
               <div className="gold-line mt-4" />
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 lg:gap-8">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 lg:gap-12">
               {related.map((p) => (
                 <ProductCard key={p.id} product={p} />
               ))}

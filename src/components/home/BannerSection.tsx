@@ -9,7 +9,7 @@ export function BannerSection() {
   const { t } = useLanguage();
 
   return (
-    <section className="relative py-32 flex items-center overflow-hidden">
+    <section className="relative py-36 lg:py-48 flex items-center overflow-hidden">
       {/* Background */}
       <div className="absolute inset-0">
         <img
@@ -44,8 +44,8 @@ export function BannerSection() {
             color: 'rgba(255,255,255,0.75)',
             fontSize: '1.125rem',
             maxWidth: '480px',
-            margin: '0 auto 2.5rem',
-            lineHeight: 1.7,
+            margin: '0 auto 3rem',
+            lineHeight: 1.8,
           }}
         >
           {t('banner.subtitle')}

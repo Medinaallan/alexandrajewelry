@@ -61,8 +61,8 @@ export function ProductCard({ product, className }: ProductCardProps) {
 
           {/* Hover actions */}
           <div
-            className="absolute inset-x-0 bottom-0 flex flex-col gap-2 p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300"
-            style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%)' }}
+            className="absolute inset-x-0 bottom-0 flex flex-col gap-2 p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300"
+            style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 100%)' }}
           >
             <button
               onClick={handleAdd}
@@ -87,7 +87,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
         </div>
 
         {/* Info */}
-        <div className="pt-4 flex flex-col gap-1">
+        <div className="pt-5 flex flex-col gap-2">
           <span className="section-label" style={{ fontSize: '0.75rem' }}>
             {categoryName}
           </span>
@@ -104,7 +104,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
           >
             {name}
           </h3>
-          <div className="flex items-center gap-2 mt-1">
+          <div className="flex items-center gap-2 mt-2">
             <span style={{ fontFamily: 'var(--font-sans)', fontSize: '1rem', fontWeight: 500, color: 'var(--text)' }}>
               {formatPrice(product.price)}
             </span>
@@ -117,7 +117,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
         onClick={handleAdd}
         disabled={!product.active}
         className={cn(
-          'mt-3 w-full py-2.5 text-[0.75rem] font-medium tracking-[0.15em] uppercase border transition-colors hidden sm:flex items-center justify-center gap-2',
+          'mt-4 w-full py-3 text-[0.75rem] font-medium tracking-[0.15em] uppercase border transition-colors hidden sm:flex items-center justify-center gap-2',
           product.active
             ? added
               ? 'border-[--gold] bg-[--gold] text-white'
@@ -135,7 +135,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
 
       <Link
         to={`/product/${product.slug}`}
-        className="mt-1 w-full py-2 text-[0.75rem] font-medium tracking-[0.15em] uppercase border border-transparent text-[--text-muted] hover:text-[--gold] transition-colors hidden sm:flex items-center justify-center gap-2"
+        className="mt-1.5 w-full py-2 text-[0.75rem] font-medium tracking-[0.15em] uppercase border border-transparent text-[--text-muted] hover:text-[--gold] transition-colors hidden sm:flex items-center justify-center gap-2"
       >
         <Eye size={11} />
         {t('product.viewDetail')}

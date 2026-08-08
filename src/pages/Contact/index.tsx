@@ -46,7 +46,7 @@ export default function ContactPage() {
   return (
     <main className="pb-24">
       {/* Hero */}
-      <section className="py-20 text-center bg-[--bg-subtle]" style={{ borderBottom: '1px solid var(--border)' }}>
+      <section className="py-28 text-center bg-[--bg-subtle]" style={{ borderBottom: '1px solid var(--border)' }}>
         <p className="section-label mb-3">{t('contact.subtitle')}</p>
         <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(2rem, 5vw, 3.5rem)', fontWeight: 300 }}>
           {t('contact.title')}
@@ -54,8 +54,8 @@ export default function ContactPage() {
         <div className="gold-line mt-5" />
       </section>
 
-      <div className="page-container py-20">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
+      <div className="page-container py-28">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-20">
 
           {/* Form */}
           <div>
@@ -75,7 +75,7 @@ export default function ContactPage() {
                 </button>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">
+              <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-7">
                 <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.5rem', fontWeight: 400, marginBottom: '0.5rem' }}>
                   {t('contact.title')}
                 </h2>
@@ -112,9 +112,9 @@ export default function ContactPage() {
           </div>
 
           {/* Info */}
-          <div className="flex flex-col gap-8">
+          <div className="flex flex-col gap-10">
             {/* WhatsApp */}
-            <div className="flex flex-col gap-3 p-6" style={{ border: '1px solid var(--border)' }}>
+              <div className="flex flex-col gap-5 p-8" style={{ border: '1px solid var(--border)' }}>
               <MessageCircle size={22} style={{ color: 'var(--gold)' }} />
               <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.25rem' }}>WhatsApp</h3>
               <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', lineHeight: 1.7 }}>
@@ -132,7 +132,7 @@ export default function ContactPage() {
             </div>
 
             {/* Hours */}
-            <div className="flex flex-col gap-3 p-6" style={{ border: '1px solid var(--border)' }}>
+              <div className="flex flex-col gap-5 p-8" style={{ border: '1px solid var(--border)' }}>
               <Clock size={22} style={{ color: 'var(--gold)' }} />
               <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.25rem' }}>{t('contact.hours')}</h3>
               <div className="flex flex-col gap-1.5">
@@ -150,7 +150,7 @@ export default function ContactPage() {
             </div>
 
             {/* Location (simulated map) */}
-            <div className="flex flex-col gap-3 p-6" style={{ border: '1px solid var(--border)' }}>
+              <div className="flex flex-col gap-5 p-8" style={{ border: '1px solid var(--border)' }}>
               <MapPin size={22} style={{ color: 'var(--gold)' }} />
               <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.25rem' }}>{t('contact.location')}</h3>
               <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>

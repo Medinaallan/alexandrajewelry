@@ -175,16 +175,16 @@ h1, h2, h3, h4, h5 {
 
 /* ─── Page Layout ───────────────────────────────────────────────────────── */
 .page-container {
-  max-width: 1280px;
+  max-width: 1360px;
   margin: 0 auto;
   padding: 0 1.5rem;
 }
 
 @media (min-width: 768px) {
-  .page-container { padding: 0 2.5rem; }
+  .page-container { padding: 0 3rem; }
 }
 @media (min-width: 1024px) {
-  .page-container { padding: 0 4rem; }
+  .page-container { padding: 0 5rem; }
 }
 
 /* ─── Overlay ───────────────────────────────────────────────────────────── */
@@ -202,10 +202,20 @@ h1, h2, h3, h4, h5 {
   overflow: hidden;
 }
 .img-zoom img {
-  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
 }
 .img-zoom:hover img {
-  transform: scale(1.06);
+  transform: scale(1.08);
+}
+
+/* ─── Card Hover Lift ────────────────────────────────────────────────────── */
+.card-lift {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.card-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
 }
 
 /* ─── Gold Button ───────────────────────────────────────────────────────── */
@@ -213,7 +223,7 @@ h1, h2, h3, h4, h5 {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.875rem 2rem;
+  padding: 1rem 2.25rem;
   background: var(--gold);
   color: white;
   font-family: var(--font-sans);
@@ -227,8 +237,8 @@ h1, h2, h3, h4, h5 {
 .btn-gold:hover {
   background: var(--gold-dark);
   border-color: var(--gold-dark);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(201,164,93,0.35);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(201,164,93,0.4);
 }
 
 /* ─── Outline Button ────────────────────────────────────────────────────── */
@@ -236,7 +246,7 @@ h1, h2, h3, h4, h5 {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.875rem 2rem;
+  padding: 1rem 2.25rem;
   background: transparent;
   color: var(--text);
   font-family: var(--font-sans);
@@ -250,21 +260,23 @@ h1, h2, h3, h4, h5 {
 .btn-outline:hover {
   border-color: var(--gold);
   color: var(--gold);
+  transform: translateY(-1px);
 }
 
 /* ─── Form Inputs ───────────────────────────────────────────────────────── */
 .form-input {
   width: 100%;
-  padding: 0.875rem 1rem;
+  padding: 1rem 1.125rem;
   background: var(--bg);
   border: 1px solid var(--border);
   color: var(--text);
   font-family: var(--font-sans);
   font-size: 0.9375rem;
-  transition: border-color 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 .form-input:focus {
   border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(201, 164, 93, 0.1);
 }
 .form-input::placeholder {
   color: var(--text-subtle);

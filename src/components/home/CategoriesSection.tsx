@@ -8,10 +8,10 @@ export function CategoriesSection() {
   const { categories } = useData();
 
   return (
-    <section className="py-24 bg-[--bg]">
+    <section className="py-28 bg-[--bg]">
       <div className="page-container">
         {/* Header */}
-        <div className="text-center mb-12">
+        <div className="text-center mb-16">
           <p className="section-label mb-3">{t('categories.subtitle')}</p>
           <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(1.875rem, 4vw, 3rem)', fontWeight: 300 }}>
             {t('categories.title')}
@@ -20,14 +20,14 @@ export function CategoriesSection() {
         </div>
 
         {/* Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
           {categories.filter((c) => c.active).map((cat) => {
             const name = language === 'es' ? cat.name : cat.nameEn;
             return (
               <Link
                 key={cat.id}
                 to={`/catalog?category=${cat.id}`}
-                className="group flex flex-col items-center gap-3"
+                className="group flex flex-col items-center gap-4"
               >
                 {/* Image */}
                 <div
@@ -63,7 +63,7 @@ export function CategoriesSection() {
         </div>
 
         {/* View all link */}
-        <div className="text-center mt-10">
+        <div className="text-center mt-14">
           <Link
             to="/catalog"
             className="inline-flex items-center gap-2 text-[0.75rem] font-medium uppercase tracking-[0.18em] text-[--text-muted] hover:text-[--gold] transition-colors"
