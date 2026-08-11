@@ -157,11 +157,11 @@ export default function AdminTestimonialsPage() {
                   <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-2">
                       <span style={{ fontWeight: 500, fontSize: '0.9375rem', color: 'var(--text)' }}>
-                        {item.clientName}
+                        {item.name}
                       </span>
-                      {item.cityCountry && (
+                      {item.location && (
                         <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                          · {item.cityCountry}
+                          · {item.location}
                         </span>
                       )}
                     </div>
