@@ -10,8 +10,8 @@ export function HeroSection() {
 
   return (
     <section
-      className="relative min-h-[90vh] lg:min-h-screen flex items-end"
-      style={{ overflow: 'hidden' }}
+      className="relative flex items-center"
+      style={{ overflow: 'hidden', minHeight: '88vh' }}
     >
       {/* Background image */}
       <div className="absolute inset-0">
@@ -32,7 +32,7 @@ export function HeroSection() {
       </div>
 
       {/* Content */}
-      <div className="relative page-container pb-20 lg:pb-28 pt-32 w-full">
+      <div className="relative page-container py-16 lg:py-20 w-full">
         <div className="max-w-xl">
           <p
             className="section-label mb-5 animate-fade-up"
@@ -44,7 +44,7 @@ export function HeroSection() {
             className="animate-fade-up"
             style={{
               fontFamily: 'var(--font-serif)',
-              fontSize: 'clamp(2.5rem, 6vw, 4.5rem)',
+              fontSize: 'clamp(2rem, 5vw, 4rem)',
               fontWeight: 300,
               color: '#FAFAFA',
               lineHeight: 1.15,
@@ -72,13 +72,13 @@ export function HeroSection() {
             {t('hero.subtitle')}
           </p>
           <div
-            className="flex flex-col sm:flex-row gap-4 mt-8 animate-fade-up"
+            className="flex flex-col sm:flex-row gap-3 mt-8 animate-fade-up"
             style={{ animationDelay: '0.5s', opacity: 0, animationFillMode: 'forwards' }}
           >
-            <Link to="/catalog" className="btn-gold">
+            <Link to="/catalog" className="btn-gold w-full sm:w-auto text-center justify-center">
               {t('hero.cta')} <ArrowRight size={14} />
             </Link>
-            <Link to="/about" className="btn-outline" style={{ color: 'white', borderColor: 'rgba(255,255,255,0.4)' }}>
+            <Link to="/about" className="btn-outline w-full sm:w-auto text-center justify-center" style={{ color: 'white', borderColor: 'rgba(255,255,255,0.4)' }}>
               {t('hero.secondary')}
             </Link>
           </div>

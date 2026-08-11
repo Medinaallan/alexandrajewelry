@@ -45,8 +45,19 @@ export const en: Record<string, string> = {
 
   // ─── Testimonials ─────────────────────────────────────────────────────────
   'testimonials.label': 'Client Stories',
-  'testimonials.title': 'What Our Clients Say',
-
+  'testimonials.title': 'What Our Clients Say',  'testimonials.cta': 'Leave a Review',
+  'testimonials.form.title': 'Share Your Experience',
+  'testimonials.form.clientName': 'Your Name',
+  'testimonials.form.clientNamePlaceholder': 'Full name or alias',
+  'testimonials.form.message': 'Your Review',
+  'testimonials.form.messagePlaceholder': 'Tell us about your purchase experience...',
+  'testimonials.form.rating': 'Rating',
+  'testimonials.form.email': 'Email Address (optional)',
+  'testimonials.form.cityCountry': 'City, Country (optional)',
+  'testimonials.form.productPurchased': 'Product Purchased (optional)',
+  'testimonials.form.submit': 'Submit Review',
+  'testimonials.form.success': 'Thank you for your comment! Your review is under review.',
+  'testimonials.form.error': 'An error occurred. Please try again.',
   // ─── Product Card ─────────────────────────────────────────────────────────
   'product.viewDetail': 'View Detail',
   'product.addToCart': 'Add to Cart',
@@ -181,6 +192,19 @@ export const en: Record<string, string> = {
   'admin.subcategories.add': 'Add Subcategory',
   'admin.subcategories.edit': 'Edit Subcategory',
   'admin.subcategories.confirmDelete': 'Are you sure you want to delete this subcategory?',
+  'admin.testimonials.title': 'Reviews',
+  'admin.testimonials.pending': 'Pending',
+  'admin.testimonials.published': 'Published',
+  'admin.testimonials.rejected': 'Rejected',
+  'admin.testimonials.approve': 'Approve',
+  'admin.testimonials.reject': 'Reject',
+  'admin.testimonials.reconsider': 'Reconsider',
+  'admin.testimonials.deleteForever': 'Delete',
+  'admin.testimonials.hide': 'Deactivate',
+  'admin.testimonials.emptyPending': 'No pending reviews.',
+  'admin.testimonials.emptyPublished': 'No published reviews.',
+  'admin.testimonials.emptyRejected': 'No rejected reviews.',
+  'admin.testimonials.confirmDelete': 'Permanently delete this review?',
   'admin.logout': 'Logout',
 
   // ─── Common ───────────────────────────────────────────────────────────────

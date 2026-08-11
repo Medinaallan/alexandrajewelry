@@ -10,26 +10,26 @@ export function FeaturedProducts() {
   const featured = getFeaturedProducts().slice(0, 8);
 
   return (
-    <section className="py-28 bg-[--bg-subtle]">
+    <section className="py-16 md:py-24 bg-[--bg-subtle]">
       <div className="page-container">
         {/* Header */}
-        <div className="text-center mb-20">
+        <div className="text-center mb-12">
           <p className="section-label mb-3">{t('featured.label')}</p>
-          <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(1.875rem, 4vw, 3rem)', fontWeight: 300 }}>
+          <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(1.75rem, 3.5vw, 2.5rem)', fontWeight: 300 }}>
             {t('featured.title')}
           </h2>
-          <div className="gold-line mt-5" />
+          <div className="gold-line mt-4" />
         </div>
 
         {/* Product grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 lg:gap-12">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 lg:gap-8">
           {featured.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
         </div>
 
         {/* CTA */}
-        <div className="text-center mt-16">
+        <div className="text-center mt-12">
           <Link to="/catalog" className="btn-outline">
             {t('featured.viewAll')} <ArrowRight size={14} />
           </Link>

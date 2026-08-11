@@ -45,8 +45,19 @@ export const es: Record<string, string> = {
 
   // ─── Testimonials ─────────────────────────────────────────────────────────
   'testimonials.label': 'Historias de Clientes',
-  'testimonials.title': 'Lo que Dicen Nuestros Clientes',
-
+  'testimonials.title': 'Lo que Dicen Nuestros Clientes',  'testimonials.cta': 'Dejar una Reseña',
+  'testimonials.form.title': 'Comparte tu Experiencia',
+  'testimonials.form.clientName': 'Tu Nombre',
+  'testimonials.form.clientNamePlaceholder': 'Nombre completo o alias',
+  'testimonials.form.message': 'Tu Reseña',
+  'testimonials.form.messagePlaceholder': 'Cuéntanos tu experiencia de compra...',
+  'testimonials.form.rating': 'Calificación',
+  'testimonials.form.email': 'Correo Electrónico (opcional)',
+  'testimonials.form.cityCountry': 'Ciudad, País (opcional)',
+  'testimonials.form.productPurchased': 'Producto Comprado (opcional)',
+  'testimonials.form.submit': 'Enviar Reseña',
+  'testimonials.form.success': '¡Gracias por tu comentario! Tu reseña se encuentra en proceso de revisión.',
+  'testimonials.form.error': 'Ocurrió un error. Por favor intenta de nuevo.',
   // ─── Product Card ─────────────────────────────────────────────────────────
   'product.viewDetail': 'Ver Detalle',
   'product.addToCart': 'Añadir al Carrito',
@@ -181,6 +192,19 @@ export const es: Record<string, string> = {
   'admin.subcategories.add': 'Agregar Subcategoría',
   'admin.subcategories.edit': 'Editar Subcategoría',
   'admin.subcategories.confirmDelete': '¿Estás seguro de que quieres eliminar esta subcategoría?',
+  'admin.testimonials.title': 'Reseñas',
+  'admin.testimonials.pending': 'Pendientes',
+  'admin.testimonials.published': 'Publicadas',
+  'admin.testimonials.rejected': 'Rechazadas',
+  'admin.testimonials.approve': 'Aprobar',
+  'admin.testimonials.reject': 'Rechazar',
+  'admin.testimonials.reconsider': 'Reconsiderar',
+  'admin.testimonials.deleteForever': 'Eliminar',
+  'admin.testimonials.hide': 'Desactivar',
+  'admin.testimonials.emptyPending': 'No hay reseñas pendientes de revisión.',
+  'admin.testimonials.emptyPublished': 'No hay reseñas publicadas.',
+  'admin.testimonials.emptyRejected': 'No hay reseñas rechazadas.',
+  'admin.testimonials.confirmDelete': '¿Eliminar esta reseña permanentemente?',
   'admin.logout': 'Cerrar Sesión',
 
   // ─── Common ───────────────────────────────────────────────────────────────

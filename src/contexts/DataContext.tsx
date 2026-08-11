@@ -8,6 +8,58 @@ import {
 } from 'react';
 import type { Product, Category, Subcategory, Testimonial } from '../types';
 import { api } from '../lib/api';
+import { categories as localCategories } from '../data/categories';
+import { products as localProducts } from '../data/products';
+import { testimonials as localTestimonials } from '../data/testimonials';
+
+const CAT_ID: Record<string, number> = {
+  'cat-rings': 1, 'cat-necklaces': 2, 'cat-bracelets': 3,
+  'cat-earrings': 4, 'cat-sets': 5, 'cat-gold': 6,
+};
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function adaptCategory(c: any): Category {
+  return {
+    id: CAT_ID[c.id] ?? 0,
+    name: c.nameEs ?? c.name,
+    nameEn: c.name,
+    slug: c.slug,
+    image: c.image ?? '',
+    description: c.descriptionEs ?? c.description ?? '',
+    descriptionEn: c.description ?? '',
+    active: c.active ?? true,
+    createdAt: new Date().toISOString(),
+  };
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function adaptProduct(p: any, i: number): Product {
+  const id = i + 1;
+  return {
+    id,
+    code: p.id ?? `PROD-${id}`,
+    name: p.nameEs ?? p.name,
+    nameEn: p.name,
+    slug: p.slug,
+    categoryId: CAT_ID[p.categoryId] ?? 0,
+    subcategoryId: 0,
+    description: p.descriptionEs ?? p.description ?? '',
+    descriptionEn: p.description ?? '',
+    cost: null,
+    price: p.price ?? 0,
+    tax: 0,
+    stock: p.available !== false ? 10 : 0,
+    minStock: 1,
+    featured: p.featured ?? false,
+    active: p.active ?? true,
+    images: ((p.images ?? []) as string[]).map((url, j) => ({
+      id: j, productId: id, filename: url, data: url,
+      displayOrder: j, createdAt: new Date().toISOString(),
+    })),
+    createdAt: p.createdAt ?? new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+}
 
 interface DataContextType {
   products: Product[];
@@ -37,14 +89,17 @@ export function DataProvider({ children }: { children: ReactNode }) {
         api.products.list(),
         api.categories.list(),
         api.subcategories.list(),
-        api.testimonials.list(),
+        api.testimonials.listApproved(),
       ]);
       setProducts(prods);
       setCategories(cats);
       setSubcategories(subs);
       setTestimonials(tests);
     } catch (err) {
-      console.error('Failed to fetch store data:', err);
+      console.warn('API unavailable, loading local data:', err);
+      setCategories(localCategories.map(adaptCategory));
+      setProducts(localProducts.map(adaptProduct));
+      setTestimonials(localTestimonials);
     } finally {
       setLoading(false);
     }

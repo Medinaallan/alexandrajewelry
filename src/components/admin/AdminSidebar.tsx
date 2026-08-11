@@ -1,7 +1,9 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Package, Tag, Layers, LogOut, Gem } from 'lucide-react';
+import { LayoutDashboard, Package, Tag, Layers, LogOut, Gem, MessageSquare } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { useAdmin } from '../../contexts/AdminContext';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { api } from '../../lib/api';
 
 const navItems = [
   { to: '/admin/dashboard', Icon: LayoutDashboard, labelKey: 'admin.dashboard.title' },
@@ -11,9 +13,17 @@ const navItems = [
 ];
 
 export function AdminSidebar() {
-  const { logout } = useAdmin();
+  const { logout, token } = useAdmin();
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const [pendingCount, setPendingCount] = useState(0);
+
+  useEffect(() => {
+    if (!token) return;
+    api.admin.testimonials.list(token, 'pending')
+      .then((rows) => setPendingCount(rows.length))
+      .catch(() => {});
+  }, [token]);
 
   const handleLogout = () => {
     logout();
@@ -64,6 +74,45 @@ export function AdminSidebar() {
             {t(labelKey)}
           </NavLink>
         ))}
+
+        {/* Testimonials nav item */}
+        <NavLink
+          to="/admin/testimonials"
+          style={({ isActive }) => ({
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            padding: '10px 12px',
+            marginBottom: '2px',
+            borderRadius: '4px',
+            fontSize: '0.8125rem',
+            fontWeight: 400,
+            color: isActive ? 'white' : 'var(--gray-500)',
+            background: isActive ? 'rgba(201,164,93,0.15)' : 'transparent',
+            borderLeft: isActive ? '2px solid var(--gold)' : '2px solid transparent',
+            transition: 'all 0.2s',
+            letterSpacing: '0.04em',
+          })}
+        >
+          <MessageSquare size={16} />
+          <span className="flex-1">{t('admin.testimonials.title')}</span>
+          {pendingCount > 0 && (
+            <span
+              style={{
+                background: 'var(--gold)',
+                color: '#000',
+                fontSize: '0.65rem',
+                fontWeight: 700,
+                borderRadius: '10px',
+                padding: '1px 6px',
+                minWidth: '18px',
+                textAlign: 'center',
+              }}
+            >
+              {pendingCount}
+            </span>
+          )}
+        </NavLink>
       </nav>
 
       {/* Logout */}

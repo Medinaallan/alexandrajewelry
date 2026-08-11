@@ -39,9 +39,15 @@ export const api = {
   },
 
   testimonials: {
-    list: () => request<Testimonial[]>('/api/testimonials'),
-    submit: (data: { name: string; location: string; rating: number; text: string }) =>
-      request<Testimonial>('/api/testimonials', { method: 'POST', body: JSON.stringify(data) }),
+    listApproved: () => request<Testimonial[]>('/api/testimonials/approved'),
+    submit: (data: {
+      name: string;
+      text: string;
+      rating?: number;
+      location?: string;
+      email?: string;
+      productPurchased?: string;
+    }) => request<Testimonial>('/api/testimonials', { method: 'POST', body: JSON.stringify(data) }),
   },
 
   orders: {
@@ -154,16 +160,16 @@ export const api = {
     },
 
     testimonials: {
-      list: (token: string) =>
-        request<Testimonial[]>('/api/testimonials/admin/all', { headers: authHeaders(token) }),
-      setStatus: (token: string, id: number, status: 'approved' | 'rejected') =>
-        request<Testimonial>(`/api/testimonials/${id}/status`, {
+      list: (token: string, status?: string) =>
+        request<Testimonial[]>(`/api/admin/testimonials${status ? `?status=${status}` : ''}`, { headers: authHeaders(token) }),
+      setStatus: (token: string, id: number, status: 'pending' | 'approved' | 'rejected') =>
+        request<Testimonial>(`/api/admin/testimonials/${id}/status`, {
           method: 'PATCH',
           headers: authHeaders(token),
           body: JSON.stringify({ status }),
         }),
       delete: (token: string, id: number) =>
-        request<{ success: boolean }>(`/api/testimonials/${id}`, {
+        request<{ success: boolean }>(`/api/admin/testimonials/${id}`, {
           method: 'DELETE',
           headers: authHeaders(token),
         }),

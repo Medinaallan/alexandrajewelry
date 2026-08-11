@@ -9,19 +9,20 @@ export function BannerSection() {
   const { t } = useLanguage();
 
   return (
-    <section className="relative py-36 lg:py-48 flex items-center overflow-hidden">
+    <section className="relative py-28 lg:py-40 flex items-center overflow-hidden">
       {/* Background */}
-      <div className="absolute inset-0">
-        <img
-          src={BANNER_IMAGE}
-          alt="Jewelry banner"
-          className="w-full h-full object-cover"
-          style={{ objectPosition: 'center 40%' }}
-          loading="lazy"
-        />
+      <div
+        className="absolute inset-0"
+        style={{
+          backgroundImage: `url(${BANNER_IMAGE})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center 40%',
+          backgroundAttachment: 'fixed',
+        }}
+      >
         <div
           className="absolute inset-0"
-          style={{ background: 'rgba(0,0,0,0.6)' }}
+          style={{ background: 'rgba(0,0,0,0.65)' }}
         />
       </div>
 

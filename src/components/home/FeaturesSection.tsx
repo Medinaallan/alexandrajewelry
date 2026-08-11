@@ -28,19 +28,19 @@ export function FeaturesSection() {
   const { t } = useLanguage();
 
   return (
-    <section className="py-20 lg:py-28 bg-[--bg]" style={{ borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)' }}>
-      <div className="page-container">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-16">
+    <section className="bg-[--bg-subtle]" style={{ borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)' }}>
+      <div className="page-container py-5 lg:py-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-5">
           {features.map(({ Icon, titleKey, descKey }) => (
-            <div key={titleKey} className="flex items-start gap-5">
-              <div className="shrink-0 mt-0.5">
-                <Icon size={22} style={{ color: 'var(--gold)' }} strokeWidth={1.5} />
+            <div key={titleKey} className="flex items-center gap-3">
+              <div className="shrink-0">
+                <Icon size={18} style={{ color: 'var(--gold)' }} strokeWidth={1.5} />
               </div>
               <div>
-                <p style={{ fontFamily: 'var(--font-sans)', fontSize: '0.9375rem', fontWeight: 500, color: 'var(--text)', marginBottom: '6px' }}>
+                <p style={{ fontFamily: 'var(--font-sans)', fontSize: '0.8125rem', fontWeight: 500, color: 'var(--text)', marginBottom: '2px' }}>
                   {t(titleKey)}
                 </p>
-                <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', lineHeight: 1.7 }}>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>
                   {t(descKey)}
                 </p>
               </div>

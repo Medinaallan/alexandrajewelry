@@ -89,7 +89,7 @@ export default function CatalogPage() {
   ];
 
   return (
-    <main className="pb-32 pt-20">
+    <main className="pb-32 pt-12">
       <div className="page-container">
         {/* Header */}
 <div className="text-center mb-20">
