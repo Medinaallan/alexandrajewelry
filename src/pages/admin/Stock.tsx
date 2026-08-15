@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Package, TrendingUp, AlertTriangle, Plus } from 'lucide-react';
+import { Package, TrendingUp, Plus } from 'lucide-react';
 import { useAdmin } from '../../contexts/AdminContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { api } from '../../lib/api';
