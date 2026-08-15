@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Star, Check, X, RotateCcw, Trash2 } from 'lucide-react';
+import Swal from 'sweetalert2';
 import { useAdmin } from '../../contexts/AdminContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { api } from '../../lib/api';
@@ -29,7 +30,6 @@ export default function AdminTestimonialsPage() {
   const [rows, setRows] = useState<Testimonial[]>([]);
   const [counts, setCounts] = useState<Record<Tab, number>>({ pending: 0, approved: 0, rejected: 0 });
   const [loading, setLoading] = useState(false);
-  const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
 
   const fetchTab = useCallback(async (status: Tab) => {
     if (!token) return;
@@ -70,9 +70,20 @@ export default function AdminTestimonialsPage() {
   const handleDelete = async (id: number) => {
     if (!token) return;
     await api.admin.testimonials.delete(token, id);
-    setConfirmDelete(null);
     await fetchTab(tab);
     await fetchCounts();
+  };
+
+  const handleDeleteWithConfirm = async (id: number) => {
+    const result = await Swal.fire({
+      title: t('admin.testimonials.confirmDelete'),
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: t('common.yes'),
+      cancelButtonText: t('common.no'),
+      confirmButtonColor: '#ef4444',
+    });
+    if (result.isConfirmed) await handleDelete(id);
   };
 
   const cardStyle: React.CSSProperties = {
@@ -232,35 +243,13 @@ export default function AdminTestimonialsPage() {
                     </button>
                   )}
                   {tab === 'rejected' && (
-                    confirmDelete === item.id ? (
-                      <div className="flex items-center gap-2">
-                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                          {t('admin.testimonials.confirmDelete')}
-                        </span>
-                        <button
-                          onClick={() => { void handleDelete(item.id); }}
-                          className="flex items-center gap-1 px-2 py-1 text-xs rounded"
-                          style={{ background: '#ef4444', color: '#fff' }}
-                        >
-                          {t('common.yes')}
-                        </button>
-                        <button
-                          onClick={() => setConfirmDelete(null)}
-                          className="text-xs px-2 py-1"
-                          style={{ color: 'var(--text-muted)' }}
-                        >
-                          {t('common.no')}
-                        </button>
-                      </div>
-                    ) : (
-                      <Button
-                        variant="danger"
-                        size="sm"
-                        onClick={() => setConfirmDelete(item.id)}
-                      >
-                        <Trash2 size={13} /> {t('admin.testimonials.deleteForever')}
-                      </Button>
-                    )
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      onClick={() => { void handleDeleteWithConfirm(item.id); }}
+                    >
+                      <Trash2 size={13} /> {t('admin.testimonials.deleteForever')}
+                    </Button>
                   )}
                 </div>
               </div>

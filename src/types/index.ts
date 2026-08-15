@@ -101,6 +101,49 @@ export interface AdminUser {
   createdAt: string;
 }
 
+export interface StockProduct {
+  id: number;
+  code: string;
+  name: string;
+  price: number;
+  stock: number;
+  minStock: number;
+  active: boolean;
+}
+
+export interface StockMovement {
+  id: number;
+  productId: number;
+  productName: string;
+  productCode: string;
+  currentStock: number;
+  quantity: number;
+  type: 'entry' | 'adjustment' | 'return';
+  notes: string;
+  createdBy: string;
+  createdAt: string;
+}
+
+export interface Sale {
+  id: number;
+  productId: number;
+  productName: string;
+  quantity: number;
+  unitPrice: number;
+  total: number;
+  notes: string;
+  soldBy: string;
+  createdAt: string;
+}
+
+export interface SaleReport {
+  productId: number;
+  productName: string;
+  totalQuantity: number;
+  totalRevenue: number;
+  salesCount: number;
+}
+
 // ─── Filter/Sort Types ─────────────────────────────────────────────────────────
 
 export type SortOption = 'newest' | 'price-asc' | 'price-desc' | 'name-asc';

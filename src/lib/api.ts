@@ -1,4 +1,4 @@
-import type { Product, Category, Subcategory, Testimonial, AdminUser, CheckoutForm, CartItem, ProductImage } from '../types';
+import type { Product, Category, Subcategory, Testimonial, AdminUser, CheckoutForm, CartItem, ProductImage, StockProduct, StockMovement, Sale, SaleReport } from '../types';
 
 const BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8787';
 
@@ -238,6 +238,32 @@ export const api = {
           method: 'PATCH',
           headers: authHeaders(token),
           body: JSON.stringify({ order }),
+        }),
+    },
+
+    stock: {
+      products: (token: string) =>
+        request<StockProduct[]>('/api/stock/products', { headers: authHeaders(token) }),
+      movements: (token: string) =>
+        request<StockMovement[]>('/api/stock', { headers: authHeaders(token) }),
+      add: (token: string, data: { productId: number; quantity: number; type?: string; notes?: string }) =>
+        request<StockMovement & { newStock: number }>('/api/stock', {
+          method: 'POST',
+          headers: authHeaders(token),
+          body: JSON.stringify(data),
+        }),
+    },
+
+    sales: {
+      list: (token: string) =>
+        request<Sale[]>('/api/sales', { headers: authHeaders(token) }),
+      report: (token: string) =>
+        request<SaleReport[]>('/api/sales/report', { headers: authHeaders(token) }),
+      create: (token: string, data: { productId: number; quantity: number; unitPrice?: number; notes?: string }) =>
+        request<Sale>('/api/sales', {
+          method: 'POST',
+          headers: authHeaders(token),
+          body: JSON.stringify(data),
         }),
     },
   },

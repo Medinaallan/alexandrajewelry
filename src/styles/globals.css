@@ -298,6 +298,74 @@ h1, h2, h3, h4, h5 {
   animation: slideInRight 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* ─── SweetAlert2 Theme ─────────────────────────────────────────────────── */
+.swal2-popup {
+  background: var(--bg) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-xl) !important;
+  color: var(--text) !important;
+  padding: 2rem !important;
+}
+.swal2-title {
+  color: var(--text) !important;
+  font-family: var(--font-serif) !important;
+  font-size: 1.375rem !important;
+  font-weight: 300 !important;
+  padding: 0 2rem 0.875rem 0 !important;
+  margin: 0 !important;
+  text-align: left !important;
+  border-bottom: 1px solid var(--border) !important;
+  margin-bottom: 1.25rem !important;
+}
+.swal2-html-container {
+  color: var(--text-muted) !important;
+  text-align: left !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  font-size: 0.875rem !important;
+  overflow: visible !important;
+}
+.swal2-icon { margin: 0 auto 1rem !important; }
+.swal2-close {
+  color: var(--text-muted) !important;
+  top: 1.125rem !important;
+  right: 1.125rem !important;
+  width: 2rem !important;
+  height: 2rem !important;
+  font-size: 1.25rem !important;
+}
+.swal2-close:hover { color: var(--text) !important; background: none !important; }
+.swal2-confirm {
+  border: none !important;
+  color: #fff !important;
+  font-family: var(--font-sans) !important;
+  font-size: 0.6875rem !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+  padding: 0.625rem 1.5rem !important;
+  border-radius: var(--radius) !important;
+}
+.swal2-cancel {
+  background: transparent !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text) !important;
+  font-family: var(--font-sans) !important;
+  font-size: 0.6875rem !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+  padding: 0.625rem 1.5rem !important;
+  border-radius: var(--radius) !important;
+}
+.swal2-actions {
+  gap: 0.75rem !important;
+  margin-top: 1.5rem !important;
+  justify-content: flex-start !important;
+}
+.swal2-backdrop-show { background: rgba(0,0,0,0.55) !important; }
+
 /* ─── Admin Sidebar ─────────────────────────────────────────────────────── */
 .admin-layout {
   display: flex;

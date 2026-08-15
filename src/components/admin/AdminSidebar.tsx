@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Package, Tag, Layers, LogOut, Gem, MessageSquare } from 'lucide-react';
+import { LayoutDashboard, Package, Tag, Layers, LogOut, Gem, MessageSquare, Boxes, ShoppingBag, BarChart2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useAdmin } from '../../contexts/AdminContext';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -10,6 +10,9 @@ const navItems = [
   { to: '/admin/products', Icon: Package, labelKey: 'admin.products.title' },
   { to: '/admin/categories', Icon: Tag, labelKey: 'admin.categories.title' },
   { to: '/admin/subcategories', Icon: Layers, labelKey: 'admin.subcategories.title' },
+  { to: '/admin/stock', Icon: Boxes, labelKey: 'admin.stock.title' },
+  { to: '/admin/sales', Icon: ShoppingBag, labelKey: 'admin.sales.title' },
+  { to: '/admin/reports', Icon: BarChart2, labelKey: 'admin.reports.title' },
 ];
 
 export function AdminSidebar() {
