@@ -29,15 +29,15 @@ export function FeaturesSection() {
 
   return (
     <section className="bg-[--bg-subtle]" style={{ borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)' }}>
-      <div className="page-container py-5 lg:py-6">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-5">
+      <div className="page-container py-6 lg:py-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-6 lg:divide-x divide-[--border]">
           {features.map(({ Icon, titleKey, descKey }) => (
-            <div key={titleKey} className="flex items-center gap-3">
+            <div key={titleKey} className="flex items-center gap-3.5 lg:px-6 lg:first:pl-0">
               <div className="shrink-0">
-                <Icon size={18} style={{ color: 'var(--gold)' }} strokeWidth={1.5} />
+                <Icon size={20} style={{ color: 'var(--gold)' }} strokeWidth={1.5} />
               </div>
               <div>
-                <p style={{ fontFamily: 'var(--font-sans)', fontSize: '0.8125rem', fontWeight: 500, color: 'var(--text)', marginBottom: '2px' }}>
+                <p style={{ fontFamily: 'var(--font-sans)', fontSize: '0.8125rem', fontWeight: 600, color: 'var(--text)', marginBottom: '3px' }}>
                   {t(titleKey)}
                 </p>
                 <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>

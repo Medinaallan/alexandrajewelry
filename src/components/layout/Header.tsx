@@ -73,10 +73,7 @@ export function Header() {
 
         {/* ── Main nav ──────────────────────────────────────────────────────── */}
         <header>
-          <div
-            className="page-container h-16 lg:h-[68px] flex items-center"
-            style={{ position: 'relative' }}
-          >
+          <div className="page-container h-16 lg:h-[68px] grid grid-cols-[auto_1fr_auto] items-center gap-4">
             {/* Logo — left */}
             <Link
               to="/"
@@ -91,11 +88,8 @@ export function Header() {
               </span>
             </Link>
 
-            {/* Nav — absolutely centered on desktop */}
-            <nav
-              className="hidden lg:flex items-center gap-8"
-              style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}
-            >
+            {/* Nav — centered in the middle grid column on desktop */}
+            <nav className="hidden lg:flex items-center justify-center gap-8">
               {navLinks.map(({ to, label }) => (
                 <NavLink
                   key={to}
@@ -120,36 +114,38 @@ export function Header() {
               ))}
             </nav>
 
-            {/* Actions — right */}
-            <div className="ml-auto flex items-center gap-0.5">
-              <button
-                onClick={() => setLanguage(language === 'en' ? 'es' : 'en')}
-                className="flex items-center gap-1 px-2 py-2 text-[--text-muted] hover:text-[--gold] transition-colors"
-                aria-label="Toggle language"
-              >
-                <Globe size={15} />
-                <span className="hidden sm:inline" style={{ fontSize: '10px', fontWeight: 500, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-                  {language === 'en' ? 'ES' : 'EN'}
-                </span>
-              </button>
+            {/* Actions — pinned to the right edge of the row */}
+            <div className="flex items-center justify-end gap-1 lg:gap-2">
+              <div className="flex items-center gap-1 pr-2 lg:pr-3 mr-1 lg:mr-2" style={{ borderRight: '1px solid var(--border)' }}>
+                <button
+                  onClick={() => setLanguage(language === 'en' ? 'es' : 'en')}
+                  className="flex items-center gap-1.5 px-2.5 py-2 rounded-full text-[--text-muted] hover:text-[--gold] hover:bg-[--bg-subtle] transition-colors"
+                  aria-label="Toggle language"
+                >
+                  <Globe size={18} />
+                  <span className="hidden sm:inline" style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+                    {language === 'en' ? 'ES' : 'EN'}
+                  </span>
+                </button>
 
-              <button onClick={toggleTheme} className="p-2 text-[--text-muted] hover:text-[--gold] transition-colors" aria-label="Toggle theme">
-                {isDark ? <Sun size={16} /> : <Moon size={16} />}
-              </button>
+                <button onClick={toggleTheme} className="p-2.5 rounded-full text-[--text-muted] hover:text-[--gold] hover:bg-[--bg-subtle] transition-colors" aria-label="Toggle theme">
+                  {isDark ? <Sun size={18} /> : <Moon size={18} />}
+                </button>
+              </div>
 
-              <button onClick={() => setSearchOpen(true)} className="p-2 text-[--text-muted] hover:text-[--gold] transition-colors" aria-label={t('nav.search')}>
-                <Search size={16} />
+              <button onClick={() => setSearchOpen(true)} className="p-2.5 rounded-full text-[--text-muted] hover:text-[--gold] hover:bg-[--bg-subtle] transition-colors" aria-label={t('nav.search')}>
+                <Search size={18} />
               </button>
 
               <button
                 onClick={openCart}
-                className="relative p-2 text-[--text-muted] hover:text-[--gold] transition-colors"
+                className="relative p-2.5 rounded-full text-[--text-muted] hover:text-[--gold] hover:bg-[--bg-subtle] transition-colors"
                 aria-label={t('nav.cart')}
               >
-                <ShoppingBag size={16} />
+                <ShoppingBag size={18} />
                 {totalItems > 0 && (
                   <span
-                    className="absolute -top-0.5 -right-0.5 flex items-center justify-center w-[17px] h-[17px] rounded-full text-white"
+                    className="absolute top-0.5 right-0.5 flex items-center justify-center w-[17px] h-[17px] rounded-full text-white"
                     style={{ background: 'var(--gold)', fontSize: '9px', fontWeight: 600 }}
                   >
                     {totalItems > 9 ? '9+' : totalItems}
@@ -159,7 +155,7 @@ export function Header() {
 
               <button
                 onClick={() => setMobileOpen((o) => !o)}
-                className="lg:hidden p-2 text-[--text-muted] hover:text-[--gold] transition-colors ml-1"
+                className="lg:hidden p-2.5 rounded-full text-[--text-muted] hover:text-[--gold] hover:bg-[--bg-subtle] transition-colors ml-1"
                 aria-label="Menu"
               >
                 {mobileOpen ? <X size={20} /> : <Menu size={20} />}
