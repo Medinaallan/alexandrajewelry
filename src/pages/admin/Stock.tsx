@@ -1,12 +1,12 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Package, TrendingUp, Plus } from 'lucide-react';
+import { Package, Plus } from 'lucide-react';
 import { useAdmin } from '../../contexts/AdminContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { api } from '../../lib/api';
 import { AdminSidebar } from '../../components/admin/AdminSidebar';
 import { Button } from '../../components/ui/Button';
 import { formatPrice } from '../../utils/formatPrice';
-import type { StockProduct, StockMovement } from '../../types';
+import type { StockProduct } from '../../types';
 
 type MovementType = 'entry' | 'adjustment' | 'return';
 
@@ -25,7 +25,6 @@ export default function AdminStockPage() {
   const { t } = useLanguage();
 
   const [products, setProducts] = useState<StockProduct[]>([]);
-  const [movements, setMovements] = useState<StockMovement[]>([]);
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
 
@@ -42,12 +41,8 @@ export default function AdminStockPage() {
     if (!token) return;
     setLoading(true);
     try {
-      const [p, m] = await Promise.all([
-        api.admin.stock.products(token),
-        api.admin.stock.movements(token),
-      ]);
+      const p = await api.admin.stock.products(token);
       setProducts(p);
-      setMovements(m);
     } finally {
       setLoading(false);
     }
@@ -61,12 +56,12 @@ export default function AdminStockPage() {
     setFormError('');
     const qty = Number(form.quantity);
     if (!form.productId || !qty) { setFormError('Completa todos los campos.'); return; }
-    const finalQty = form.type === 'adjustment' ? qty : form.type === 'return' ? qty : qty;
+    if (!form.notes.trim()) { setFormError('El motivo es obligatorio.'); return; }
     setSaving(true);
     try {
       await api.admin.stock.add(token, {
         productId: Number(form.productId),
-        quantity: finalQty,
+        quantity: qty,
         type: form.type,
         notes: form.notes,
       });
@@ -84,13 +79,6 @@ export default function AdminStockPage() {
     if (p.stock === 0) return { label: t('admin.stock.critical'), color: '#ef4444' };
     if (p.stock <= p.minStock) return { label: t('admin.stock.lowStock'), color: '#f59e0b' };
     return { label: t('admin.stock.ok'), color: '#22c55e' };
-  };
-
-  const movementTypeLabel = (type: string) => {
-    if (type === 'entry') return t('admin.stock.entry');
-    if (type === 'adjustment') return t('admin.stock.adjustment');
-    if (type === 'return') return t('admin.stock.return');
-    return type;
   };
 
   const sectionCard: React.CSSProperties = {
@@ -151,9 +139,16 @@ export default function AdminStockPage() {
                     style={inputStyle}
                     value={form.quantity}
                     onChange={(e) => setForm((f) => ({ ...f, quantity: e.target.value }))}
-                    min={-9999}
+                    min={0}
                     required
                   />
+                  <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                    {form.type === 'adjustment'
+                      ? 'Nuevo stock total del producto.'
+                      : form.type === 'return'
+                        ? 'Cantidad a restar del stock.'
+                        : 'Cantidad a sumar al stock.'}
+                  </p>
                 </div>
 
                 <div>
@@ -173,14 +168,14 @@ export default function AdminStockPage() {
 
                 <div>
                   <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '4px' }}>
-                    {t('admin.stock.notes')}
+                    {t('admin.stock.notes')} *
                   </label>
                   <input
                     type="text"
                     style={inputStyle}
                     value={form.notes}
                     onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
-                    placeholder="Opcional..."
+                    required
                   />
                 </div>
               </div>
@@ -210,7 +205,7 @@ export default function AdminStockPage() {
         ) : (
           <>
             {/* Products stock table */}
-            <div style={{ ...sectionCard, marginBottom: '2rem' }}>
+            <div style={sectionCard}>
               <h2 style={{ fontSize: '1rem', fontWeight: 500, color: 'var(--text)', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Package size={16} style={{ color: 'var(--gold)' }} />
                 {t('admin.stock.product')}
@@ -247,51 +242,6 @@ export default function AdminStockPage() {
                   </tbody>
                 </table>
               </div>
-            </div>
-
-            {/* Movement History */}
-            <div style={sectionCard}>
-              <h2 style={{ fontSize: '1rem', fontWeight: 500, color: 'var(--text)', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <TrendingUp size={16} style={{ color: 'var(--gold)' }} />
-                {t('admin.stock.history')}
-              </h2>
-              {movements.length === 0 ? (
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>{t('admin.stock.noMovements')}</p>
-              ) : (
-                <div style={{ overflowX: 'auto' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8125rem' }}>
-                    <thead>
-                      <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                        {[t('admin.stock.product'), t('admin.stock.quantity'), t('admin.stock.type'), t('admin.stock.notes'), t('admin.stock.createdBy'), t('admin.sales.date')].map((h) => (
-                          <th key={h} style={{ textAlign: 'left', padding: '8px 12px', color: 'var(--text-muted)', fontWeight: 500, fontSize: '0.75rem', letterSpacing: '0.04em' }}>{h}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {movements.map((m) => (
-                        <tr key={m.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                          <td style={{ padding: '10px 12px', color: 'var(--text)', fontWeight: 500 }}>{m.productName}</td>
-                          <td style={{ padding: '10px 12px' }}>
-                            <span style={{ fontWeight: 700, color: m.quantity >= 0 ? '#22c55e' : '#ef4444' }}>
-                              {m.quantity >= 0 ? '+' : ''}{m.quantity}
-                            </span>
-                          </td>
-                          <td style={{ padding: '10px 12px' }}>
-                            <span style={{ background: 'var(--bg-secondary)', color: 'var(--text-muted)', fontSize: '0.7rem', padding: '2px 8px', borderRadius: '10px' }}>
-                              {movementTypeLabel(m.type)}
-                            </span>
-                          </td>
-                          <td style={{ padding: '10px 12px', color: 'var(--text-muted)' }}>{m.notes || '—'}</td>
-                          <td style={{ padding: '10px 12px', color: 'var(--text-muted)' }}>{m.createdBy || '—'}</td>
-                          <td style={{ padding: '10px 12px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
-                            {new Date(m.createdAt).toLocaleString('es-VE', { dateStyle: 'short', timeStyle: 'short' })}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
             </div>
           </>
         )}

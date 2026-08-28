@@ -209,6 +209,7 @@ export const en: Record<string, string> = {
 
   // ─── Stock ────────────────────────────────────────────────────────────────
   'admin.stock.title': 'Stock',
+  'admin.stock.viewAdjust': 'View/Adjust Stock',
   'admin.stock.add': 'Register Entry',
   'admin.stock.product': 'Product',
   'admin.stock.code': 'Code',
@@ -216,7 +217,7 @@ export const en: Record<string, string> = {
   'admin.stock.minStock': 'Min Stock',
   'admin.stock.quantity': 'Quantity',
   'admin.stock.type': 'Movement Type',
-  'admin.stock.notes': 'Notes',
+  'admin.stock.notes': 'Motive',
   'admin.stock.createdBy': 'Registered by',
   'admin.stock.entry': 'Entry',
   'admin.stock.adjustment': 'Adjustment',
