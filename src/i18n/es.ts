@@ -247,6 +247,12 @@ export const es: Record<string, string> = {
   'admin.sales.available': 'Disponible',
   'admin.sales.insufficientStock': 'Stock insuficiente para esta cantidad.',
   'admin.sales.success': 'Venta registrada exitosamente.',
+  'admin.sales.emptyCart': 'No hay productos agregados.',
+  'admin.sales.allCategories': 'Todas',
+  'admin.sales.allSubcategories': 'Todas',
+  'admin.sales.searchProducts': 'Buscar productos...',
+  'admin.sales.noProducts': 'No se encontraron productos.',
+  'admin.sales.outOfStock': 'Agotado',
 
   // ─── Reports ─────────────────────────────────────────────────────────────
   'admin.reports.title': 'Reportes',

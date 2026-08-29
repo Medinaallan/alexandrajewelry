@@ -21,6 +21,7 @@ const AdminTestimonials  = lazy(() => import('../pages/admin/Testimonials'));
 const AdminStock         = lazy(() => import('../pages/admin/Stock'));
 const AdminStockMovements = lazy(() => import('../pages/admin/StockMovements'));
 const AdminSales         = lazy(() => import('../pages/admin/Sales'));
+const AdminSalesHistory  = lazy(() => import('../pages/admin/SalesHistory'));
 const AdminReports       = lazy(() => import('../pages/admin/Reports'));
 
 function PageLoader() {
@@ -163,6 +164,14 @@ export function AppRoutes() {
           element={
             <AdminRoute>
               <AdminSales />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/sales/history"
+          element={
+            <AdminRoute>
+              <AdminSalesHistory />
             </AdminRoute>
           }
         />

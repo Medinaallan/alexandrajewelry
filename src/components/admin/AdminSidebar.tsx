@@ -1,5 +1,5 @@
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Package, Tag, Layers, LogOut, Gem, MessageSquare, Boxes, ShoppingBag, BarChart2, ChevronDown } from 'lucide-react';
+import { LayoutDashboard, Package, Tag, Layers, LogOut, Gem, MessageSquare, Boxes, ShoppingBag, BarChart2, ChevronDown, type LucideIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useAdmin } from '../../contexts/AdminContext';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -13,13 +13,30 @@ const navItemsTop = [
 ];
 
 const navItemsBottom = [
-  { to: '/admin/sales', Icon: ShoppingBag, labelKey: 'admin.sales.title' },
   { to: '/admin/reports', Icon: BarChart2, labelKey: 'admin.reports.title' },
 ];
 
-const stockChildren = [
-  { to: '/admin/stock', end: true, labelKey: 'admin.stock.viewAdjust' },
-  { to: '/admin/stock/movements', end: false, labelKey: 'admin.stock.history' },
+const dropdowns = [
+  {
+    key: 'stock',
+    basePath: '/admin/stock',
+    Icon: Boxes,
+    labelKey: 'admin.stock.title',
+    children: [
+      { to: '/admin/stock', end: true, labelKey: 'admin.stock.viewAdjust' },
+      { to: '/admin/stock/movements', end: false, labelKey: 'admin.stock.history' },
+    ],
+  },
+  {
+    key: 'sales',
+    basePath: '/admin/sales',
+    Icon: ShoppingBag,
+    labelKey: 'admin.sales.title',
+    children: [
+      { to: '/admin/sales', end: true, labelKey: 'admin.sales.register' },
+      { to: '/admin/sales/history', end: false, labelKey: 'admin.sales.recent' },
+    ],
+  },
 ];
 
 const navLinkStyle = ({ isActive }: { isActive: boolean }): React.CSSProperties => ({
@@ -38,13 +55,90 @@ const navLinkStyle = ({ isActive }: { isActive: boolean }): React.CSSProperties 
   letterSpacing: '0.04em',
 });
 
+const childNavLinkStyle = ({ isActive }: { isActive: boolean }): React.CSSProperties => ({
+  display: 'block',
+  padding: '8px 12px',
+  marginBottom: '2px',
+  borderRadius: '4px',
+  fontSize: '0.75rem',
+  fontWeight: 400,
+  color: isActive ? 'white' : 'var(--gray-500)',
+  background: isActive ? 'rgba(201,164,93,0.15)' : 'transparent',
+  borderLeft: isActive ? '2px solid var(--gold)' : '2px solid transparent',
+  transition: 'all 0.2s',
+  letterSpacing: '0.04em',
+});
+
+function NavDropdown({
+  Icon,
+  label,
+  isActive,
+  isOpen,
+  onToggle,
+  children,
+}: {
+  Icon: LucideIcon;
+  label: string;
+  isActive: boolean;
+  isOpen: boolean;
+  onToggle: () => void;
+  children: { to: string; end: boolean; label: string }[];
+}) {
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={onToggle}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          width: '100%',
+          padding: '10px 12px',
+          marginBottom: '2px',
+          borderRadius: '4px',
+          fontSize: '0.8125rem',
+          fontWeight: 400,
+          color: isActive ? 'white' : 'var(--gray-500)',
+          background: isActive ? 'rgba(201,164,93,0.15)' : 'transparent',
+          border: 'none',
+          borderLeft: isActive ? '2px solid var(--gold)' : '2px solid transparent',
+          cursor: 'pointer',
+          transition: 'all 0.2s',
+          letterSpacing: '0.04em',
+        }}
+      >
+        <span style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <Icon size={16} />
+          {label}
+        </span>
+        <ChevronDown
+          size={14}
+          style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}
+        />
+      </button>
+      {isOpen && (
+        <div style={{ marginLeft: '16px', marginBottom: '2px' }}>
+          {children.map(({ to, end, label: childLabel }) => (
+            <NavLink key={to} to={to} end={end} style={childNavLinkStyle}>
+              {childLabel}
+            </NavLink>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function AdminSidebar() {
   const { logout, token } = useAdmin();
   const { t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
   const [pendingCount, setPendingCount] = useState(0);
-  const [stockOpen, setStockOpen] = useState(location.pathname.startsWith('/admin/stock'));
+  const [openDropdown, setOpenDropdown] = useState<string | null>(
+    dropdowns.find((d) => location.pathname.startsWith(d.basePath))?.key ?? null
+  );
 
   useEffect(() => {
     if (!token) return;
@@ -54,10 +148,9 @@ export function AdminSidebar() {
   }, [token]);
 
   useEffect(() => {
-    if (location.pathname.startsWith('/admin/stock')) setStockOpen(true);
+    const active = dropdowns.find((d) => location.pathname.startsWith(d.basePath));
+    if (active) setOpenDropdown(active.key);
   }, [location.pathname]);
-
-  const isStockActive = location.pathname.startsWith('/admin/stock');
 
   const handleLogout = () => {
     logout();
@@ -91,64 +184,17 @@ export function AdminSidebar() {
           </NavLink>
         ))}
 
-        {/* Stock dropdown */}
-        <button
-          type="button"
-          onClick={() => setStockOpen((v) => !v)}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            width: '100%',
-            padding: '10px 12px',
-            marginBottom: '2px',
-            borderRadius: '4px',
-            fontSize: '0.8125rem',
-            fontWeight: 400,
-            color: isStockActive ? 'white' : 'var(--gray-500)',
-            background: isStockActive ? 'rgba(201,164,93,0.15)' : 'transparent',
-            border: 'none',
-            borderLeft: isStockActive ? '2px solid var(--gold)' : '2px solid transparent',
-            cursor: 'pointer',
-            transition: 'all 0.2s',
-            letterSpacing: '0.04em',
-          }}
-        >
-          <span style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <Boxes size={16} />
-            {t('admin.stock.title')}
-          </span>
-          <ChevronDown
-            size={14}
-            style={{ transform: stockOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}
+        {dropdowns.map(({ key, basePath, Icon, labelKey, children }) => (
+          <NavDropdown
+            key={key}
+            Icon={Icon}
+            label={t(labelKey)}
+            isActive={location.pathname.startsWith(basePath)}
+            isOpen={openDropdown === key}
+            onToggle={() => setOpenDropdown((v) => (v === key ? null : key))}
+            children={children.map((c) => ({ ...c, label: t(c.labelKey) }))}
           />
-        </button>
-        {stockOpen && (
-          <div style={{ marginLeft: '16px', marginBottom: '2px' }}>
-            {stockChildren.map(({ to, end, labelKey }) => (
-              <NavLink
-                key={to}
-                to={to}
-                end={end}
-                style={({ isActive }) => ({
-                  display: 'block',
-                  padding: '8px 12px',
-                  marginBottom: '2px',
-                  borderRadius: '4px',
-                  fontSize: '0.75rem',
-                  fontWeight: 400,
-                  color: isActive ? 'white' : 'var(--gray-500)',
-                  background: isActive ? 'rgba(201,164,93,0.15)' : 'transparent',
-                  borderLeft: isActive ? '2px solid var(--gold)' : '2px solid transparent',
-                  transition: 'all 0.2s',
-                  letterSpacing: '0.04em',
-                })}
-              >
-                {t(labelKey)}
-              </NavLink>
-            ))}
-          </div>
-        )}
+        ))}
 
         {navItemsBottom.map(({ to, Icon, labelKey }) => (
           <NavLink key={to} to={to} style={navLinkStyle}>
