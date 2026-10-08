@@ -134,6 +134,11 @@ export const es: Record<string, string> = {
   'checkout.whatsappMsg': 'Envía los detalles de tu pedido por WhatsApp para una confirmación rápida.',
   'checkout.sendWhatsapp': 'Enviar por WhatsApp',
   'checkout.required': 'Este campo es obligatorio',
+  'checkout.error': 'No pudimos registrar tu pedido. Revisa tu conexión e intenta de nuevo.',
+  'checkout.orderNumber': 'Pedido',
+  'checkout.receiptType': 'El comprobante debe ser una imagen (JPG, PNG, WebP) o un PDF.',
+  'checkout.receiptTooBig': 'El comprobante no puede superar los 5 MB.',
+  'checkout.receiptNotUploaded': 'Tu pedido quedó registrado, pero no pudimos guardar el comprobante. Envíanoslo por WhatsApp, por favor.',
 
   // ─── About ────────────────────────────────────────────────────────────────
   'about.title': 'Nuestra Historia',
@@ -266,6 +271,24 @@ export const es: Record<string, string> = {
   'admin.reports.product': 'Producto',
   'admin.reports.quantity': 'Unidades',
 
+  // ─── Admin Orders ─────────────────────────────────────────────────────────
+  'admin.orders.title': 'Pedidos',
+  'admin.orders.empty': 'Todavía no hay pedidos.',
+  'admin.orders.customer': 'Cliente',
+  'admin.orders.items': 'Productos',
+  'admin.orders.total': 'Total',
+  'admin.orders.payment': 'Pago',
+  'admin.orders.status': 'Estado',
+  'admin.orders.date': 'Fecha',
+  'admin.orders.viewReceipt': 'Ver comprobante',
+  'admin.orders.error': 'No se pudo completar la acción.',
+  'admin.orders.status.pending': 'Pendiente',
+  'admin.orders.status.confirmed': 'Confirmado',
+  'admin.orders.status.paid': 'Pagado',
+  'admin.orders.status.shipped': 'Enviado',
+  'admin.orders.status.delivered': 'Entregado',
+  'admin.orders.status.cancelled': 'Cancelado',
+
   // ─── Common ───────────────────────────────────────────────────────────────
   'common.save': 'Guardar',
   'common.cancel': 'Cancelar',
@@ -279,4 +302,8 @@ export const es: Record<string, string> = {
   'common.back': 'Volver',
   'common.viewAll': 'Ver Todo',
   'common.close': 'Cerrar',
+  'common.retry': 'Reintentar',
+  'common.loadError': 'No pudimos cargar el catálogo. Revisa tu conexión e intenta de nuevo.',
+  'notFound.message': 'Página no encontrada.',
+  'notFound.goHome': 'Ir al Inicio',
 };

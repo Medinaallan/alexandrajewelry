@@ -1,5 +1,7 @@
 import { lazy, Suspense } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Link } from 'react-router-dom';
+import { useData } from '../contexts/DataContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { Header } from '../components/layout/Header';
 import { Footer } from '../components/layout/Footer';
 import { CartDrawer } from '../components/cart/CartDrawer';
@@ -23,6 +25,7 @@ const AdminStockMovements = lazy(() => import('../pages/admin/StockMovements'));
 const AdminSales         = lazy(() => import('../pages/admin/Sales'));
 const AdminSalesHistory  = lazy(() => import('../pages/admin/SalesHistory'));
 const AdminReports       = lazy(() => import('../pages/admin/Reports'));
+const AdminOrders        = lazy(() => import('../pages/admin/Orders'));
 
 function PageLoader() {
   return (
@@ -35,11 +38,49 @@ function PageLoader() {
   );
 }
 
+/** Shown when the catalog could not be loaded from the API */
+function CatalogErrorBanner() {
+  const { error, loading, refetch } = useData();
+  const { t } = useLanguage();
+  if (!error) return null;
+  return (
+    <div
+      role="alert"
+      className="flex flex-wrap items-center justify-center gap-4 px-4 py-3 text-center"
+      style={{ background: 'rgba(239,68,68,0.08)', borderBottom: '1px solid rgba(239,68,68,0.25)', fontSize: '0.875rem' }}
+    >
+      <span>{t('common.loadError')}</span>
+      <button
+        type="button"
+        disabled={loading}
+        onClick={() => void refetch()}
+        className="text-xs uppercase tracking-widest underline hover:text-[--gold] transition-colors"
+      >
+        {loading ? t('common.loading') : t('common.retry')}
+      </button>
+    </div>
+  );
+}
+
+function NotFoundPage() {
+  const { t } = useLanguage();
+  return (
+    <div className="page-container py-32 text-center">
+      <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: '4rem', fontWeight: 300, color: 'var(--text-muted)', marginBottom: '1rem' }}>
+        404
+      </h1>
+      <p style={{ fontSize: '1.125rem', marginBottom: '2rem' }}>{t('notFound.message')}</p>
+      <Link to="/" className="btn-gold inline-block">{t('notFound.goHome')}</Link>
+    </div>
+  );
+}
+
 /** Main store layout with header + footer */
 function StoreLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
       <Header />
+      <CatalogErrorBanner />
       <CartDrawer />
       {children}
       <Footer />
@@ -144,6 +185,14 @@ export function AppRoutes() {
           }
         />
         <Route
+          path="/admin/orders"
+          element={
+            <AdminRoute>
+              <AdminOrders />
+            </AdminRoute>
+          }
+        />
+        <Route
           path="/admin/stock"
           element={
             <AdminRoute>
@@ -189,13 +238,7 @@ export function AppRoutes() {
           path="*"
           element={
             <StoreLayout>
-              <div className="page-container py-32 text-center">
-                <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: '4rem', fontWeight: 300, color: 'var(--text-muted)', marginBottom: '1rem' }}>
-                  404
-                </h1>
-                <p style={{ fontSize: '1.125rem', marginBottom: '2rem' }}>Page not found.</p>
-                <a href="/" className="btn-gold inline-block">Go Home</a>
-              </div>
+              <NotFoundPage />
             </StoreLayout>
           }
         />

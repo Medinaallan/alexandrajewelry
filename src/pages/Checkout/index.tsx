@@ -6,9 +6,13 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { formatPrice } from '../../utils/formatPrice';
 import { generateWhatsAppMessage } from '../../utils/generateWhatsAppMessage';
 import { Button } from '../../components/ui/Button';
+import { api } from '../../lib/api';
 import type { CheckoutForm } from '../../types';
 
-type Step = 'form' | 'payment' | 'success';
+type Step = 'form' | 'success';
+
+const MAX_RECEIPT_BYTES = 5 * 1024 * 1024;
+const RECEIPT_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
 
 const PAYMENT_METHODS = [
   { id: 'transfer', icon: '🏦' },
@@ -25,6 +29,9 @@ export default function CheckoutPage() {
   const [step, setStep] = useState<Step>('form');
   const [loading, setLoading] = useState(false);
   const [transferFile, setTransferFile] = useState<File | null>(null);
+  const [fileError, setFileError] = useState('');
+  const [submitError, setSubmitError] = useState('');
+  const [placed, setPlaced] = useState<{ id: number; whatsappUrl?: string; receiptMissing: boolean } | null>(null);
   const [form, setForm] = useState<CheckoutForm>({
     name: '',
     phone: '',
@@ -32,7 +39,6 @@ export default function CheckoutPage() {
     city: '',
     notes: '',
     paymentMethod: 'transfer',
-    transferFile: null,
   });
   const [errors, setErrors] = useState<Partial<Record<keyof CheckoutForm, string>>>({});
 
@@ -49,19 +55,43 @@ export default function CheckoutPage() {
     return Object.keys(e).length === 0;
   };
 
+  const handleFile = (file: File | null) => {
+    setFileError('');
+    if (file && !RECEIPT_TYPES.includes(file.type)) {
+      setFileError(t('checkout.receiptType'));
+      return;
+    }
+    if (file && file.size > MAX_RECEIPT_BYTES) {
+      setFileError(t('checkout.receiptTooBig'));
+      return;
+    }
+    setTransferFile(file);
+  };
+
   const handleConfirm = async () => {
     if (!validate()) return;
+    setSubmitError('');
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 900));
-    setLoading(false);
+    try {
+      const receipt = form.paymentMethod === 'transfer' ? transferFile : null;
+      const order = await api.orders.create(form, items, receipt);
 
-    if (form.paymentMethod === 'whatsapp') {
-      const url = generateWhatsAppMessage(items, total, form.name);
-      window.open(url, '_blank', 'noopener,noreferrer');
+      let whatsappUrl: string | undefined;
+      if (form.paymentMethod === 'whatsapp') {
+        whatsappUrl = generateWhatsAppMessage(items, order.total, form.name, order.id);
+        // May be blocked as a pop-up; the success screen also shows the link
+        window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+      }
+
+      setPlaced({ id: order.id, whatsappUrl, receiptMissing: Boolean(receipt) && !order.receiptUploaded });
+      clearCart();
+      setStep('success');
+    } catch (err) {
+      // The cart is kept so the customer can try again
+      setSubmitError(err instanceof Error && err.message !== 'Failed to fetch' ? err.message : t('checkout.error'));
+    } finally {
+      setLoading(false);
     }
-
-    clearCart();
-    setStep('success');
   };
 
   if (items.length === 0 && step !== 'success') {
@@ -96,12 +126,29 @@ export default function CheckoutPage() {
         >
           {t('checkout.success')}
         </h1>
+        {placed && (
+          <p style={{ fontFamily: 'var(--font-serif)', fontSize: '1.25rem', marginBottom: '1rem' }}>
+            {t('checkout.orderNumber')} #{placed.id}
+          </p>
+        )}
         <p style={{ color: 'var(--text-muted)', lineHeight: 1.7, marginBottom: '2.5rem', fontSize: '0.9375rem' }}>
           {t('checkout.successMsg')}
         </p>
-        <Link to="/" className="btn-gold inline-flex items-center gap-2">
-          <ArrowLeft size={14} /> {t('checkout.backHome')}
-        </Link>
+        {placed?.receiptMissing && (
+          <p style={{ fontSize: '0.875rem', color: '#ef4444', marginBottom: '2rem' }}>
+            {t('checkout.receiptNotUploaded')}
+          </p>
+        )}
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          {placed?.whatsappUrl && (
+            <a href={placed.whatsappUrl} target="_blank" rel="noopener noreferrer" className="btn-gold inline-flex items-center gap-2">
+              {t('checkout.sendWhatsapp')}
+            </a>
+          )}
+          <Link to="/" className={`${placed?.whatsappUrl ? 'btn-outline' : 'btn-gold'} inline-flex items-center gap-2`}>
+            <ArrowLeft size={14} /> {t('checkout.backHome')}
+          </Link>
+        </div>
       </div>
     );
   }
@@ -138,21 +185,21 @@ export default function CheckoutPage() {
               </h2>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <CheckoutField label={t('checkout.name')} error={errors.name}>
-                  <input className="form-input" placeholder={t('checkout.name')} value={form.name} onChange={(e) => set('name', e.target.value)} />
+                <CheckoutField label={t('checkout.name')} error={errors.name} htmlFor="checkout-name">
+                  <input id="checkout-name" autoComplete="name" className="form-input" placeholder={t('checkout.name')} value={form.name} onChange={(e) => set('name', e.target.value)} />
                 </CheckoutField>
-                <CheckoutField label={t('checkout.phone')} error={errors.phone}>
-                  <input className="form-input" type="tel" placeholder={t('checkout.phone')} value={form.phone} onChange={(e) => set('phone', e.target.value)} />
+                <CheckoutField label={t('checkout.phone')} error={errors.phone} htmlFor="checkout-phone">
+                  <input id="checkout-phone" autoComplete="tel" className="form-input" type="tel" placeholder={t('checkout.phone')} value={form.phone} onChange={(e) => set('phone', e.target.value)} />
                 </CheckoutField>
               </div>
-              <CheckoutField label={t('checkout.address')} error={errors.address}>
-                <input className="form-input" placeholder={t('checkout.address')} value={form.address} onChange={(e) => set('address', e.target.value)} />
+              <CheckoutField label={t('checkout.address')} error={errors.address} htmlFor="checkout-address">
+                <input id="checkout-address" autoComplete="street-address" className="form-input" placeholder={t('checkout.address')} value={form.address} onChange={(e) => set('address', e.target.value)} />
               </CheckoutField>
-              <CheckoutField label={t('checkout.city')} error={errors.city}>
-                <input className="form-input" placeholder={t('checkout.city')} value={form.city} onChange={(e) => set('city', e.target.value)} />
+              <CheckoutField label={t('checkout.city')} error={errors.city} htmlFor="checkout-city">
+                <input id="checkout-city" autoComplete="address-level2" className="form-input" placeholder={t('checkout.city')} value={form.city} onChange={(e) => set('city', e.target.value)} />
               </CheckoutField>
-              <CheckoutField label={t('checkout.notes')}>
-                <textarea className="form-input resize-none" rows={3} placeholder={t('checkout.notes')} value={form.notes} onChange={(e) => set('notes', e.target.value)} />
+              <CheckoutField label={t('checkout.notes')} htmlFor="checkout-notes">
+                <textarea id="checkout-notes" className="form-input resize-none" rows={3} placeholder={t('checkout.notes')} value={form.notes} onChange={(e) => set('notes', e.target.value)} />
               </CheckoutField>
             </section>
 
@@ -166,7 +213,9 @@ export default function CheckoutPage() {
                 {PAYMENT_METHODS.map(({ id, icon }) => (
                   <button
                     key={id}
-                    onClick={() => set('paymentMethod', id as CheckoutForm['paymentMethod'])}
+                    type="button"
+                    aria-pressed={form.paymentMethod === id}
+                    onClick={() => set('paymentMethod', id)}
                     className="flex flex-col items-center gap-2 py-4 px-3 transition-all"
                     style={{
                       border: `1px solid ${form.paymentMethod === id ? 'var(--gold)' : 'var(--border)'}`,
@@ -207,9 +256,10 @@ export default function CheckoutPage() {
                         type="file"
                         accept="image/*,.pdf"
                         className="hidden"
-                        onChange={(e) => setTransferFile(e.target.files?.[0] ?? null)}
+                        onChange={(e) => handleFile(e.target.files?.[0] ?? null)}
                       />
                     </label>
+                    {fileError && <span style={{ fontSize: '0.75rem', color: '#ef4444' }}>{fileError}</span>}
                   </div>
                 )}
                 {form.paymentMethod === 'googlepay' && (
@@ -262,9 +312,7 @@ export default function CheckoutPage() {
                         </div>
                         <div className="flex-1 flex flex-col gap-0.5 min-w-0">
                           <p style={{ fontSize: '0.875rem', lineHeight: 1.3 }} className="line-clamp-2">{name}</p>
-                          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                            {t('cart.items').replace('items', '')} ×{quantity}
-                          </p>
+                          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>×{quantity}</p>
                         </div>
                         <span style={{ fontSize: '0.875rem', fontWeight: 500, flexShrink: 0 }}>
                           {formatPrice(product.price * quantity)}
@@ -287,7 +335,12 @@ export default function CheckoutPage() {
                     <span style={{ fontFamily: 'var(--font-serif)', fontSize: '1.0625rem' }}>{formatPrice(total)}</span>
                   </div>
                 </div>
-                <div className="px-6 pb-6">
+                <div className="px-6 pb-6 flex flex-col gap-3">
+                  {submitError && (
+                    <p role="alert" style={{ fontSize: '0.8125rem', color: '#ef4444', padding: '0.625rem 0.875rem', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
+                      {submitError}
+                    </p>
+                  )}
                   <Button variant="gold" className="w-full justify-center" isLoading={loading} onClick={handleConfirm}>
                     <Check size={15} /> {t('checkout.confirm')}
                   </Button>
@@ -301,10 +354,10 @@ export default function CheckoutPage() {
   );
 }
 
-function CheckoutField({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
+function CheckoutField({ label, error, htmlFor, children }: { label: string; error?: string; htmlFor: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label style={{ fontSize: '0.6875rem', fontWeight: 500, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
+      <label htmlFor={htmlFor} style={{ fontSize: '0.6875rem', fontWeight: 500, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
         {label}
       </label>
       {children}

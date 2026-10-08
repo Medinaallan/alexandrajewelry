@@ -1,16 +1,22 @@
 import type { CartItem } from '../types';
 import { formatPrice } from './formatPrice';
 
-const WHATSAPP_NUMBER = '15550000000'; // Replace with real number
+// Store's WhatsApp number: country code + number, digits only.
+// Set VITE_WHATSAPP_NUMBER in .env.local and in the Vercel project settings.
+export const WHATSAPP_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER ?? '15550000000';
+
+export const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}`;
 
 export function generateWhatsAppMessage(
   items: CartItem[],
   total: number,
-  customerName: string
+  customerName: string,
+  orderId?: number
 ): string {
   const lines = [
     `Hello! I would like to place an order 🛍️`,
     ``,
+    ...(orderId ? [`*Order #${orderId}*`] : []),
     `*Customer:* ${customerName}`,
     ``,
     `*Order Details:*`,
@@ -25,5 +31,5 @@ export function generateWhatsAppMessage(
   ];
 
   const message = lines.join('\n');
-  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+  return `${WHATSAPP_URL}?text=${encodeURIComponent(message)}`;
 }

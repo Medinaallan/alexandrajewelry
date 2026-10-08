@@ -1,19 +1,29 @@
-import type { Product, Category, Subcategory, Testimonial, AdminUser, CheckoutForm, CartItem, ProductImage, StockProduct, StockMovement, Sale, SaleReport } from '../types';
+import type { Product, Category, Subcategory, Testimonial, AdminUser, CheckoutForm, CartItem, ProductImage, StockProduct, StockMovement, Sale, SaleReport, Order, OrderStatus } from '../types';
 
 const BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8787';
 
-async function request<T>(path: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-  });
+// Called when the API rejects the admin token (expired or revoked session)
+let onUnauthorized: (() => void) | null = null;
+export function setUnauthorizedHandler(handler: (() => void) | null) {
+  onUnauthorized = handler;
+}
+
+async function send(path: string, options?: RequestInit): Promise<Response> {
+  const headers = new Headers(options?.headers);
+  // FormData sets its own multipart Content-Type (with the boundary)
+  if (!(options?.body instanceof FormData)) headers.set('Content-Type', 'application/json');
+
+  const res = await fetch(`${BASE}${path}`, { ...options, headers });
   if (!res.ok) {
+    if (res.status === 401 && headers.has('Authorization')) onUnauthorized?.();
     const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error((err as { error: string }).error ?? res.statusText);
+    throw new Error((err as { error?: string }).error ?? res.statusText);
   }
+  return res;
+}
+
+async function request<T>(path: string, options?: RequestInit): Promise<T> {
+  const res = await send(path, options);
   return res.json() as Promise<T>;
 }
 
@@ -51,20 +61,26 @@ export const api = {
   },
 
   orders: {
-    create: (form: CheckoutForm, items: CartItem[], total: number) =>
-      request<{ id: number }>('/api/orders', {
-        method: 'POST',
-        body: JSON.stringify({
-          name: form.name,
-          phone: form.phone,
-          address: form.address,
-          city: form.city,
-          notes: form.notes,
-          paymentMethod: form.paymentMethod,
-          items,
-          total,
-        }),
-      }),
+    // Only product ids and quantities are sent: the API prices the order itself.
+    create: (form: CheckoutForm, items: CartItem[], receipt?: File | null) => {
+      const data = {
+        name: form.name,
+        phone: form.phone,
+        address: form.address,
+        city: form.city,
+        notes: form.notes,
+        paymentMethod: form.paymentMethod,
+        items: items.map((i) => ({ productId: i.product.id, quantity: i.quantity })),
+      };
+      let body: BodyInit = JSON.stringify(data);
+      if (receipt) {
+        const formData = new FormData();
+        formData.append('data', JSON.stringify(data));
+        formData.append('receipt', receipt);
+        body = formData;
+      }
+      return request<{ id: number; total: number; receiptUploaded: boolean }>('/api/orders', { method: 'POST', body });
+    },
   },
 
   // ─── Admin (requires JWT token) ─────────────────────────────────────────────
@@ -177,13 +193,18 @@ export const api = {
 
     orders: {
       list: (token: string) =>
-        request<unknown[]>('/api/orders', { headers: authHeaders(token) }),
-      updateStatus: (token: string, id: number, status: string) =>
-        request<unknown>(`/api/orders/${id}/status`, {
+        request<Order[]>('/api/orders', { headers: authHeaders(token) }),
+      updateStatus: (token: string, id: number, status: OrderStatus) =>
+        request<Order>(`/api/orders/${id}/status`, {
           method: 'PATCH',
           headers: authHeaders(token),
           body: JSON.stringify({ status }),
         }),
+      // The transfer receipt is private, so it is downloaded with the admin token
+      receipt: async (token: string, id: number) => {
+        const res = await send(`/api/orders/${id}/receipt`, { headers: authHeaders(token) });
+        return res.blob();
+      },
     },
 
     users: {
@@ -261,6 +282,13 @@ export const api = {
         request<SaleReport[]>('/api/sales/report', { headers: authHeaders(token) }),
       create: (token: string, data: { productId: number; quantity: number; unitPrice?: number; notes?: string }) =>
         request<Sale>('/api/sales', {
+          method: 'POST',
+          headers: authHeaders(token),
+          body: JSON.stringify(data),
+        }),
+      // Several products in one sale: either all lines are registered or none
+      createBatch: (token: string, data: { lines: Array<{ productId: number; quantity: number; unitPrice?: number }>; notes?: string }) =>
+        request<Sale[]>('/api/sales/batch', {
           method: 'POST',
           headers: authHeaders(token),
           body: JSON.stringify(data),

@@ -85,7 +85,11 @@ function ProductFormModal({ editing, token, categories, subcategories, onDone }:
       };
       let productId: number;
       if (editing) {
-        const updated = await api.admin.products.update(token, editing.id, payload);
+        // Stock also changes through sales and stock movements, so it is only
+        // sent when it was edited here; otherwise a stale value would undo them.
+        const { stock, ...rest } = payload;
+        const changes = stock === editing.stock ? rest : payload;
+        const updated = await api.admin.products.update(token, editing.id, changes);
         productId = updated.id;
       } else {
         const created = await api.admin.products.create(token, payload);

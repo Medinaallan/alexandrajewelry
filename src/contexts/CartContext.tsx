@@ -1,11 +1,49 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
 import type { CartContextType, CartItem, Product } from '../types';
+import { useData } from './DataContext';
+
+const CART_KEY = 'alexandra-cart';
 
 const CartContext = createContext<CartContextType | null>(null);
 
+function loadCart(): CartItem[] {
+  try {
+    const saved: unknown = JSON.parse(localStorage.getItem(CART_KEY) ?? '[]');
+    if (!Array.isArray(saved)) return [];
+    return saved.filter(
+      (i): i is CartItem =>
+        typeof i?.product?.id === 'number' && Number.isInteger(i?.quantity) && i.quantity > 0
+    );
+  } catch {
+    return [];
+  }
+}
+
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>([]);
+  const { products, loading, error } = useData();
+  const [items, setItems] = useState<CartItem[]>(loadCart);
   const [isOpen, setIsOpen] = useState(false);
+
+  // The cart survives a page reload
+  useEffect(() => {
+    try {
+      localStorage.setItem(CART_KEY, JSON.stringify(items));
+    } catch {
+      // storage full or blocked: the cart just won't be remembered
+    }
+  }, [items]);
+
+  // Once the catalog is loaded, refresh saved items with current prices and
+  // drop products that are no longer on sale.
+  useEffect(() => {
+    if (loading || error) return;
+    setItems((prev) =>
+      prev.flatMap((item) => {
+        const current = products.find((p) => p.id === item.product.id && p.active);
+        return current ? [{ ...item, product: current }] : [];
+      })
+    );
+  }, [products, loading, error]);
 
   const addItem = useCallback((product: Product, quantity = 1) => {
     setItems((prev) => {

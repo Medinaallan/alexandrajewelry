@@ -125,24 +125,17 @@ export default function AdminSalesPage() {
     setFormError('');
     setFormSuccess('');
     setSaving(true);
-    const remaining = [...cart];
     try {
-      while (remaining.length > 0) {
-        const line = remaining[0];
-        await api.admin.sales.create(token, {
-          productId: line.productId,
-          quantity: line.quantity,
-          unitPrice: line.unitPrice,
-          notes,
-        });
-        remaining.shift();
-      }
+      // One request for the whole sale: every line is registered, or none is
+      await api.admin.sales.createBatch(token, {
+        lines: cart.map((l) => ({ productId: l.productId, quantity: l.quantity, unitPrice: l.unitPrice })),
+        notes,
+      });
       setFormSuccess(t('admin.sales.success'));
       setCart([]);
       setNotes('');
     } catch (err) {
       setFormError(err instanceof Error ? err.message : 'Error al registrar.');
-      setCart(remaining);
     } finally {
       setSaving(false);
       await fetchData();

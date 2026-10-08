@@ -76,7 +76,31 @@ export interface CheckoutForm {
   city: string;
   notes: string;
   paymentMethod: 'transfer' | 'googlepay' | 'paypal' | 'whatsapp';
-  transferFile?: File | null;
+}
+
+export type OrderStatus = 'pending' | 'confirmed' | 'paid' | 'shipped' | 'delivered' | 'cancelled';
+
+export interface OrderItem {
+  productId: number;
+  code: string;
+  name: string;
+  price: number;
+  quantity: number;
+  subtotal: number;
+}
+
+export interface Order {
+  id: number;
+  customerName: string;
+  customerPhone: string;
+  customerAddress: string;
+  customerCity: string;
+  notes: string;
+  paymentMethod: CheckoutForm['paymentMethod'];
+  items: OrderItem[];
+  total: number;
+  status: OrderStatus;
+  createdAt: string;
 }
 
 export interface Testimonial {

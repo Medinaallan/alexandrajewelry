@@ -68,7 +68,7 @@ export default function CatalogPage() {
     }
 
     return result;
-  }, [filters]);
+  }, [filters, products]);
 
   const setFilter = <K extends keyof CatalogFilters>(key: K, value: CatalogFilters[K]) => {
     setFilters((prev) => ({ ...prev, [key]: value }));

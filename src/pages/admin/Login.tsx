@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { Gem, Eye, EyeOff } from 'lucide-react';
 import { useAdmin } from '../../contexts/AdminContext';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -17,16 +17,12 @@ export default function AdminLoginPage() {
   const [loading, setLoading] = useState(false);
 
   // If already authenticated redirect
-  if (isAuthenticated) {
-    navigate('/admin/dashboard', { replace: true });
-    return null;
-  }
+  if (isAuthenticated) return <Navigate to="/admin/dashboard" replace />;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 600));
     const ok = await login(username, password);
     setLoading(false);
     if (ok) {
@@ -112,10 +108,6 @@ export default function AdminLoginPage() {
             {t('admin.login.submit')}
           </Button>
         </form>
-
-        <p style={{ textAlign: 'center', fontSize: '0.75rem', color: 'var(--gray-600)' }}>
-          Demo credentials: admin / alexandra2026
-        </p>
       </div>
     </div>
   );

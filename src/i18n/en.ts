@@ -134,6 +134,11 @@ export const en: Record<string, string> = {
   'checkout.whatsappMsg': 'Send your order details via WhatsApp for quick confirmation.',
   'checkout.sendWhatsapp': 'Send via WhatsApp',
   'checkout.required': 'This field is required',
+  'checkout.error': 'We could not place your order. Check your connection and try again.',
+  'checkout.orderNumber': 'Order',
+  'checkout.receiptType': 'The receipt must be an image (JPG, PNG, WebP) or a PDF.',
+  'checkout.receiptTooBig': 'The receipt cannot be larger than 5 MB.',
+  'checkout.receiptNotUploaded': 'Your order was placed, but we could not save the receipt. Please send it to us on WhatsApp.',
 
   // ─── About ────────────────────────────────────────────────────────────────
   'about.title': 'Our Story',
@@ -279,4 +284,26 @@ export const en: Record<string, string> = {
   'common.back': 'Back',
   'common.viewAll': 'View All',
   'common.close': 'Close',
+  'common.retry': 'Retry',
+  'common.loadError': 'We could not load the catalog. Check your connection and try again.',
+  'notFound.message': 'Page not found.',
+  'notFound.goHome': 'Go Home',
+
+  // ─── Admin Orders ─────────────────────────────────────────────────────────
+  'admin.orders.title': 'Orders',
+  'admin.orders.empty': 'There are no orders yet.',
+  'admin.orders.customer': 'Customer',
+  'admin.orders.items': 'Products',
+  'admin.orders.total': 'Total',
+  'admin.orders.payment': 'Payment',
+  'admin.orders.status': 'Status',
+  'admin.orders.date': 'Date',
+  'admin.orders.viewReceipt': 'View receipt',
+  'admin.orders.error': 'The action could not be completed.',
+  'admin.orders.status.pending': 'Pending',
+  'admin.orders.status.confirmed': 'Confirmed',
+  'admin.orders.status.paid': 'Paid',
+  'admin.orders.status.shipped': 'Shipped',
+  'admin.orders.status.delivered': 'Delivered',
+  'admin.orders.status.cancelled': 'Cancelled',
 };

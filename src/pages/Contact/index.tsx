@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { MessageCircle, Clock, MapPin, Globe, Hash } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { Button } from '../../components/ui/Button';
+import { WHATSAPP_URL } from '../../utils/generateWhatsAppMessage';
 
 interface FormState {
   name: string;
@@ -121,7 +122,7 @@ export default function ContactPage() {
                 {t('contact.privacy')}
               </p>
               <a
-                href="https://wa.me/15550000000"
+                href={WHATSAPP_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn-gold self-start mt-2 flex items-center gap-2"

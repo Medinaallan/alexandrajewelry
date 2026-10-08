@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
 import type { Language, LanguageContextType } from '../types';
 import { en } from '../i18n/en';
 import { es } from '../i18n/es';
@@ -12,6 +12,11 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     const saved = localStorage.getItem('alexandra-lang') as Language | null;
     return saved === 'es' ? 'es' : 'en';
   });
+
+  // Screen readers and search engines read the page language from <html lang>
+  useEffect(() => {
+    document.documentElement.lang = language;
+  }, [language]);
 
   const setLanguage = useCallback((lang: Language) => {
     setLanguageState(lang);

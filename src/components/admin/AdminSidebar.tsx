@@ -1,5 +1,5 @@
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Package, Tag, Layers, LogOut, Gem, MessageSquare, Boxes, ShoppingBag, BarChart2, ChevronDown, type LucideIcon } from 'lucide-react';
+import { LayoutDashboard, Package, Tag, Layers, LogOut, Gem, MessageSquare, Boxes, ShoppingBag, BarChart2, ChevronDown, ClipboardList, type LucideIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useAdmin } from '../../contexts/AdminContext';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -136,6 +136,7 @@ export function AdminSidebar() {
   const navigate = useNavigate();
   const location = useLocation();
   const [pendingCount, setPendingCount] = useState(0);
+  const [pendingOrders, setPendingOrders] = useState(0);
   const [openDropdown, setOpenDropdown] = useState<string | null>(
     dropdowns.find((d) => location.pathname.startsWith(d.basePath))?.key ?? null
   );
@@ -144,6 +145,9 @@ export function AdminSidebar() {
     if (!token) return;
     api.admin.testimonials.list(token, 'pending')
       .then((rows) => setPendingCount(rows.length))
+      .catch(() => {});
+    api.admin.orders.list(token)
+      .then((rows) => setPendingOrders(rows.filter((o) => o.status === 'pending').length))
       .catch(() => {});
   }, [token]);
 
@@ -183,6 +187,28 @@ export function AdminSidebar() {
             {t(labelKey)}
           </NavLink>
         ))}
+
+        {/* Orders placed from the store */}
+        <NavLink to="/admin/orders" style={navLinkStyle}>
+          <ClipboardList size={16} />
+          <span className="flex-1">{t('admin.orders.title')}</span>
+          {pendingOrders > 0 && (
+            <span
+              style={{
+                background: 'var(--gold)',
+                color: '#000',
+                fontSize: '0.65rem',
+                fontWeight: 700,
+                borderRadius: '10px',
+                padding: '1px 6px',
+                minWidth: '18px',
+                textAlign: 'center',
+              }}
+            >
+              {pendingOrders}
+            </span>
+          )}
+        </NavLink>
 
         {dropdowns.map(({ key, basePath, Icon, labelKey, children }) => (
           <NavDropdown
