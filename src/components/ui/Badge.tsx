@@ -7,10 +7,10 @@ interface BadgeProps {
 }
 
 const variantClasses = {
-  gold:    'bg-[--gold] text-white',
-  dark:    'bg-[--black] text-white',
-  new:     'bg-[--black] text-white',
-  sale:    'bg-[--gold] text-white',
+  gold:    'bg-(--gold) text-white',
+  dark:    'bg-(--black) text-white',
+  new:     'bg-(--black) text-white',
+  sale:    'bg-(--gold) text-white',
   popular: 'bg-[--gray-800] text-white',
 };
 

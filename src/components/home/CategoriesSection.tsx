@@ -65,7 +65,7 @@ export function CategoriesSection() {
         <div className="text-center mt-12">
           <Link
             to="/catalog"
-            className="inline-flex items-center gap-2 text-[--text-muted] hover:text-[--gold] transition-colors"
+            className="inline-flex items-center gap-2 text-(--text-muted) hover:text-(--gold) transition-colors"
             style={{ fontSize: '0.75rem', fontWeight: 500, letterSpacing: '0.18em', textTransform: 'uppercase' }}
           >
             {t('categories.viewAll')} <ArrowRight size={12} />

@@ -69,10 +69,10 @@ export default function ProductDetailPage() {
     <main className="pb-24">
       {/* Breadcrumb */}
       <div className="page-container py-6" style={{ borderBottom: '1px solid var(--border)' }}>
-        <nav className="flex items-center gap-2 text-xs text-[--text-muted]">
-          <Link to="/" className="hover:text-[--gold] transition-colors">{t('nav.home')}</Link>
+        <nav className="flex items-center gap-2 text-xs text-(--text-muted)">
+          <Link to="/" className="hover:text-(--gold) transition-colors">{t('nav.home')}</Link>
           <span>/</span>
-          <Link to="/catalog" className="hover:text-[--gold] transition-colors">{t('nav.catalog')}</Link>
+          <Link to="/catalog" className="hover:text-(--gold) transition-colors">{t('nav.catalog')}</Link>
           <span>/</span>
           <span style={{ color: 'var(--text)' }}>{name}</span>
         </nav>
@@ -178,7 +178,7 @@ export default function ProductDetailPage() {
             {/* Details */}
             <div className="flex flex-col gap-3">
               <div className="flex items-center gap-4 py-4" style={{ borderBottom: '1px solid var(--border)' }}>
-                <span className="w-28 shrink-0 text-xs uppercase tracking-widest text-[--text-muted]">
+                <span className="w-28 shrink-0 text-xs uppercase tracking-widest text-(--text-muted)">
                   {t('detail.availability')}
                 </span>
                 <span style={{ fontSize: '0.875rem', color: product.active ? 'var(--gold)' : 'var(--text-muted)', fontWeight: product.active ? 500 : 400 }}>
@@ -187,7 +187,7 @@ export default function ProductDetailPage() {
               </div>
               {product.code && (
                 <div className="flex items-center gap-4 py-4" style={{ borderBottom: '1px solid var(--border)' }}>
-                  <span className="w-28 shrink-0 text-xs uppercase tracking-widest text-[--text-muted]">
+                  <span className="w-28 shrink-0 text-xs uppercase tracking-widest text-(--text-muted)">
                     {t('detail.category')}
                   </span>
                   <span style={{ fontSize: '0.875rem', color: 'var(--text)' }}>{product.code}</span>
@@ -198,13 +198,13 @@ export default function ProductDetailPage() {
             {/* Quantity + Add to cart */}
             <div className="flex flex-col gap-6">
               <div className="flex items-center gap-4">
-                <span className="text-xs uppercase tracking-widest text-[--text-muted]">
+                <span className="text-xs uppercase tracking-widest text-(--text-muted)">
                   {t('detail.quantity')}
                 </span>
                 <div className="flex items-center" style={{ border: '1px solid var(--border)' }}>
                   <button
                     onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                    className="px-4 py-3 hover:text-[--gold] transition-colors text-lg leading-none"
+                    className="px-4 py-3 hover:text-(--gold) transition-colors text-lg leading-none"
                   >
                     -
                   </button>
@@ -213,7 +213,7 @@ export default function ProductDetailPage() {
                   </span>
                   <button
                     onClick={() => setQuantity((q) => q + 1)}
-                    className="px-4 py-3 hover:text-[--gold] transition-colors text-lg leading-none"
+                    className="px-4 py-3 hover:text-(--gold) transition-colors text-lg leading-none"
                   >
                     +
                   </button>
@@ -232,7 +232,7 @@ export default function ProductDetailPage() {
                 </Button>
                 <button
                   onClick={handleShare}
-                  className="p-4 border border-[--border] hover:border-[--gold] hover:text-[--gold] transition-colors"
+                  className="p-4 border border-(--border) hover:border-(--gold) hover:text-(--gold) transition-colors"
                   aria-label={t('detail.share')}
                 >
                   <Share2 size={17} />

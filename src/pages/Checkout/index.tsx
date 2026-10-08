@@ -159,7 +159,7 @@ export default function CheckoutPage() {
         <div className="mb-10">
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-xs uppercase tracking-widest text-[--text-muted] hover:text-[--gold] transition-colors"
+            className="flex items-center gap-2 text-xs uppercase tracking-widest text-(--text-muted) hover:text-(--gold) transition-colors"
           >
             <ArrowLeft size={14} /> {t('common.back')}
           </button>
@@ -247,7 +247,7 @@ export default function CheckoutPage() {
                         ? 'Por favor realiza tu transferencia a los datos bancarios que te enviaremos por mensaje. Luego sube el comprobante.'
                         : 'Please make your transfer to the bank details we will send you by message. Then upload your receipt.'}
                     </p>
-                    <label className="flex flex-col items-center gap-3 py-8 border-2 border-dashed border-[--border] cursor-pointer hover:border-[--gold] transition-colors">
+                    <label className="flex flex-col items-center gap-3 py-8 border-2 border-dashed border-(--border) cursor-pointer hover:border-(--gold) transition-colors">
                       <Upload size={24} style={{ color: transferFile ? 'var(--gold)' : 'var(--text-muted)' }} />
                       <span style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', textAlign: 'center' }}>
                         {transferFile ? transferFile.name : t('checkout.transferDrag')}
@@ -302,7 +302,7 @@ export default function CheckoutPage() {
                     {t('checkout.orderSummary')}
                   </h2>
                 </div>
-                <ul className="divide-y divide-[--border]">
+                <ul className="divide-y divide-(--border)">
                   {items.map(({ product, quantity }) => {
                     const name = language === 'es' ? product.name : product.nameEn;
                     return (

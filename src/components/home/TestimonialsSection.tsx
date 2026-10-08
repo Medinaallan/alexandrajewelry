@@ -146,7 +146,7 @@ export function TestimonialsSection() {
   };
 
   return (
-    <section className="py-16 md:py-24 bg-[--bg]">
+    <section className="py-16 md:py-24 bg-(--bg)">
       <div className="page-container">
         {/* Header */}
         <div className="text-center mb-12">
@@ -158,11 +158,11 @@ export function TestimonialsSection() {
         </div>
 
         {/* Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="flex flex-wrap justify-center gap-6">
           {testimonials.map((item) => (
             <div
               key={item.id}
-              className="flex flex-col gap-5 p-6"
+              className="flex flex-col gap-5 p-6 w-full md:w-[calc(33.333%-1rem)]"
               style={{ border: '1px solid var(--border)', background: 'var(--bg-subtle)', borderRadius: '8px' }}
             >
               {/* Stars */}

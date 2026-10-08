@@ -28,9 +28,9 @@ export function FeaturesSection() {
   const { t } = useLanguage();
 
   return (
-    <section className="bg-[--bg-subtle]" style={{ borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)' }}>
+    <section className="bg-(--bg-subtle)" style={{ borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)' }}>
       <div className="page-container py-6 lg:py-8">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-6 lg:divide-x divide-[--border]">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-6 lg:divide-x divide-(--border)">
           {features.map(({ Icon, titleKey, descKey }) => (
             <div key={titleKey} className="flex items-center gap-3.5 lg:px-6 lg:first:pl-0">
               <div className="shrink-0">

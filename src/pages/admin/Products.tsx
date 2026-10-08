@@ -206,7 +206,7 @@ function ProductFormModal({ editing, token, categories, subcategories, onDone }:
       <div className="flex flex-wrap gap-4">
         {([['active', 'Activo'], ['featured', 'Destacado']] as const).map(([key, label]) => (
           <label key={key} className="flex items-center gap-2 cursor-pointer text-sm">
-            <input type="checkbox" checked={Boolean(form[key])} onChange={(e) => set(key, e.target.checked)} className="accent-[--gold]" />
+            <input type="checkbox" checked={Boolean(form[key])} onChange={(e) => set(key, e.target.checked)} className="accent-(--gold)" />
             {label}
           </label>
         ))}
@@ -292,7 +292,7 @@ export default function AdminProductsPage() {
               </thead>
               <tbody>
                 {filtered.map((p) => (
-                  <tr key={p.id} style={{ borderBottom: '1px solid var(--border)' }} className="hover:bg-[--bg-subtle] transition-colors">
+                  <tr key={p.id} style={{ borderBottom: '1px solid var(--border)' }} className="hover:bg-(--bg-subtle) transition-colors">
                     <td className="px-4 py-3">
                       <div className="w-10 h-10 overflow-hidden bg-[--gray-100] shrink-0 flex items-center justify-center">
                         {p.images?.[0]?.data
@@ -304,7 +304,7 @@ export default function AdminProductsPage() {
                     <td className="px-4 py-3" style={{ maxWidth: '180px' }}>
                       <div className="flex flex-col">
                         <span className="font-medium truncate" style={{ color: 'var(--text)', fontSize: '0.8125rem' }}>{p.name}</span>
-                        {p.featured && <span className="text-[10px] text-[--gold]">★ Destacado</span>}
+                        {p.featured && <span className="text-[10px] text-(--gold)">★ Destacado</span>}
                       </div>
                     </td>
                     <td className="px-4 py-3" style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{p.code}</td>
@@ -313,17 +313,17 @@ export default function AdminProductsPage() {
                     </td>
                     <td className="px-4 py-3" style={{ fontWeight: 500, whiteSpace: 'nowrap' }}>{formatPrice(p.price)}</td>
                     <td className="px-4 py-3">
-                      <button onClick={async () => { await api.admin.products.update(token!, p.id, { active: !p.active }); await refetch(); }} className="flex items-center gap-1.5 hover:text-[--gold] transition-colors text-[--text-muted]">
+                      <button onClick={async () => { await api.admin.products.update(token!, p.id, { active: !p.active }); await refetch(); }} className="flex items-center gap-1.5 hover:text-(--gold) transition-colors text-(--text-muted)">
                         {p.active ? <ToggleRight size={20} style={{ color: '#22c55e' }} /> : <ToggleLeft size={20} />}
                         <span style={{ fontSize: '0.6875rem', fontWeight: 500 }}>{p.active ? t('common.active') : t('common.inactive')}</span>
                       </button>
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1">
-                        <button onClick={() => openEdit(p)} className="p-1.5 hover:text-[--gold] transition-colors text-[--text-muted]" title={t('common.edit')}>
+                        <button onClick={() => openEdit(p)} className="p-1.5 hover:text-(--gold) transition-colors text-(--text-muted)" title={t('common.edit')}>
                           <Edit2 size={14} />
                         </button>
-                        <button onClick={() => { void handleDelete(p.id); }} className="p-1.5 hover:text-red-500 transition-colors text-[--text-muted]">
+                        <button onClick={() => { void handleDelete(p.id); }} className="p-1.5 hover:text-red-500 transition-colors text-(--text-muted)">
                           <Trash2 size={14} />
                         </button>
                       </div>

@@ -57,7 +57,7 @@ export function CartDrawer() {
               </span>
             )}
           </div>
-          <button onClick={closeCart} className="p-1.5 hover:text-[--gold] transition-colors text-[--text-muted]">
+          <button onClick={closeCart} className="p-1.5 hover:text-(--gold) transition-colors text-(--text-muted)">
             <X size={18} />
           </button>
         </div>
@@ -84,7 +84,7 @@ export function CartDrawer() {
               </button>
             </div>
           ) : (
-            <ul className="divide-y divide-[--border]">
+            <ul className="divide-y divide-(--border)">
               {items.map(({ product, quantity }) => {
                 const name = language === 'es' ? product.name : product.nameEn;
                 const category = categories.find((c) => c.id === product.categoryId);
@@ -108,7 +108,7 @@ export function CartDrawer() {
                         to={`/product/${product.slug}`}
                         onClick={closeCart}
                         style={{ fontFamily: 'var(--font-serif)', fontSize: '0.9375rem', lineHeight: 1.3 }}
-                        className="hover:text-[--gold] transition-colors line-clamp-2"
+                        className="hover:text-(--gold) transition-colors line-clamp-2"
                       >
                         {name}
                       </Link>
@@ -123,14 +123,14 @@ export function CartDrawer() {
                         >
                           <button
                             onClick={() => updateQuantity(product.id, quantity - 1)}
-                            className="p-1.5 hover:text-[--gold] transition-colors text-[--text-muted]"
+                            className="p-1.5 hover:text-(--gold) transition-colors text-(--text-muted)"
                           >
                             <Minus size={12} />
                           </button>
                           <span className="px-3 text-sm font-medium">{quantity}</span>
                           <button
                             onClick={() => updateQuantity(product.id, quantity + 1)}
-                            className="p-1.5 hover:text-[--gold] transition-colors text-[--text-muted]"
+                            className="p-1.5 hover:text-(--gold) transition-colors text-(--text-muted)"
                           >
                             <Plus size={12} />
                           </button>
@@ -142,7 +142,7 @@ export function CartDrawer() {
                     </div>
                     <button
                       onClick={() => removeItem(product.id)}
-                      className="shrink-0 p-1.5 hover:text-red-500 transition-colors text-[--text-subtle] self-start"
+                      className="shrink-0 p-1.5 hover:text-red-500 transition-colors text-(--text-subtle) self-start"
                       aria-label={t('cart.remove')}
                     >
                       <Trash2 size={14} />
@@ -188,7 +188,7 @@ export function CartDrawer() {
 
             <button
               onClick={clearCart}
-              className="text-center text-xs text-[--text-muted] hover:text-red-500 transition-colors tracking-wide uppercase"
+              className="text-center text-xs text-(--text-muted) hover:text-red-500 transition-colors tracking-wide uppercase"
             >
               {t('cart.clear')}
             </button>

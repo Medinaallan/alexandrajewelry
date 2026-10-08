@@ -47,7 +47,7 @@ export default function ContactPage() {
   return (
     <main className="pb-24">
       {/* Hero */}
-      <section className="py-28 text-center bg-[--bg-subtle]" style={{ borderBottom: '1px solid var(--border)' }}>
+      <section className="py-28 text-center bg-(--bg-subtle)" style={{ borderBottom: '1px solid var(--border)' }}>
         <p className="section-label mb-3">{t('contact.subtitle')}</p>
         <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(2rem, 5vw, 3.5rem)', fontWeight: 300 }}>
           {t('contact.title')}
@@ -184,7 +184,7 @@ export default function ContactPage() {
                     key={label}
                     href={href}
                     aria-label={label}
-                    className="flex items-center gap-2 px-4 py-2.5 text-xs uppercase tracking-widest border border-[--border] hover:border-[--gold] hover:text-[--gold] transition-all"
+                    className="flex items-center gap-2 px-4 py-2.5 text-xs uppercase tracking-widest border border-(--border) hover:border-(--gold) hover:text-(--gold) transition-all"
                     style={{ color: 'var(--text-muted)' }}
                   >
                     <Icon size={14} /> {label}

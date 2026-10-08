@@ -119,7 +119,7 @@ export default function CatalogPage() {
               {filters.search && (
                 <button
                   onClick={() => setFilter('search', '')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[--text-muted] hover:text-[--gold]"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-(--text-muted) hover:text-(--gold)"
                 >
                   <X size={14} />
                 </button>
@@ -138,7 +138,7 @@ export default function CatalogPage() {
 
           {/* Sort */}
           <div className="relative flex items-center gap-2">
-            <span className="text-xs text-[--text-muted] uppercase tracking-widest hidden sm:inline">
+            <span className="text-xs text-(--text-muted) uppercase tracking-widest hidden sm:inline">
               {t('catalog.filter.sortBy')}
             </span>
             <div className="relative">
@@ -152,7 +152,7 @@ export default function CatalogPage() {
                   <option key={value} value={value}>{label}</option>
                 ))}
               </select>
-              <ChevronDown size={13} className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-[--text-muted]" />
+              <ChevronDown size={13} className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-(--text-muted)" />
             </div>
           </div>
         </div>
@@ -205,7 +205,7 @@ export default function CatalogPage() {
                   {t('catalog.filter.price')}
                 </h3>
                 <div className="flex flex-col gap-3">
-                  <div className="flex items-center justify-between text-sm text-[--text-muted]">
+                  <div className="flex items-center justify-between text-sm text-(--text-muted)">
                     <span>${filters.minPrice}</span>
                     <span>${filters.maxPrice === MAX_PRICE ? `${MAX_PRICE}+` : filters.maxPrice}</span>
                   </div>
@@ -216,7 +216,7 @@ export default function CatalogPage() {
                     step={100}
                     value={filters.maxPrice}
                     onChange={(e) => setFilter('maxPrice', Number(e.target.value))}
-                    className="w-full accent-[--gold] cursor-pointer"
+                    className="w-full accent-(--gold) cursor-pointer"
                   />
                 </div>
               </div>
@@ -225,7 +225,7 @@ export default function CatalogPage() {
               {hasActiveFilters && (
                 <button
                   onClick={clearFilters}
-                  className="flex items-center gap-2 text-xs text-[--text-muted] hover:text-red-500 transition-colors"
+                  className="flex items-center gap-2 text-xs text-(--text-muted) hover:text-red-500 transition-colors"
                 >
                   <X size={12} /> {t('catalog.clearFilters')}
                 </button>
@@ -235,7 +235,7 @@ export default function CatalogPage() {
 
           {/* Products */}
           <div className="flex-1 min-w-0">
-            <p className="text-xs text-[--text-muted] mb-6 tracking-wide">
+            <p className="text-xs text-(--text-muted) mb-6 tracking-wide">
               {filtered.length} {t('catalog.results')}
             </p>
 

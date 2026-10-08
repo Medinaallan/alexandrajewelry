@@ -121,7 +121,7 @@ export default function AdminDashboard() {
                   <tr
                     key={p.id}
                     style={{ borderBottom: '1px solid var(--border)' }}
-                    className="hover:bg-[--bg-subtle] transition-colors"
+                    className="hover:bg-(--bg-subtle) transition-colors"
                   >
                     <td className="px-6 py-3">
                       <div className="w-10 h-10 overflow-hidden" style={{ background: 'var(--gray-100)' }}>

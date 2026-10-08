@@ -62,7 +62,7 @@ export function Header() {
         <div
           style={{
             overflow: 'hidden',
-            maxHeight: topBarCollapsed ? 0 : '44px',
+            maxHeight: topBarCollapsed ? 0 : '60px',
             opacity: topBarCollapsed ? 0 : 1,
             transition: 'max-height 0.32s ease, opacity 0.22s ease',
             pointerEvents: topBarCollapsed ? 'none' : 'auto',
@@ -119,7 +119,7 @@ export function Header() {
               <div className="flex items-center gap-1 pr-2 lg:pr-3 mr-1 lg:mr-2" style={{ borderRight: '1px solid var(--border)' }}>
                 <button
                   onClick={() => setLanguage(language === 'en' ? 'es' : 'en')}
-                  className="flex items-center gap-1.5 px-2.5 py-2 rounded-full text-[--text-muted] hover:text-[--gold] hover:bg-[--bg-subtle] transition-colors"
+                  className="flex items-center gap-1.5 px-2.5 py-2 rounded-full text-(--text-muted) hover:text-(--gold) hover:bg-(--bg-subtle) transition-colors"
                   aria-label="Toggle language"
                 >
                   <Globe size={18} />
@@ -128,18 +128,18 @@ export function Header() {
                   </span>
                 </button>
 
-                <button onClick={toggleTheme} className="p-2.5 rounded-full text-[--text-muted] hover:text-[--gold] hover:bg-[--bg-subtle] transition-colors" aria-label="Toggle theme">
+                <button onClick={toggleTheme} className="p-2.5 rounded-full text-(--text-muted) hover:text-(--gold) hover:bg-(--bg-subtle) transition-colors" aria-label="Toggle theme">
                   {isDark ? <Sun size={18} /> : <Moon size={18} />}
                 </button>
               </div>
 
-              <button onClick={() => setSearchOpen(true)} className="p-2.5 rounded-full text-[--text-muted] hover:text-[--gold] hover:bg-[--bg-subtle] transition-colors" aria-label={t('nav.search')}>
+              <button onClick={() => setSearchOpen(true)} className="p-2.5 rounded-full text-(--text-muted) hover:text-(--gold) hover:bg-(--bg-subtle) transition-colors" aria-label={t('nav.search')}>
                 <Search size={18} />
               </button>
 
               <button
                 onClick={openCart}
-                className="relative p-2.5 rounded-full text-[--text-muted] hover:text-[--gold] hover:bg-[--bg-subtle] transition-colors"
+                className="relative p-2.5 rounded-full text-(--text-muted) hover:text-(--gold) hover:bg-(--bg-subtle) transition-colors"
                 aria-label={t('nav.cart')}
               >
                 <ShoppingBag size={18} />
@@ -155,7 +155,7 @@ export function Header() {
 
               <button
                 onClick={() => setMobileOpen((o) => !o)}
-                className="lg:hidden p-2.5 rounded-full text-[--text-muted] hover:text-[--gold] hover:bg-[--bg-subtle] transition-colors ml-1"
+                className="lg:hidden p-2.5 rounded-full text-(--text-muted) hover:text-(--gold) hover:bg-(--bg-subtle) transition-colors ml-1"
                 aria-label="Menu"
               >
                 {mobileOpen ? <X size={20} /> : <Menu size={20} />}
@@ -177,16 +177,16 @@ export function Header() {
             onClick={(e) => e.stopPropagation()}
           >
             <form onSubmit={handleSearch} className="page-container flex items-center gap-4 h-16">
-              <Search size={18} className="text-[--text-muted] shrink-0" />
+              <Search size={18} className="text-(--text-muted) shrink-0" />
               <input
                 autoFocus
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={t('catalog.search')}
-                className="flex-1 bg-transparent text-lg text-[--text] outline-none"
+                className="flex-1 bg-transparent text-lg text-(--text) outline-none"
                 style={{ fontFamily: 'var(--font-serif)', color: 'var(--text)' }}
               />
-              <button type="button" onClick={() => setSearchOpen(false)} className="p-1 text-[--text-muted] hover:text-[--gold] transition-colors">
+              <button type="button" onClick={() => setSearchOpen(false)} className="p-1 text-(--text-muted) hover:text-(--gold) transition-colors">
                 <X size={18} />
               </button>
             </form>
@@ -210,7 +210,7 @@ export function Header() {
               <span style={{ fontFamily: 'var(--font-serif)', fontSize: '0.875rem', letterSpacing: '0.15em', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
                 Menu
               </span>
-              <button onClick={() => setMobileOpen(false)} className="p-2 text-[--text-muted] hover:text-[--gold] transition-colors">
+              <button onClick={() => setMobileOpen(false)} className="p-2 text-(--text-muted) hover:text-(--gold) transition-colors">
                 <X size={20} />
               </button>
             </div>
@@ -244,7 +244,7 @@ export function Header() {
             >
               <button
                 onClick={() => setLanguage(language === 'en' ? 'es' : 'en')}
-                className="flex items-center gap-1.5 text-[--text-muted] hover:text-[--gold] transition-colors"
+                className="flex items-center gap-1.5 text-(--text-muted) hover:text-(--gold) transition-colors"
                 style={{ fontSize: '11px', letterSpacing: '0.12em', textTransform: 'uppercase' }}
               >
                 <Globe size={13} />
@@ -252,7 +252,7 @@ export function Header() {
               </button>
               <button
                 onClick={toggleTheme}
-                className="flex items-center gap-1.5 text-[--text-muted] hover:text-[--gold] transition-colors"
+                className="flex items-center gap-1.5 text-(--text-muted) hover:text-(--gold) transition-colors"
                 style={{ fontSize: '11px', letterSpacing: '0.12em', textTransform: 'uppercase' }}
               >
                 {isDark ? <Sun size={13} /> : <Moon size={13} />}

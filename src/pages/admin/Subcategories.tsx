@@ -55,7 +55,7 @@ function SubcategoryFormModal({ editing, token, categories, onDone }: {
         <textarea className="form-input resize-none" rows={2} value={form.description} onChange={(e) => set('description', e.target.value)} placeholder="Descripción breve" />
       </AdminField>
       <label className="flex items-center gap-2 cursor-pointer text-sm">
-        <input type="checkbox" checked={form.active} onChange={(e) => set('active', e.target.checked)} className="accent-[--gold]" />
+        <input type="checkbox" checked={form.active} onChange={(e) => set('active', e.target.checked)} className="accent-(--gold)" />
         Activo
       </label>
       <div className="flex gap-3 pt-2">
@@ -239,7 +239,7 @@ export default function AdminSubcategoriesPage() {
               </thead>
               <tbody>
                 {displayed.map((s) => (
-                  <tr key={s.id} style={{ borderBottom: '1px solid var(--border)' }} className="hover:bg-[--bg-subtle] transition-colors">
+                  <tr key={s.id} style={{ borderBottom: '1px solid var(--border)' }} className="hover:bg-(--bg-subtle) transition-colors">
                     <td className="px-4 py-3">
                       <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontFamily: 'monospace' }}>#{s.id}</span>
                     </td>
@@ -257,7 +257,7 @@ export default function AdminSubcategoriesPage() {
                     <td className="px-4 py-3">
                       <button
                         onClick={async () => { await api.admin.subcategories.update(token!, s.id, { active: !s.active }); await refetch(); }}
-                        className="flex items-center gap-1.5 hover:text-[--gold] transition-colors text-[--text-muted]"
+                        className="flex items-center gap-1.5 hover:text-(--gold) transition-colors text-(--text-muted)"
                       >
                         {s.active ? <ToggleRight size={20} style={{ color: '#22c55e' }} /> : <ToggleLeft size={20} />}
                         <span style={{ fontSize: '0.6875rem', fontWeight: 500 }}>{s.active ? t('common.active') : t('common.inactive')}</span>
@@ -265,10 +265,10 @@ export default function AdminSubcategoriesPage() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1">
-                        <button onClick={() => openEdit(s)} className="p-1.5 hover:text-[--gold] transition-colors text-[--text-muted]" title={t('common.edit')}>
+                        <button onClick={() => openEdit(s)} className="p-1.5 hover:text-(--gold) transition-colors text-(--text-muted)" title={t('common.edit')}>
                           <Edit2 size={14} />
                         </button>
-                        <button onClick={() => { void handleDelete(s.id); }} className="p-1.5 hover:text-red-500 transition-colors text-[--text-muted]" title={t('common.delete')}>
+                        <button onClick={() => { void handleDelete(s.id); }} className="p-1.5 hover:text-red-500 transition-colors text-(--text-muted)" title={t('common.delete')}>
                           <Trash2 size={14} />
                         </button>
                       </div>

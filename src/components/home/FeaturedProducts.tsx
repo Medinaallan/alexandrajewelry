@@ -6,11 +6,15 @@ import { ProductCard } from '../product/ProductCard';
 
 export function FeaturedProducts() {
   const { t } = useLanguage();
-  const { getFeaturedProducts } = useData();
-  const featured = getFeaturedProducts().slice(0, 8);
+  const { getFeaturedProducts, products } = useData();
+  const marked = getFeaturedProducts();
+  // Sin destacados marcados, mostrar el catálogo activo para no dejar la sección vacía
+  const featured = (marked.length > 0 ? marked : products.filter((p) => p.active)).slice(0, 8);
+
+  if (featured.length === 0) return null;
 
   return (
-    <section className="py-16 md:py-24 bg-[--bg-subtle]">
+    <section className="py-16 md:py-24 bg-(--bg-subtle)">
       <div className="page-container">
         {/* Header */}
         <div className="text-center mb-12">
@@ -22,9 +26,14 @@ export function FeaturedProducts() {
         </div>
 
         {/* Product grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 lg:gap-8">
+        <div className="flex flex-wrap justify-center gap-6 lg:gap-8">
           {featured.map((product) => (
-            <ProductCard key={product.id} product={product} />
+            <div
+              key={product.id}
+              className="w-[calc(50%-0.75rem)] md:w-[calc(33.333%-1rem)] lg:w-[calc(25%-1.5rem)]"
+            >
+              <ProductCard product={product} />
+            </div>
           ))}
         </div>
 

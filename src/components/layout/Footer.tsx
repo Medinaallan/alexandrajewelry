@@ -75,7 +75,7 @@ export function Footer() {
                   key={label}
                   href="#"
                   aria-label={label}
-                  className="p-2 border border-[#2a2a2a] hover:border-[--gold] hover:text-[--gold] transition-all duration-300"
+                  className="p-2 border border-[#2a2a2a] hover:border-(--gold) hover:text-(--gold) transition-all duration-300"
                   style={{ color: 'var(--gray-500)' }}
                 >
                   <Icon size={15} />
@@ -133,7 +133,7 @@ function FooterColumn({ title, links }: { title: string; links: { to: string; la
             <Link
               to={to}
               style={{ fontSize: '0.875rem', color: 'var(--gray-500)', transition: 'color 0.2s' }}
-              className="hover:text-[--gold]"
+              className="hover:text-(--gold)"
             >
               {label}
             </Link>

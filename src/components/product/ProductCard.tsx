@@ -71,8 +71,8 @@ export function ProductCard({ product, className }: ProductCardProps) {
                 'w-full py-3 text-[10px] font-medium tracking-[0.15em] uppercase transition-colors flex items-center justify-center gap-2',
                 product.active
                   ? added
-                    ? 'bg-[--gold] text-white'
-                    : 'bg-white text-[--black] hover:bg-[--gold] hover:text-white'
+                    ? 'bg-(--gold) text-white'
+                    : 'bg-white text-(--black) hover:bg-(--gold) hover:text-white'
                   : 'bg-white/40 text-white cursor-not-allowed'
               )}
             >
@@ -100,7 +100,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
               lineHeight: 1.3,
               transition: 'color 0.2s',
             }}
-            className="group-hover:text-[--gold]"
+            className="group-hover:text-(--gold)"
           >
             {name}
           </h3>
@@ -120,9 +120,9 @@ export function ProductCard({ product, className }: ProductCardProps) {
           'mt-4 w-full py-3 text-[0.75rem] font-medium tracking-[0.15em] uppercase border transition-colors hidden sm:flex items-center justify-center gap-2',
           product.active
             ? added
-              ? 'border-[--gold] bg-[--gold] text-white'
-              : 'border-[--border] text-[--text-muted] hover:border-[--gold] hover:text-[--gold]'
-            : 'border-[--border] text-[--text-subtle] cursor-not-allowed'
+              ? 'border-(--gold) bg-(--gold) text-white'
+              : 'border-(--border) text-(--text-muted) hover:border-(--gold) hover:text-(--gold)'
+            : 'border-(--border) text-(--text-subtle) cursor-not-allowed'
         )}
       >
         <ShoppingBag size={11} />
@@ -135,7 +135,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
 
       <Link
         to={`/product/${product.slug}`}
-        className="mt-1.5 w-full py-2 text-[0.75rem] font-medium tracking-[0.15em] uppercase border border-transparent text-[--text-muted] hover:text-[--gold] transition-colors hidden sm:flex items-center justify-center gap-2"
+        className="mt-1.5 w-full py-2 text-[0.75rem] font-medium tracking-[0.15em] uppercase border border-transparent text-(--text-muted) hover:text-(--gold) transition-colors hidden sm:flex items-center justify-center gap-2"
       >
         <Eye size={11} />
         {t('product.viewDetail')}

@@ -14,7 +14,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 const variantClasses: Record<Variant, string> = {
   gold: 'btn-gold',
   outline: 'btn-outline',
-  ghost: 'inline-flex items-center gap-2 text-sm font-medium text-[--text-muted] hover:text-[--gold] transition-colors',
+  ghost: 'inline-flex items-center gap-2 text-sm font-medium text-(--text-muted) hover:text-(--gold) transition-colors',
   danger: 'inline-flex items-center gap-2 px-4 py-2 text-xs font-medium uppercase tracking-widest border border-red-300 text-red-600 hover:bg-red-50 dark:hover:bg-red-950 transition-colors',
 };
 

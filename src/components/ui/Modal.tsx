@@ -27,17 +27,17 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalPr
       <div className="overlay" onClick={onClose} />
       <div
         className={cn(
-          'relative z-50 w-full bg-[--bg] shadow-xl animate-fade-up',
+          'relative z-50 w-full bg-(--bg) shadow-xl animate-fade-up',
           sizeClass
         )}
         style={{ maxHeight: '90vh', overflowY: 'auto' }}
       >
         {title && (
-          <div className="flex items-center justify-between px-6 py-4 border-b border-[--border]">
-            <h3 className="font-serif text-xl text-[--text]">{title}</h3>
+          <div className="flex items-center justify-between px-6 py-4 border-b border-(--border)">
+            <h3 className="font-serif text-xl text-(--text)">{title}</h3>
             <button
               onClick={onClose}
-              className="p-1.5 hover:text-[--gold] transition-colors text-[--text-muted]"
+              className="p-1.5 hover:text-(--gold) transition-colors text-(--text-muted)"
               aria-label="Close"
             >
               <X size={18} />

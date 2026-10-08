@@ -130,7 +130,7 @@ export default function AdminOrdersPage() {
                           <button
                             type="button"
                             onClick={() => void openReceipt(o)}
-                            className="flex items-center gap-1 hover:text-[--gold] transition-colors"
+                            className="flex items-center gap-1 hover:text-(--gold) transition-colors"
                             style={{ marginTop: '4px', fontSize: '0.75rem', textDecoration: 'underline' }}
                           >
                             <FileText size={12} /> {t('admin.orders.viewReceipt')}

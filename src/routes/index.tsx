@@ -54,7 +54,7 @@ function CatalogErrorBanner() {
         type="button"
         disabled={loading}
         onClick={() => void refetch()}
-        className="text-xs uppercase tracking-widest underline hover:text-[--gold] transition-colors"
+        className="text-xs uppercase tracking-widest underline hover:text-(--gold) transition-colors"
       >
         {loading ? t('common.loading') : t('common.retry')}
       </button>
