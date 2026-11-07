@@ -1,11 +1,28 @@
+import { useEffect, useState } from 'react';
 import { Package, Tag, CheckCircle, Star } from 'lucide-react';
-import { useData } from '../../contexts/DataContext';
+import { useAdmin } from '../../contexts/AdminContext';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useAdminProducts } from '../../hooks/useAdminProducts';
+import { api } from '../../lib/api';
 import { AdminSidebar } from '../../components/admin/AdminSidebar';
+import type { Category } from '../../types';
 
 export default function AdminDashboard() {
-  const { products, categories } = useData();
+  const { token } = useAdmin();
   const { t } = useLanguage();
+  // Admin lists: the public catalog only has active products and categories
+  const { products, error: productsError } = useAdminProducts();
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [categoriesError, setCategoriesError] = useState('');
+
+  useEffect(() => {
+    if (!token) return;
+    api.admin.categories
+      .list(token)
+      .then((rows) => { setCategories(rows); setCategoriesError(''); })
+      .catch((err: unknown) => setCategoriesError(err instanceof Error ? err.message : 'No se pudieron cargar las categorías.'));
+  }, [token]);
+  const error = productsError || categoriesError;
 
   const stats = [
     {
@@ -49,6 +66,8 @@ export default function AdminDashboard() {
         >
           {t('admin.dashboard.title')}
         </h1>
+
+        {error && <p role="alert" style={{ color: '#ef4444', fontSize: '0.8125rem', marginBottom: '1rem' }}>{error}</p>}
 
         {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-10">

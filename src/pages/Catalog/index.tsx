@@ -7,7 +7,16 @@ import { ProductGridSkeleton } from '../../components/ui/Skeleton';
 import { useLanguage } from '../../contexts/LanguageContext';
 import type { CatalogFilters, SortOption } from '../../types';
 
-const MAX_PRICE = 4000;
+// Upper end of the price slider when no product has loaded yet
+const DEFAULT_PRICE_CEILING = 1000;
+
+/** Most expensive active product, rounded up so the slider can reach it. */
+function priceCeilingOf(prices: number[]): number {
+  const highest = Math.max(0, ...prices);
+  if (highest === 0) return DEFAULT_PRICE_CEILING;
+  const step = highest > 1000 ? 100 : 10;
+  return Math.ceil(highest / step) * step;
+}
 
 export default function CatalogPage() {
   const { t, language } = useLanguage();
@@ -19,7 +28,8 @@ export default function CatalogPage() {
     category: searchParams.get('category') ? Number(searchParams.get('category')) : '',
     subcategory: '',
     minPrice: 0,
-    maxPrice: MAX_PRICE,
+    // Infinity = no upper limit (the slider sits at its top)
+    maxPrice: Infinity,
     sort: (searchParams.get('sort') as SortOption) || 'newest',
     search: searchParams.get('search') || '',
   });
@@ -32,6 +42,13 @@ export default function CatalogPage() {
       search: searchParams.get('search') || '',
     }));
   }, [searchParams]);
+
+  const priceCeiling = useMemo(
+    () => priceCeilingOf(products.filter((p) => p.active).map((p) => p.price)),
+    [products]
+  );
+  const priceStep = priceCeiling > 1000 ? 100 : 10;
+  const priceLimited = filters.maxPrice < priceCeiling;
 
   const filtered = useMemo(() => {
     let result = products.filter((p) => p.active);
@@ -47,8 +64,9 @@ export default function CatalogPage() {
           p.nameEn.toLowerCase().includes(q)
       );
     }
+    // At the top of the slider nothing is excluded for being expensive
     result = result.filter(
-      (p) => p.price >= filters.minPrice && p.price <= filters.maxPrice
+      (p) => p.price >= filters.minPrice && (!priceLimited || p.price <= filters.maxPrice)
     );
 
     switch (filters.sort) {
@@ -68,18 +86,18 @@ export default function CatalogPage() {
     }
 
     return result;
-  }, [filters, products]);
+  }, [filters, products, priceLimited]);
 
   const setFilter = <K extends keyof CatalogFilters>(key: K, value: CatalogFilters[K]) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
   const clearFilters = () => {
-    setFilters({ category: '', subcategory: '', minPrice: 0, maxPrice: MAX_PRICE, sort: 'newest', search: '' });
+    setFilters({ category: '', subcategory: '', minPrice: 0, maxPrice: Infinity, sort: 'newest', search: '' });
     setSearchParams({});
   };
 
-  const hasActiveFilters = filters.category || filters.search || filters.minPrice > 0 || filters.maxPrice < MAX_PRICE;
+  const hasActiveFilters = filters.category || filters.search || filters.minPrice > 0 || priceLimited;
 
   const sortOptions: { value: SortOption; label: string }[] = [
     { value: 'newest', label: t('catalog.sort.newest') },
@@ -207,14 +225,14 @@ export default function CatalogPage() {
                 <div className="flex flex-col gap-3">
                   <div className="flex items-center justify-between text-sm text-(--text-muted)">
                     <span>${filters.minPrice}</span>
-                    <span>${filters.maxPrice === MAX_PRICE ? `${MAX_PRICE}+` : filters.maxPrice}</span>
+                    <span>${priceLimited ? filters.maxPrice : priceCeiling}</span>
                   </div>
                   <input
                     type="range"
                     min={0}
-                    max={MAX_PRICE}
-                    step={100}
-                    value={filters.maxPrice}
+                    max={priceCeiling}
+                    step={priceStep}
+                    value={Math.min(filters.maxPrice, priceCeiling)}
                     onChange={(e) => setFilter('maxPrice', Number(e.target.value))}
                     className="w-full accent-(--gold) cursor-pointer"
                   />

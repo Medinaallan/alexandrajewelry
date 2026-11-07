@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
 import type { CartContextType, CartItem, Product } from '../types';
 import { useData } from './DataContext';
+import { maxUnits } from '../utils/stock';
 
 const CART_KEY = 'alexandra-cart';
 
@@ -34,26 +35,30 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [items]);
 
   // Once the catalog is loaded, refresh saved items with current prices and
-  // drop products that are no longer on sale.
+  // stock: quantities are trimmed to what is left, and products that are no
+  // longer on sale or sold out are dropped.
   useEffect(() => {
     if (loading || error) return;
     setItems((prev) =>
       prev.flatMap((item) => {
-        const current = products.find((p) => p.id === item.product.id && p.active);
-        return current ? [{ ...item, product: current }] : [];
+        const current = products.find((p) => p.id === item.product.id);
+        const max = current ? maxUnits(current) : 0;
+        return current && max > 0 ? [{ product: current, quantity: Math.min(item.quantity, max) }] : [];
       })
     );
   }, [products, loading, error]);
 
   const addItem = useCallback((product: Product, quantity = 1) => {
+    const max = maxUnits(product);
+    if (max === 0) return;
     setItems((prev) => {
       const existing = prev.find((i) => i.product.id === product.id);
       if (existing) {
         return prev.map((i) =>
-          i.product.id === product.id ? { ...i, quantity: i.quantity + quantity } : i
+          i.product.id === product.id ? { ...i, quantity: Math.min(i.quantity + quantity, max) } : i
         );
       }
-      return [...prev, { product, quantity }];
+      return [...prev, { product, quantity: Math.min(quantity, max) }];
     });
     setIsOpen(true);
   }, []);
@@ -67,7 +72,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
       setItems((prev) => prev.filter((i) => i.product.id !== productId));
     } else {
       setItems((prev) =>
-        prev.map((i) => (i.product.id === productId ? { ...i, quantity } : i))
+        prev.map((i) =>
+          i.product.id === productId ? { ...i, quantity: Math.min(quantity, maxUnits(i.product)) } : i
+        )
       );
     }
   }, []);

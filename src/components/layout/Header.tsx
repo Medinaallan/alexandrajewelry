@@ -9,7 +9,7 @@ import { TopBar } from './TopBar';
 export function Header() {
   const { totalItems, openCart } = useCart();
   const { isDark, toggleTheme } = useTheme();
-  const { t, language, setLanguage } = useLanguage();
+  const { t, targetLanguage: language, setLanguage } = useLanguage();
   const navigate = useNavigate();
 
   const [scrollY, setScrollY] = useState(0);

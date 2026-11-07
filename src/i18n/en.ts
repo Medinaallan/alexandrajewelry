@@ -89,6 +89,8 @@ export const en: Record<string, string> = {
   'detail.availability': 'Availability',
   'detail.available': 'In Stock',
   'detail.unavailable': 'Out of Stock',
+  'detail.lastUnits': 'Last units:',
+  'cart.maxStock': 'No more units available',
   'detail.additionalInfo': 'Additional Information',
   'detail.related': 'You May Also Like',
   'detail.share': 'Share',

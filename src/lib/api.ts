@@ -1,6 +1,8 @@
 import type { Product, Category, Subcategory, Testimonial, AdminUser, CheckoutForm, CartItem, ProductImage, StockProduct, StockMovement, Sale, SaleReport, Order, OrderStatus } from '../types';
 
-const BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8787';
+import type { BulkProductRow } from './productExcel';
+
+const BASE =import.meta.env.VITE_API_URL ?? 'http://localhost:8787';
 
 // Called when the API rejects the admin token (expired or revoked session)
 let onUnauthorized: (() => void) | null = null;
@@ -108,6 +110,20 @@ export const api = {
           method: 'PUT',
           headers: authHeaders(token),
           body: JSON.stringify(data),
+        }),
+      // Bulk import, step 1: checks every row against the database, saves nothing
+      bulkVerify: (token: string, products: BulkProductRow[]) =>
+        request<{ valid: number; errors: { row: number; error: string }[] }>('/api/products/bulk', {
+          method: 'POST',
+          headers: authHeaders(token),
+          body: JSON.stringify({ products, dryRun: true }),
+        }),
+      // Bulk import, step 2: saves up to 20 rows (all or none)
+      bulkCreate: (token: string, products: BulkProductRow[]) =>
+        request<{ created: number }>('/api/products/bulk', {
+          method: 'POST',
+          headers: authHeaders(token),
+          body: JSON.stringify({ products }),
         }),
       toggle: (token: string, id: number) =>
         request<Product>(`/api/products/${id}/toggle`, {

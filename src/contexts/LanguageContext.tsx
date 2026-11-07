@@ -1,35 +1,45 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
+import { useLocation } from 'react-router-dom';
 import type { Language, LanguageContextType } from '../types';
-import { en } from '../i18n/en';
 import { es } from '../i18n/es';
-
-const translations: Record<Language, Record<string, string>> = { en, es };
+import { translateSite } from '../lib/googleTranslate';
 
 const LanguageContext = createContext<LanguageContextType | null>(null);
 
+// Pages are always rendered in Spanish; Google Translate translates them in the
+// visitor's browser into `targetLanguage`. The admin panel is never translated.
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguageState] = useState<Language>(() => {
+  const { pathname } = useLocation();
+  const isAdmin = pathname.startsWith('/admin');
+  const [targetLanguage, setTargetLanguage] = useState<Language>(() => {
     const saved = localStorage.getItem('alexandra-lang') as Language | null;
     return saved === 'es' ? 'es' : 'en';
   });
 
-  // Screen readers and search engines read the page language from <html lang>
+  // Keep Google away from the admin panel (also covers its pop-up modals)
   useEffect(() => {
-    document.documentElement.lang = language;
-  }, [language]);
+    const html = document.documentElement;
+    html.classList.toggle('notranslate', isAdmin);
+    html.setAttribute('translate', isAdmin ? 'no' : 'yes');
+  }, [isAdmin]);
+
+  // On load, the widget translates the page by itself from its cookie
+  useEffect(() => {
+    if (!isAdmin) void translateSite(targetLanguage, true);
+    // only when entering / leaving the admin; language changes go through setLanguage
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAdmin]);
 
   const setLanguage = useCallback((lang: Language) => {
-    setLanguageState(lang);
+    setTargetLanguage(lang);
     localStorage.setItem('alexandra-lang', lang);
+    void translateSite(lang);
   }, []);
 
-  const t = useCallback(
-    (key: string): string => translations[language][key] ?? key,
-    [language]
-  );
+  const t = useCallback((key: string): string => es[key] ?? key, []);
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+    <LanguageContext.Provider value={{ language: 'es', targetLanguage, setLanguage, t }}>
       {children}
     </LanguageContext.Provider>
   );

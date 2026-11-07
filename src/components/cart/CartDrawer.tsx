@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { X, ShoppingBag, Plus, Minus, Trash2, ArrowRight } from 'lucide-react';
 import { useCart } from '../../contexts/CartContext';
+import { maxUnits } from '../../utils/stock';
 import { useData } from '../../contexts/DataContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { formatPrice } from '../../utils/formatPrice';
@@ -130,7 +131,10 @@ export function CartDrawer() {
                           <span className="px-3 text-sm font-medium">{quantity}</span>
                           <button
                             onClick={() => updateQuantity(product.id, quantity + 1)}
-                            className="p-1.5 hover:text-(--gold) transition-colors text-(--text-muted)"
+                            disabled={quantity >= maxUnits(product)}
+                            title={quantity >= maxUnits(product) ? t('cart.maxStock') : undefined}
+                            aria-label={quantity >= maxUnits(product) ? t('cart.maxStock') : undefined}
+                            className="p-1.5 hover:text-(--gold) transition-colors text-(--text-muted) disabled:opacity-30 disabled:cursor-not-allowed"
                           >
                             <Plus size={12} />
                           </button>

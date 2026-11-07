@@ -1,15 +1,17 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Plus, Edit2, Trash2, ToggleLeft, ToggleRight, X, ImageIcon } from 'lucide-react';
+import { Plus, Edit2, Trash2, ToggleLeft, ToggleRight, X, ImageIcon, Upload, Download, FileSpreadsheet } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { useAdmin } from '../../contexts/AdminContext';
 import { useData } from '../../contexts/DataContext';
+import { useAdminProducts } from '../../hooks/useAdminProducts';
 import { api } from '../../lib/api';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { AdminSidebar } from '../../components/admin/AdminSidebar';
 import { Button } from '../../components/ui/Button';
 import { MySwal } from '../../lib/swal';
 import { formatPrice } from '../../utils/formatPrice';
-import type { Product, ProductImage } from '../../types';
+import { downloadProductTemplate, parseProductFile, PRODUCT_COLUMNS, type BulkProductRow, type RowError } from '../../lib/productExcel';
+import type { Category, Product, ProductImage, Subcategory } from '../../types';
 
 type ProductForm = {
   code: string;
@@ -53,7 +55,7 @@ function ProductFormModal({ editing, token, categories, subcategories, onDone }:
       categoryId: editing.categoryId, subcategoryId: editing.subcategoryId,
       description: editing.description, descriptionEn: editing.descriptionEn,
       cost: editing.cost ?? null, price: editing.price, tax: editing.tax,
-      stock: editing.stock, minStock: editing.minStock,
+      stock: editing.stock, minStock: editing.minStock ?? 0,
       featured: editing.featured, active: editing.active,
     } : BLANK
   );
@@ -121,7 +123,7 @@ function ProductFormModal({ editing, token, categories, subcategories, onDone }:
   return (
     <div className="flex flex-col gap-4 text-left">
       <p style={{ fontSize: '0.75rem', color: 'var(--gold)', background: 'rgba(201,164,93,0.08)', border: '1px solid rgba(201,164,93,0.2)', borderRadius: 'var(--radius)', padding: '0.5rem 0.75rem' }}>
-        ✨ Los campos de texto se escriben en <strong>español</strong> — la traducción al inglés se genera automáticamente.
+        ✨ Escribe solo en <strong>español</strong>: la tienda se traduce automáticamente en el navegador con Google Translate.
       </p>
       <div className="grid grid-cols-2 gap-4">
         <AdminField label="Código">
@@ -219,9 +221,226 @@ function ProductFormModal({ editing, token, categories, subcategories, onDone }:
   );
 }
 
+// ── Bulk import from Excel ───────────────────────────────────────────────
+// Two steps: 1) verify the file (browser + database checks, nothing is saved)
+//            2) the admin confirms and only the correct rows are processed.
+const BULK_BATCH = 100; // must not exceed BULK_MAX in the API
+
+type Verification = {
+  valid: BulkProductRow[];
+  errors: RowError[]; // one entry per row (row 0 = problem with the whole file)
+};
+
+type BulkProps = { token: string; categories: Category[]; subcategories: Subcategory[]; onDone: () => void };
+function ProductBulkModal({ token, categories, subcategories, onDone }: BulkProps) {
+  const [fileName, setFileName] = useState('');
+  const [check, setCheck] = useState<Verification | null>(null);
+  const [busy, setBusy] = useState<'' | 'template' | 'verifying' | 'processing'>('');
+  const [progress, setProgress] = useState('');
+  const [failure, setFailure] = useState('');
+
+  const handleTemplate = async () => {
+    setBusy('template');
+    try {
+      await downloadProductTemplate(categories, subcategories);
+    } finally {
+      setBusy('');
+    }
+  };
+
+  // Step 1 — verify
+  const handleFile = async (file: File | undefined) => {
+    if (!file) return;
+    setFileName(file.name);
+    setCheck(null);
+    setFailure('');
+    setBusy('verifying');
+    try {
+      const parsed = await parseProductFile(file, categories, subcategories);
+      let valid = parsed.rows;
+      const errors = [...parsed.errors];
+      const fileProblem = errors.some((e) => e.row === 0);
+      if (valid.length && !fileProblem) {
+        // The database checks what the browser can't: codes that already exist
+        const server = await api.admin.products.bulkVerify(token, valid);
+        const byRow = new Map<number, string[]>();
+        for (const e of server.errors) byRow.set(e.row, [...(byRow.get(e.row) ?? []), e.error]);
+        for (const [row, msgs] of byRow) errors.push({ row, message: msgs.join('; ') });
+        valid = valid.filter((r) => !byRow.has(r.row));
+      }
+      errors.sort((a, b) => a.row - b.row);
+      setCheck({ valid: fileProblem ? [] : valid, errors });
+    } catch (err) {
+      setFailure(err instanceof Error ? err.message : 'No se pudo verificar el archivo.');
+    } finally {
+      setBusy('');
+    }
+  };
+
+  // Step 2 — process the verified rows
+  const handleProcess = async () => {
+    if (!check) return;
+    const rows = check.valid;
+    setBusy('processing');
+    setFailure('');
+    let created = 0;
+    try {
+      for (let i = 0; i < rows.length; i += BULK_BATCH) {
+        setProgress(`Procesando ${Math.min(i + BULK_BATCH, rows.length)} de ${rows.length}…`);
+        const res = await api.admin.products.bulkCreate(token, rows.slice(i, i + BULK_BATCH));
+        created += res.created;
+      }
+      onDone();
+      const skipped = check.errors.filter((e) => e.row > 0).length;
+      void Swal.fire({
+        icon: 'success',
+        title: 'Carga completada',
+        html: `Se subieron <strong>${created}</strong> productos.` +
+          (skipped ? `<br>${skipped} fila(s) con errores no se subieron; corrígelas y súbelas en otro archivo.` : '') +
+          '<br><small>Recuerda agregar las imágenes editando cada producto.</small>',
+        confirmButtonColor: '#c9a45d',
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Error desconocido';
+      if (created) onDone();
+      setFailure(
+        (created ? `Se subieron ${created} de ${rows.length} productos (hasta la fila ${rows[created - 1].row}) antes del error. ` : 'No se subió ningún producto. ') +
+        message,
+      );
+      setCheck({ ...check, valid: rows.slice(created) });
+    } finally {
+      setBusy('');
+      setProgress('');
+    }
+  };
+
+  const mono = { fontFamily: 'monospace', color: 'var(--gold)', whiteSpace: 'nowrap' } as const;
+  const box = (color: string) => ({
+    fontSize: '0.75rem', borderRadius: 'var(--radius)', padding: '0.625rem 0.75rem',
+    color, background: `color-mix(in srgb, ${color} 7%, transparent)`, border: `1px solid color-mix(in srgb, ${color} 30%, transparent)`,
+  });
+  const rowErrors = check?.errors.filter((e) => e.row > 0) ?? [];
+  const fileErrors = check?.errors.filter((e) => e.row === 0) ?? [];
+  const total = (check?.valid.length ?? 0) + rowErrors.length;
+
+  return (
+    <div className="flex flex-col gap-4 text-left">
+      <p style={{ fontSize: '0.75rem', color: 'var(--gold)', background: 'rgba(201,164,93,0.08)', border: '1px solid rgba(201,164,93,0.2)', borderRadius: 'var(--radius)', padding: '0.5rem 0.75rem' }}>
+        ✨ Escribe solo en <strong>español</strong>: la tienda se traduce automáticamente en el navegador con Google Translate. El slug lo genera el sistema.
+      </p>
+
+      {!check && (
+        <div style={{ background: 'var(--bg-subtle)', borderRadius: 'var(--radius)', padding: '0.75rem', fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: 1.7 }}>
+          <div className="grid" style={{ gridTemplateColumns: 'auto 1fr', gap: '0.125rem 1rem' }}>
+            {PRODUCT_COLUMNS.map((c) => (
+              <div key={c.key} className="contents">
+                <span style={mono}>{c.header}{c.required ? ' *' : ''}</span>
+                <span>{c.note}</span>
+              </div>
+            ))}
+          </div>
+          <p style={{ marginTop: '0.5rem', fontSize: '0.6875rem', opacity: 0.8 }}>
+            La plantilla trae las hojas <strong>Categorías</strong> y <strong>Subcategorías</strong> con sus IDs. Las imágenes se agregan después, editando cada producto.
+          </p>
+        </div>
+      )}
+
+      {/* Step indicator */}
+      <div className="flex items-center gap-2" style={{ fontSize: '0.6875rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+        <span style={{ color: check ? 'var(--text-muted)' : 'var(--gold)', fontWeight: 600 }}>1. Verificar archivo</span>
+        <span style={{ color: 'var(--text-subtle)' }}>→</span>
+        <span style={{ color: check?.valid.length ? 'var(--gold)' : 'var(--text-subtle)', fontWeight: 600 }}>2. Procesar</span>
+      </div>
+
+      <div className="flex flex-wrap gap-3">
+        <Button variant="outline" size="sm" onClick={() => { void handleTemplate(); }} disabled={busy !== ''}>
+          <Download size={13} /> {busy === 'template' ? 'Generando…' : 'Descargar plantilla Excel'}
+        </Button>
+        <Button variant="outline" size="sm" onClick={() => document.getElementById('product-bulk-input')?.click()} disabled={busy !== ''}>
+          <FileSpreadsheet size={13} /> {busy === 'verifying' ? 'Verificando…' : check ? 'Subir otro archivo' : 'Seleccionar y verificar .xlsx'}
+        </Button>
+        <input id="product-bulk-input" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" className="hidden" onChange={(e) => { void handleFile(e.target.files?.[0]); e.target.value = ''; }} />
+      </div>
+
+      {fileName && <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Archivo: <strong>{fileName}</strong></p>}
+
+      {/* Verification result */}
+      {check && fileErrors.length > 0 && (
+        <div style={box('#ef4444')}>
+          <p style={{ fontWeight: 600 }}>✖ No se pudo verificar el archivo</p>
+          {fileErrors.map((e, i) => <p key={i}>{e.message}</p>)}
+        </div>
+      )}
+
+      {check && fileErrors.length === 0 && rowErrors.length === 0 && (
+        <div style={box('#16a34a')}>
+          <p style={{ fontWeight: 600 }}>✔ Verificación completa: los {check.valid.length} productos están correctos.</p>
+          <p>¿Deseas procesarlos?</p>
+        </div>
+      )}
+
+      {check && fileErrors.length === 0 && rowErrors.length > 0 && (
+        <div style={box(check.valid.length ? '#d97706' : '#ef4444')}>
+          <p style={{ fontWeight: 600 }}>
+            {check.valid.length
+              ? `⚠ ${check.valid.length} de ${total} productos están correctos. ${rowErrors.length} fila(s) tienen errores y no se pueden subir:`
+              : `✖ Ninguno de los ${total} productos se puede subir. Corrige el Excel y vuelve a subirlo:`}
+          </p>
+          <ul style={{ listStyle: 'disc', paddingLeft: '1rem', maxHeight: 150, overflowY: 'auto', marginTop: '0.25rem' }}>
+            {rowErrors.map((e) => <li key={e.row}><strong>Fila {e.row}:</strong> {e.message}</li>)}
+          </ul>
+          {check.valid.length > 0 && <p style={{ marginTop: '0.375rem' }}>Puedes corregir el Excel y volver a subirlo, o procesar solo los productos correctos.</p>}
+        </div>
+      )}
+
+      {check && check.valid.length > 0 && (
+        <div style={{ maxHeight: 170, overflowY: 'auto', border: '1px solid var(--border)', borderRadius: 'var(--radius)' }}>
+          <table className="w-full" style={{ fontSize: '0.6875rem' }}>
+            <thead>
+              <tr style={{ background: 'var(--bg-subtle)', color: 'var(--text-muted)' }}>
+                {['Fila', 'Código', 'Nombre', 'Categoría', 'Subcategoría', 'Precio', 'Stock'].map((h) => <th key={h} className="px-2 py-1 text-left">{h}</th>)}
+              </tr>
+            </thead>
+            <tbody>
+              {check.valid.map((r) => (
+                <tr key={r.row} style={{ borderTop: '1px solid var(--border)' }}>
+                  <td className="px-2 py-1">{r.row}</td>
+                  <td className="px-2 py-1">{r.code}</td>
+                  <td className="px-2 py-1">{r.name}</td>
+                  <td className="px-2 py-1">{categories.find((c) => c.id === r.categoryId)?.name}</td>
+                  <td className="px-2 py-1">{subcategories.find((s) => s.id === r.subcategoryId)?.name}</td>
+                  <td className="px-2 py-1">{formatPrice(r.price)}</td>
+                  <td className="px-2 py-1">{r.stock}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {failure && <div style={box('#ef4444')}>{failure.split('\n').map((l, i) => <p key={i}>{l}</p>)}</div>}
+      {progress && <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{progress}</p>}
+
+      <div className="flex gap-3 pt-2">
+        {check && check.valid.length > 0 && (
+          <Button variant="gold" onClick={() => { void handleProcess(); }} disabled={busy !== ''}>
+            {busy === 'processing'
+              ? 'Procesando…'
+              : rowErrors.length
+                ? `Procesar solo los ${check.valid.length} correctos`
+                : `Sí, procesar ${check.valid.length} productos`}
+          </Button>
+        )}
+        <Button variant="outline" onClick={() => Swal.close()} disabled={busy === 'processing'}>Cerrar</Button>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminProductsPage() {
   const { token } = useAdmin();
-  const { products, categories, subcategories, refetch } = useData();
+  const { categories, subcategories } = useData();
+  const { products, error: loadError, refetch } = useAdminProducts();
   const { t } = useLanguage();
   const [search, setSearch] = useState('');
 
@@ -230,6 +449,9 @@ export default function AdminProductsPage() {
 
   const openEdit = (product: Product) =>
     MySwal.fire({ title: t('admin.products.edit'), html: <ProductFormModal editing={product} token={token!} categories={categories} subcategories={subcategories} onDone={() => { void refetch(); }} />, showConfirmButton: false, showCloseButton: true, width: '680px' });
+
+  const openBulk = () =>
+    MySwal.fire({ title: 'Carga masiva de productos', html: <ProductBulkModal token={token!} categories={categories} subcategories={subcategories} onDone={() => { void refetch(); }} />, showConfirmButton: false, showCloseButton: true, width: '680px' });
 
   const handleDelete = async (id: number) => {
     const result = await Swal.fire({
@@ -262,10 +484,17 @@ export default function AdminProductsPage() {
           <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: '2rem', fontWeight: 300 }}>
             {t('admin.products.title')}
           </h1>
-          <Button variant="gold" size="sm" onClick={openAdd}>
-            <Plus size={14} /> {t('admin.products.add')}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={openBulk}>
+              <Upload size={14} /> Carga masiva
+            </Button>
+            <Button variant="gold" size="sm" onClick={openAdd}>
+              <Plus size={14} /> {t('admin.products.add')}
+            </Button>
+          </div>
         </div>
+
+        {loadError && <p role="alert" style={{ color: '#ef4444', fontSize: '0.8125rem', marginBottom: '12px' }}>{loadError}</p>}
 
         {/* Search */}
         <input

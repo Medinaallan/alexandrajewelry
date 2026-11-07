@@ -40,7 +40,7 @@ function SubcategoryFormModal({ editing, token, categories, onDone }: {
   return (
     <div className="flex flex-col gap-4 text-left">
       <p style={{ fontSize: '0.75rem', color: 'var(--gold)', background: 'rgba(201,164,93,0.08)', border: '1px solid rgba(201,164,93,0.2)', borderRadius: 'var(--radius)', padding: '0.5rem 0.75rem' }}>
-        ✨ Escribe en <strong>español</strong> — la traducción al inglés se genera automáticamente.
+        ✨ Escribe solo en <strong>español</strong>: la tienda se traduce automáticamente en el navegador con Google Translate.
       </p>
       <AdminField label="Categoría padre">
         <select className="form-input" value={form.categoryId} onChange={(e) => set('categoryId', Number(e.target.value) || '')}>
@@ -141,7 +141,7 @@ function SubcategoryBulkModal({ token, categories, onDone }: { token: string; ca
           <span style={{ fontFamily: 'monospace', color: 'var(--gold)' }}>description</span><span>Descripción breve (ES)</span>
           <span style={{ fontFamily: 'monospace', color: 'var(--gold)' }}>active</span><span><code style={{ background: 'var(--bg-muted)', padding: '0 3px', borderRadius: 2 }}>true</code> o <code style={{ background: 'var(--bg-muted)', padding: '0 3px', borderRadius: 2 }}>false</code></span>
         </div>
-        <p style={{ marginTop: '0.5rem', fontSize: '0.6875rem', opacity: 0.7 }}>Campos auto-generados: id · categoryId · nameEn · slug · descriptionEn · createdAt</p>
+        <p style={{ marginTop: '0.5rem', fontSize: '0.6875rem', opacity: 0.7 }}>Campos auto-generados: id · categoryId · slug · createdAt</p>
       </div>
       <Button variant="outline" size="sm" onClick={downloadTemplate}>
         <Upload size={13} /> Descargar plantilla CSV
@@ -230,7 +230,7 @@ export default function AdminSubcategoriesPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--border)', background: 'var(--bg-subtle)' }}>
-                  {['ID', 'Nombre', 'EN (auto)', 'Categoría', 'Estado', 'Acciones'].map((h) => (
+                  {['ID', 'Nombre', 'Categoría', 'Estado', 'Acciones'].map((h) => (
                     <th key={h} className="px-4 py-3 text-left" style={{ fontSize: '0.6875rem', fontWeight: 500, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                       {h}
                     </th>
@@ -245,9 +245,6 @@ export default function AdminSubcategoriesPage() {
                     </td>
                     <td className="px-4 py-3">
                       <span style={{ fontSize: '0.8125rem', fontWeight: 500 }}>{s.name}</span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>{s.nameEn}</span>
                     </td>
                     <td className="px-4 py-3">
                       <span style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>

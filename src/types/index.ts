@@ -43,11 +43,12 @@ export interface Product {
   subcategoryId: number;
   description: string;
   descriptionEn: string;
+  // cost and minStock are internal: only the admin product list includes them
   cost?: number | null;
   price: number;
   tax: number;
   stock: number;
-  minStock: number;
+  minStock?: number;
   featured: boolean;
   active: boolean;
   images: ProductImage[];
@@ -157,6 +158,8 @@ export interface Sale {
   total: number;
   notes: string;
   soldBy: string;
+  /** Set when the sale comes from a web order marked as paid */
+  orderId?: number | null;
   createdAt: string;
 }
 
@@ -196,7 +199,10 @@ export interface ThemeContextType {
 export type Language = 'en' | 'es';
 
 export interface LanguageContextType {
+  /** Language the pages are written in: always Spanish (Google Translate translates the rendered page). */
   language: Language;
+  /** Language the visitor chose to read the site in. */
+  targetLanguage: Language;
   setLanguage: (lang: Language) => void;
   t: (key: string) => string;
 }

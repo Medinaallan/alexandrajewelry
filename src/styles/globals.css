@@ -398,3 +398,17 @@
     .admin-sidebar { display: none; }
   }
 }
+
+/* ── Google Translate widget ─────────────────────────────────────────────
+   The site is translated in the browser by Google; hide its top bar,
+   tooltips and hover highlights so only the translated text shows. */
+.goog-te-banner-frame,
+iframe.skiptranslate,
+.VIpgJd-ZVi9od-ORHb-OEVmcd,
+.VIpgJd-ZVi9od-aZ2wEe-wOHMyf,
+#goog-gt-tt,
+.goog-te-balloon-frame,
+#google_translate_element { display: none !important; }
+body { top: 0 !important; position: static !important; }
+.goog-text-highlight,
+font[style] { background: none !important; box-shadow: none !important; }
