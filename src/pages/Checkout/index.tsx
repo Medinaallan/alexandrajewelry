@@ -6,17 +6,18 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { formatPrice } from '../../utils/formatPrice';
 import { generateWhatsAppMessage } from '../../utils/generateWhatsAppMessage';
 import { Button } from '../../components/ui/Button';
+import { PayPalPay } from '../../components/checkout/PayPalPay';
 import { api } from '../../lib/api';
 import type { CheckoutForm } from '../../types';
 
-type Step = 'form' | 'success';
+// PayPal orders go through 'pay' (the order exists, the buttons are shown)
+type Step = 'form' | 'pay' | 'success';
 
 const MAX_RECEIPT_BYTES = 5 * 1024 * 1024;
 const RECEIPT_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
 
 const PAYMENT_METHODS = [
   { id: 'transfer', icon: '🏦' },
-  { id: 'googlepay', icon: '🔵' },
   { id: 'paypal', icon: '🅿️' },
   { id: 'whatsapp', icon: '💬' },
 ] as const;
@@ -31,7 +32,14 @@ export default function CheckoutPage() {
   const [transferFile, setTransferFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState('');
   const [submitError, setSubmitError] = useState('');
-  const [placed, setPlaced] = useState<{ id: number; whatsappUrl?: string; receiptMissing: boolean } | null>(null);
+  const [placed, setPlaced] = useState<{
+    id: number;
+    total: number;
+    whatsappUrl?: string;
+    receiptMissing: boolean;
+    /** PayPal capture id once the customer paid */
+    paypalRef?: string;
+  } | null>(null);
   const [form, setForm] = useState<CheckoutForm>({
     name: '',
     phone: '',
@@ -83,9 +91,9 @@ export default function CheckoutPage() {
         window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
       }
 
-      setPlaced({ id: order.id, whatsappUrl, receiptMissing: Boolean(receipt) && !order.receiptUploaded });
+      setPlaced({ id: order.id, total: order.total, whatsappUrl, receiptMissing: Boolean(receipt) && !order.receiptUploaded });
       clearCart();
-      setStep('success');
+      setStep(form.paymentMethod === 'paypal' ? 'pay' : 'success');
     } catch (err) {
       // The cart is kept so the customer can try again
       setSubmitError(err instanceof Error && err.message !== 'Failed to fetch' ? err.message : t('checkout.error'));
@@ -94,7 +102,7 @@ export default function CheckoutPage() {
     }
   };
 
-  if (items.length === 0 && step !== 'success') {
+  if (items.length === 0 && step === 'form') {
     return (
       <div className="page-container py-32 text-center">
         <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '2rem', marginBottom: '1rem' }}>
@@ -103,6 +111,38 @@ export default function CheckoutPage() {
         <Link to="/catalog" className="btn-gold inline-flex items-center gap-2">
           {t('cart.exploreCatalog')}
         </Link>
+      </div>
+    );
+  }
+
+  if (step === 'pay' && placed) {
+    return (
+      <div className="page-container py-24 max-w-md mx-auto">
+        <div className="text-center mb-8">
+          <p style={{ fontSize: '0.6875rem', letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--gold)' }}>
+            {t('checkout.orderNumber')} #{placed.id}
+          </p>
+          <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(1.5rem, 4vw, 2.25rem)', fontWeight: 300, marginTop: '0.5rem' }}>
+            {t('checkout.payTitle')}
+          </h1>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '0.75rem', lineHeight: 1.6 }}>
+            {t('checkout.payMsg')}
+          </p>
+        </div>
+        <PayPalPay
+          orderId={placed.id}
+          total={placed.total}
+          phone={form.phone}
+          onPaid={(paypalRef) => {
+            setPlaced((p) => (p ? { ...p, paypalRef } : p));
+            setStep('success');
+          }}
+        />
+        <p className="text-center mt-8" style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
+          <button type="button" onClick={() => setStep('success')} className="underline hover:text-(--gold)">
+            {t('checkout.payLater')}
+          </button>
+        </p>
       </div>
     );
   }
@@ -134,6 +174,11 @@ export default function CheckoutPage() {
         <p style={{ color: 'var(--text-muted)', lineHeight: 1.7, marginBottom: '2.5rem', fontSize: '0.9375rem' }}>
           {t('checkout.successMsg')}
         </p>
+        {form.paymentMethod === 'paypal' && placed && (
+          <p style={{ fontSize: '0.875rem', marginBottom: '2rem', lineHeight: 1.6, color: placed.paypalRef ? 'var(--text)' : '#b45309' }}>
+            {placed.paypalRef ? `${t('checkout.paypalPaid')} ${placed.paypalRef}` : t('checkout.paypalPending')}
+          </p>
+        )}
         {placed?.receiptMissing && (
           <p style={{ fontSize: '0.875rem', color: '#ef4444', marginBottom: '2rem' }}>
             {t('checkout.receiptNotUploaded')}
@@ -144,6 +189,11 @@ export default function CheckoutPage() {
             <a href={placed.whatsappUrl} target="_blank" rel="noopener noreferrer" className="btn-gold inline-flex items-center gap-2">
               {t('checkout.sendWhatsapp')}
             </a>
+          )}
+          {placed && (
+            <Link to={`/track?id=${placed.id}`} className="btn-outline inline-flex items-center gap-2">
+              {t('track.link')}
+            </Link>
           )}
           <Link to="/" className={`${placed?.whatsappUrl ? 'btn-outline' : 'btn-gold'} inline-flex items-center gap-2`}>
             <ArrowLeft size={14} /> {t('checkout.backHome')}
@@ -209,7 +259,7 @@ export default function CheckoutPage() {
                 {t('checkout.paymentMethod')}
               </h2>
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {PAYMENT_METHODS.map(({ id, icon }) => (
                   <button
                     key={id}
@@ -262,20 +312,11 @@ export default function CheckoutPage() {
                     {fileError && <span style={{ fontSize: '0.75rem', color: '#ef4444' }}>{fileError}</span>}
                   </div>
                 )}
-                {form.paymentMethod === 'googlepay' && (
-                  <div className="text-center py-4">
-                    <div style={{ fontSize: '3rem', marginBottom: '0.75rem' }}>🔵</div>
-                    <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.125rem', marginBottom: '0.5rem' }}>Google Pay</h3>
-                    <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', maxWidth: '280px', margin: '0 auto' }}>
-                      {t('checkout.googlePayMsg')}
-                    </p>
-                  </div>
-                )}
                 {form.paymentMethod === 'paypal' && (
                   <div className="text-center py-4">
                     <div style={{ fontSize: '3rem', marginBottom: '0.75rem' }}>🅿️</div>
-                    <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.125rem', marginBottom: '0.5rem' }}>PayPal</h3>
-                    <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', maxWidth: '280px', margin: '0 auto' }}>
+                    <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.125rem', marginBottom: '0.5rem' }}>{t('checkout.paypal')}</h3>
+                    <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', maxWidth: '320px', margin: '0 auto' }}>
                       {t('checkout.paypalMsg')}
                     </p>
                   </div>

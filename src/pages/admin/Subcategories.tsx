@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { Plus, Edit2, Trash2, ToggleLeft, ToggleRight, Upload } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { useAdmin } from '../../contexts/AdminContext';
-import { useData } from '../../contexts/DataContext';
+import { useAdminCategories } from '../../hooks/useAdminCategories';
 import { api } from '../../lib/api';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { AdminSidebar } from '../../components/admin/AdminSidebar';
@@ -167,7 +167,7 @@ function SubcategoryBulkModal({ token, categories, onDone }: { token: string; ca
 // ── Main page ─────────────────────────────────────────────────────────────
 export default function AdminSubcategoriesPage() {
   const { token } = useAdmin();
-  const { subcategories, categories, refetch } = useData();
+  const { subcategories, categories, error: loadError, refetch } = useAdminCategories();
   const { t } = useLanguage();
   const [filterCategory, setFilterCategory] = useState<number | ''>('');
 
@@ -204,6 +204,7 @@ export default function AdminSubcategoriesPage() {
     <div className="admin-layout">
       <AdminSidebar />
       <div className="admin-content p-8">
+        {loadError && <p role="alert" style={{ color: '#ef4444', fontSize: '0.8125rem', marginBottom: '12px' }}>{loadError}</p>}
         <div className="flex items-center justify-between mb-8">
           <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: '2rem', fontWeight: 300 }}>
             {t('admin.subcategories.title')}

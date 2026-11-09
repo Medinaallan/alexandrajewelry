@@ -21,7 +21,7 @@ export default function ContactPage() {
   const validate = (): boolean => {
     const newErrors: Partial<FormState> = {};
     if (!form.name.trim()) newErrors.name = t('checkout.required');
-    if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) newErrors.email = 'Valid email required';
+    if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) newErrors.email = t('contact.invalidEmail');
     if (!form.message.trim()) newErrors.message = t('checkout.required');
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;

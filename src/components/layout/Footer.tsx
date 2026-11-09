@@ -1,24 +1,26 @@
 import { Link } from 'react-router-dom';
 import { Globe, Hash, ExternalLink, Heart } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useData } from '../../contexts/DataContext';
 
 export function Footer() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const { categories } = useData();
   const year = new Date().getFullYear();
 
+  // The store's real categories (the catalog filters by category id)
   const shopLinks = [
-    { to: '/catalog?category=cat-rings', label: 'Rings' },
-    { to: '/catalog?category=cat-necklaces', label: 'Necklaces' },
-    { to: '/catalog?category=cat-bracelets', label: 'Bracelets' },
-    { to: '/catalog?category=cat-earrings', label: 'Earrings' },
-    { to: '/catalog?category=cat-sets', label: 'Sets' },
-    { to: '/catalog?category=cat-gold', label: '14K Gold' },
+    ...categories
+      .filter((c) => c.active)
+      .slice(0, 6)
+      .map((c) => ({ to: `/catalog?category=${c.id}`, label: language === 'es' ? c.name : c.nameEn || c.name })),
+    { to: '/catalog', label: t('nav.catalog') },
   ];
 
   const companyLinks = [
     { to: '/about', label: t('nav.about') },
     { to: '/contact', label: t('nav.contact') },
-    { to: '/catalog', label: t('nav.catalog') },
+    { to: '/track', label: t('track.link') },
   ];
 
   const legalLinks = [

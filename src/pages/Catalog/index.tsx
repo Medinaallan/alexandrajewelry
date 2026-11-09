@@ -20,7 +20,7 @@ function priceCeilingOf(prices: number[]): number {
 
 export default function CatalogPage() {
   const { t, language } = useLanguage();
-  const { products, categories, loading } = useData();
+  const { products, categories, subcategories, loading } = useData();
   const [searchParams, setSearchParams] = useSearchParams();
   const [filtersOpen, setFiltersOpen] = useState(false);
 
@@ -56,12 +56,17 @@ export default function CatalogPage() {
     if (filters.category) {
       result = result.filter((p) => p.categoryId === filters.category);
     }
+    if (filters.subcategory) {
+      result = result.filter((p) => p.subcategoryId === filters.subcategory);
+    }
     if (filters.search) {
       const q = filters.search.toLowerCase();
       result = result.filter(
         (p) =>
           p.name.toLowerCase().includes(q) ||
-          p.nameEn.toLowerCase().includes(q)
+          p.nameEn.toLowerCase().includes(q) ||
+          p.code.toLowerCase().includes(q) ||
+          p.description.toLowerCase().includes(q)
       );
     }
     // At the top of the slider nothing is excluded for being expensive
@@ -96,6 +101,16 @@ export default function CatalogPage() {
     setFilters({ category: '', subcategory: '', minPrice: 0, maxPrice: Infinity, sort: 'newest', search: '' });
     setSearchParams({});
   };
+
+  // Subcategories of the chosen category that have at least one product on sale
+  const categorySubs = filters.category
+    ? subcategories.filter(
+        (sub) =>
+          sub.active &&
+          sub.categoryId === filters.category &&
+          products.some((p) => p.active && p.subcategoryId === sub.id)
+      )
+    : [];
 
   const hasActiveFilters = filters.category || filters.search || filters.minPrice > 0 || priceLimited;
 
@@ -150,7 +165,7 @@ export default function CatalogPage() {
               className="lg:hidden flex items-center gap-2 btn-outline"
               style={{ padding: '0.625rem 1rem' }}
             >
-              <SlidersHorizontal size={14} /> Filters
+              <SlidersHorizontal size={14} /> {t('catalog.filters')}
             </button>
           </div>
 
@@ -193,7 +208,7 @@ export default function CatalogPage() {
                 <ul className="flex flex-col gap-1">
                   <li>
                     <button
-                      onClick={() => setFilter('category', '')}
+                      onClick={() => setFilters((prev) => ({ ...prev, category: '', subcategory: '' }))}
                       className="flex items-center justify-between w-full py-2.5 text-sm text-left transition-colors"
                       style={{ color: !filters.category ? 'var(--gold)' : 'var(--text-muted)' }}
                     >
@@ -205,7 +220,7 @@ export default function CatalogPage() {
                     return (
                       <li key={cat.id}>
                         <button
-                          onClick={() => setFilter('category', cat.id)}
+                          onClick={() => setFilters((prev) => ({ ...prev, category: cat.id, subcategory: '' }))}
                           className="flex items-center justify-between w-full py-2.5 text-sm text-left transition-colors"
                           style={{ color: filters.category === cat.id ? 'var(--gold)' : 'var(--text-muted)' }}
                         >
@@ -216,6 +231,37 @@ export default function CatalogPage() {
                   })}
                 </ul>
               </div>
+
+              {/* Subcategory: only for the chosen category, and only those with products */}
+              {categorySubs.length > 0 && (
+                <div>
+                  <h3 className="section-label mb-4" style={{ display: 'block', marginBottom: '1rem' }}>
+                    {t('catalog.filter.subcategory')}
+                  </h3>
+                  <ul className="flex flex-col gap-1">
+                    <li>
+                      <button
+                        onClick={() => setFilter('subcategory', '')}
+                        className="flex items-center justify-between w-full py-2 text-sm text-left transition-colors"
+                        style={{ color: !filters.subcategory ? 'var(--gold)' : 'var(--text-muted)' }}
+                      >
+                        {t('catalog.filter.allSubcategories')}
+                      </button>
+                    </li>
+                    {categorySubs.map((sub) => (
+                      <li key={sub.id}>
+                        <button
+                          onClick={() => setFilter('subcategory', sub.id)}
+                          className="flex items-center justify-between w-full py-2 text-sm text-left transition-colors"
+                          style={{ color: filters.subcategory === sub.id ? 'var(--gold)' : 'var(--text-muted)' }}
+                        >
+                          {language === 'es' ? sub.name : sub.nameEn || sub.name}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
               {/* Price */}
               <div>

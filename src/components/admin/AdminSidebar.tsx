@@ -1,9 +1,11 @@
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Package, Tag, Layers, LogOut, Gem, MessageSquare, Boxes, ShoppingBag, BarChart2, ChevronDown, ClipboardList, type LucideIcon } from 'lucide-react';
+import { LayoutDashboard, Package, Tag, Layers, LogOut, Gem, MessageSquare, Boxes, ShoppingBag, BarChart2, ChevronDown, ClipboardList, Users, type LucideIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useAdmin } from '../../contexts/AdminContext';
 import { useLanguage } from '../../contexts/LanguageContext';
+import Swal from 'sweetalert2';
 import { api } from '../../lib/api';
+import { NEW_ORDER_EVENT, ORDERS_CHANGED_EVENT, ORDER_POLL_MS, playChime } from '../../lib/orderAlerts';
 
 const navItemsTop = [
   { to: '/admin/dashboard', Icon: LayoutDashboard, labelKey: 'admin.dashboard.title' },
@@ -14,6 +16,7 @@ const navItemsTop = [
 
 const navItemsBottom = [
   { to: '/admin/reports', Icon: BarChart2, labelKey: 'admin.reports.title' },
+  { to: '/admin/users', Icon: Users, labelKey: 'admin.users.title' },
 ];
 
 const dropdowns = [
@@ -130,6 +133,33 @@ function NavDropdown({
   );
 }
 
+// Kept outside the component: the sidebar remounts on every admin page, and
+// the newest order already announced must survive that.
+let lastSeenOrderId: number | null = null;
+const baseTitle = document.title;
+
+function announceNewOrder(openOrders: () => void) {
+  playChime();
+  window.dispatchEvent(new Event(NEW_ORDER_EVENT));
+  void Swal.fire({
+    toast: true,
+    position: 'top-end',
+    icon: 'info',
+    title: '¡Nuevo pedido recibido!',
+    text: 'Haz clic para verlo.',
+    showConfirmButton: false,
+    timer: 10_000,
+    timerProgressBar: true,
+    didOpen: (toast) => {
+      toast.style.cursor = 'pointer';
+      toast.addEventListener('click', () => {
+        Swal.close();
+        openOrders();
+      });
+    },
+  });
+}
+
 export function AdminSidebar() {
   const { logout, token } = useAdmin();
   const { t } = useLanguage();
@@ -146,10 +176,38 @@ export function AdminSidebar() {
     api.admin.testimonials.list(token, 'pending')
       .then((rows) => setPendingCount(rows.length))
       .catch(() => {});
-    api.admin.orders.list(token)
-      .then((rows) => setPendingOrders(rows.filter((o) => o.status === 'pending').length))
-      .catch(() => {});
   }, [token]);
+
+  // Pending orders: checked every minute and right after a status change.
+  // A higher order number than the last one seen means a new order arrived.
+  useEffect(() => {
+    if (!token) return;
+    let cancelled = false;
+    const check = async () => {
+      try {
+        const { count, lastId } = await api.admin.orders.pendingCount(token);
+        if (cancelled) return;
+        setPendingOrders(count);
+        document.title = count > 0 ? `(${count}) ${baseTitle}` : baseTitle;
+        if (lastSeenOrderId !== null && lastId !== null && lastId > lastSeenOrderId) {
+          announceNewOrder(() => navigate('/admin/orders'));
+        }
+        if (lastId !== null && (lastSeenOrderId === null || lastId > lastSeenOrderId)) lastSeenOrderId = lastId;
+      } catch {
+        // offline for a moment: try again on the next tick
+      }
+    };
+    void check();
+    const timer = window.setInterval(() => void check(), ORDER_POLL_MS);
+    const onChanged = () => void check();
+    window.addEventListener(ORDERS_CHANGED_EVENT, onChanged);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+      window.removeEventListener(ORDERS_CHANGED_EVENT, onChanged);
+      document.title = baseTitle;
+    };
+  }, [token, navigate]);
 
   useEffect(() => {
     const active = dropdowns.find((d) => location.pathname.startsWith(d.basePath));

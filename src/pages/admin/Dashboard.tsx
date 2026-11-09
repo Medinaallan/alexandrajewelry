@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Package, Tag, CheckCircle, Star } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Package, Tag, CheckCircle, Star, AlertTriangle } from 'lucide-react';
 import { useAdmin } from '../../contexts/AdminContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAdminProducts } from '../../hooks/useAdminProducts';
@@ -23,6 +24,11 @@ export default function AdminDashboard() {
       .catch((err: unknown) => setCategoriesError(err instanceof Error ? err.message : 'No se pudieron cargar las categorías.'));
   }, [token]);
   const error = productsError || categoriesError;
+
+  // Active products at or below their minimum stock, most urgent first
+  const lowStock = products
+    .filter((p) => p.active && (p.stock === 0 || p.stock <= (p.minStock ?? 0)))
+    .sort((a, b) => a.stock - b.stock);
 
   const stats = [
     {
@@ -98,6 +104,40 @@ export default function AdminDashboard() {
           ))}
         </div>
 
+        {/* Low stock */}
+        {lowStock.length > 0 && (
+          <div
+            className="mb-10"
+            style={{ background: 'var(--bg)', border: '1px solid #f59e0b', borderRadius: 'var(--radius)' }}
+          >
+            <div className="px-6 py-4 flex items-center justify-between gap-4" style={{ borderBottom: '1px solid var(--border)' }}>
+              <h2 className="flex items-center gap-2" style={{ fontFamily: 'var(--font-serif)', fontSize: '1.125rem', fontWeight: 400 }}>
+                <AlertTriangle size={18} style={{ color: '#f59e0b' }} />
+                Stock bajo ({lowStock.length})
+              </h2>
+              <Link to="/admin/stock" className="text-xs uppercase tracking-widest hover:text-(--gold)" style={{ color: 'var(--text-muted)' }}>
+                Agregar stock →
+              </Link>
+            </div>
+            <ul className="divide-y divide-(--border)">
+              {lowStock.slice(0, 10).map((p) => (
+                <li key={p.id} className="px-6 py-3 flex items-center justify-between gap-4 text-sm">
+                  <span style={{ color: 'var(--text)' }}>
+                    {p.name} <span style={{ fontFamily: 'monospace', fontSize: '0.7rem', color: 'var(--text-muted)' }}>({p.code})</span>
+                  </span>
+                  <span style={{ whiteSpace: 'nowrap', fontWeight: 500, color: p.stock === 0 ? '#ef4444' : '#f59e0b' }}>
+                    {p.stock === 0 ? 'Agotado' : `Quedan ${p.stock}`}
+                    <span style={{ fontWeight: 400, color: 'var(--text-muted)' }}> · mínimo {p.minStock ?? 0}</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+            {lowStock.length > 10 && (
+              <p className="px-6 py-3 text-xs" style={{ color: 'var(--text-muted)' }}>y {lowStock.length - 10} más en Stock.</p>
+            )}
+          </div>
+        )}
+
         {/* Recent products */}
         <div
           style={{
@@ -118,7 +158,7 @@ export default function AdminDashboard() {
             <table className="w-full text-sm">
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--border)', background: 'var(--bg-subtle)' }}>
-                  {['Image', 'Name', 'Category', 'Price', 'Status'].map((h) => (
+                  {['Imagen', 'Nombre', 'Categoría', 'Precio', 'Estado'].map((h) => (
                     <th
                       key={h}
                       className="px-6 py-3 text-left"

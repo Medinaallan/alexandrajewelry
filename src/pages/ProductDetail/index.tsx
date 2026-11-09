@@ -2,7 +2,7 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ShoppingBag, Share2, ChevronLeft, ChevronRight, Gem } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
-import { useCart } from '../../contexts/CartContext';
+import { useCart } from '../../contexts/CartContext';
 import { maxUnits } from '../../utils/stock';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { formatPrice } from '../../utils/formatPrice';
@@ -25,7 +25,7 @@ export default function ProductDetailPage() {
   if (loading) {
     return (
       <div className="page-container py-32 text-center">
-        <p style={{ color: 'var(--text-muted)' }}>Loading...</p>
+        <p style={{ color: 'var(--text-muted)' }}>{t('common.loading')}</p>
       </div>
     );
   }
@@ -34,10 +34,10 @@ export default function ProductDetailPage() {
     return (
       <div className="page-container py-32 text-center">
         <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '2rem', marginBottom: '1rem' }}>
-          Product not found
+          {t('detail.notFound')}
         </h2>
         <Button variant="outline" onClick={() => navigate('/catalog')}>
-          <ArrowLeft size={14} /> Back to Catalog
+          <ArrowLeft size={14} /> {t('detail.backToCatalog')}
         </Button>
       </div>
     );
@@ -206,7 +206,7 @@ export default function ProductDetailPage() {
               {product.code && (
                 <div className="flex items-center gap-4 py-4" style={{ borderBottom: '1px solid var(--border)' }}>
                   <span className="w-28 shrink-0 text-xs uppercase tracking-widest text-(--text-muted)">
-                    {t('detail.category')}
+                    {t('detail.code')}
                   </span>
                   <span style={{ fontSize: '0.875rem', color: 'var(--text)' }}>{product.code}</span>
                 </div>

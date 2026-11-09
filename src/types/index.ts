@@ -101,7 +101,22 @@ export interface Order {
   items: OrderItem[];
   total: number;
   status: OrderStatus;
+  /** PayPal capture id reported by the customer's browser (not verified) */
+  paymentRef: string | null;
+  paymentAmount: number | null;
   createdAt: string;
+}
+
+/** What a customer sees when checking their order (no personal data) */
+export interface OrderTracking {
+  id: number;
+  status: OrderStatus;
+  paymentMethod: CheckoutForm['paymentMethod'];
+  total: number;
+  createdAt: string;
+  /** A PayPal payment was already noted on the order */
+  paymentReported: boolean;
+  items: { name: string; quantity: number; subtotal: number }[];
 }
 
 export interface Testimonial {

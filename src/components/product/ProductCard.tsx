@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ShoppingBag, Eye, Gem } from 'lucide-react';
 import type { Product } from '../../types';
-import { useCart } from '../../contexts/CartContext';
+import { useCart } from '../../contexts/CartContext';
 import { maxUnits } from '../../utils/stock';
 import { useData } from '../../contexts/DataContext';
 import { useLanguage } from '../../contexts/LanguageContext';

@@ -1,4 +1,4 @@
-import type { Product, Category, Subcategory, Testimonial, AdminUser, CheckoutForm, CartItem, ProductImage, StockProduct, StockMovement, Sale, SaleReport, Order, OrderStatus } from '../types';
+import type { Product, Category, Subcategory, Testimonial, AdminUser, CheckoutForm, CartItem, ProductImage, StockProduct, StockMovement, Sale, SaleReport, Order, OrderStatus, OrderTracking } from '../types';
 
 import type { BulkProductRow } from './productExcel';
 
@@ -83,6 +83,15 @@ export const api = {
       }
       return request<{ id: number; total: number; receiptUploaded: boolean }>('/api/orders', { method: 'POST', body });
     },
+    // The customer checks an order with its number and the phone used to place it
+    track: (id: number, phone: string) =>
+      request<OrderTracking>(`/api/orders/track?id=${id}&phone=${encodeURIComponent(phone)}`),
+    // Notes a PayPal payment on the order; the admin verifies it in PayPal
+    reportPaypal: (id: number, phone: string, captureId: string, amount: number) =>
+      request<{ ok: true }>(`/api/orders/${id}/paypal`, {
+        method: 'POST',
+        body: JSON.stringify({ phone, captureId, amount }),
+      }),
   },
 
   // ─── Admin (requires JWT token) ─────────────────────────────────────────────
@@ -210,6 +219,9 @@ export const api = {
     orders: {
       list: (token: string) =>
         request<Order[]>('/api/orders', { headers: authHeaders(token) }),
+      // Cheap call the panel polls to announce new orders
+      pendingCount: (token: string) =>
+        request<{ count: number; lastId: number | null }>('/api/orders/pending-count', { headers: authHeaders(token) }),
       updateStatus: (token: string, id: number, status: OrderStatus) =>
         request<Order>(`/api/orders/${id}/status`, {
           method: 'PATCH',
@@ -296,6 +308,12 @@ export const api = {
         request<Sale[]>('/api/sales', { headers: authHeaders(token) }),
       report: (token: string) =>
         request<SaleReport[]>('/api/sales/report', { headers: authHeaders(token) }),
+      // Cancels a counter sale: its units go back to stock
+      void: (token: string, id: number) =>
+        request<{ ok: true; productId: number; quantity: number; newStock: number }>(`/api/sales/${id}`, {
+          method: 'DELETE',
+          headers: authHeaders(token),
+        }),
       create: (token: string, data: { productId: number; quantity: number; unitPrice?: number; notes?: string }) =>
         request<Sale>('/api/sales', {
           method: 'POST',

@@ -14,6 +14,7 @@ const ProductDetail    = lazy(() => import('../pages/ProductDetail'));
 const AboutPage        = lazy(() => import('../pages/About'));
 const ContactPage      = lazy(() => import('../pages/Contact'));
 const CheckoutPage     = lazy(() => import('../pages/Checkout'));
+const TrackOrderPage   = lazy(() => import('../pages/TrackOrder'));
 const AdminLoginPage   = lazy(() => import('../pages/admin/Login'));
 const AdminDashboard   = lazy(() => import('../pages/admin/Dashboard'));
 const AdminProducts    = lazy(() => import('../pages/admin/Products'));
@@ -26,6 +27,7 @@ const AdminSales         = lazy(() => import('../pages/admin/Sales'));
 const AdminSalesHistory  = lazy(() => import('../pages/admin/SalesHistory'));
 const AdminReports       = lazy(() => import('../pages/admin/Reports'));
 const AdminOrders        = lazy(() => import('../pages/admin/Orders'));
+const AdminUsers         = lazy(() => import('../pages/admin/Users'));
 
 function PageLoader() {
   return (
@@ -134,6 +136,14 @@ export function AppRoutes() {
           }
         />
         <Route
+          path="/track"
+          element={
+            <StoreLayout>
+              <TrackOrderPage />
+            </StoreLayout>
+          }
+        />
+        <Route
           path="/checkout"
           element={
             <StoreLayout>
@@ -144,6 +154,14 @@ export function AppRoutes() {
 
         {/* ── Admin routes ──────────────────────────────────────────────── */}
         <Route path="/admin" element={<AdminLoginPage />} />
+        <Route
+          path="/admin/users"
+          element={
+            <AdminRoute>
+              <AdminUsers />
+            </AdminRoute>
+          }
+        />
         <Route
           path="/admin/dashboard"
           element={

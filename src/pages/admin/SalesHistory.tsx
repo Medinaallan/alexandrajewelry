@@ -1,4 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
+import { Link } from 'react-router-dom';
+import { Undo2 } from 'lucide-react';
+import Swal from 'sweetalert2';
 import { useAdmin } from '../../contexts/AdminContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { api } from '../../lib/api';
@@ -12,6 +15,7 @@ export default function AdminSalesHistoryPage() {
 
   const [sales, setSales] = useState<Sale[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const fetchData = useCallback(async () => {
     if (!token) return;
@@ -19,12 +23,42 @@ export default function AdminSalesHistoryPage() {
     try {
       const s = await api.admin.sales.list(token);
       setSales(s);
+      setError('');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudieron cargar las ventas.');
     } finally {
       setLoading(false);
     }
   }, [token]);
 
   useEffect(() => { void fetchData(); }, [fetchData]);
+
+  // Only counter sales: a web order's sales are undone from the order status
+  const voidSale = async (sale: Sale) => {
+    if (!token) return;
+    const answer = await Swal.fire({
+      title: '¿Anular esta venta?',
+      text: `${sale.quantity} × ${sale.productName} (${formatPrice(sale.total)}). Las unidades vuelven al stock y la venta deja de contar en los reportes.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, anular',
+      cancelButtonText: 'No',
+      confirmButtonColor: '#ef4444',
+    });
+    if (!answer.isConfirmed) return;
+    try {
+      const result = await api.admin.sales.void(token, sale.id);
+      setSales((prev) => prev.filter((s) => s.id !== sale.id));
+      setError('');
+      void Swal.fire({
+        toast: true, position: 'top-end', icon: 'success', showConfirmButton: false, timer: 3000,
+        title: `Venta anulada. Stock de ${sale.productName}: ${result.newStock}`,
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo anular la venta.');
+      void fetchData();
+    }
+  };
 
   const sectionCard: React.CSSProperties = {
     background: 'var(--bg)',
@@ -44,6 +78,8 @@ export default function AdminSalesHistoryPage() {
           </h1>
         </div>
 
+        {error && <p role="alert" style={{ color: '#ef4444', fontSize: '0.8125rem', marginBottom: '12px' }}>{error}</p>}
+
         <div style={sectionCard}>
           {loading ? (
             <p style={{ color: 'var(--text-muted)' }}>{t('common.loading')}</p>
@@ -54,8 +90,8 @@ export default function AdminSalesHistoryPage() {
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8125rem' }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                    {[t('admin.sales.product'), t('admin.sales.quantity'), t('admin.sales.unitPrice'), t('admin.sales.total'), t('admin.sales.notes'), t('admin.sales.soldBy'), t('admin.sales.date')].map((h) => (
-                      <th key={h} style={{ textAlign: 'left', padding: '8px 12px', color: 'var(--text-muted)', fontWeight: 500, fontSize: '0.75rem', letterSpacing: '0.04em' }}>{h}</th>
+                    {[t('admin.sales.product'), t('admin.sales.quantity'), t('admin.sales.unitPrice'), t('admin.sales.total'), t('admin.sales.notes'), t('admin.sales.soldBy'), 'Origen', t('admin.sales.date'), ''].map((h) => (
+                      <th key={h || 'actions'} style={{ textAlign: 'left', padding: '8px 12px', color: 'var(--text-muted)', fontWeight: 500, fontSize: '0.75rem', letterSpacing: '0.04em' }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -69,7 +105,25 @@ export default function AdminSalesHistoryPage() {
                       <td style={{ padding: '10px 12px', color: 'var(--text-muted)' }}>{s.notes || '—'}</td>
                       <td style={{ padding: '10px 12px', color: 'var(--text-muted)' }}>{s.soldBy || '—'}</td>
                       <td style={{ padding: '10px 12px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                        {s.orderId ? (
+                          <Link to="/admin/orders" className="hover:text-(--gold) underline">Web · pedido #{s.orderId}</Link>
+                        ) : 'Mostrador'}
+                      </td>
+                      <td style={{ padding: '10px 12px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                         {new Date(s.createdAt).toLocaleString('es-VE', { dateStyle: 'short', timeStyle: 'short' })}
+                      </td>
+                      <td style={{ padding: '10px 12px' }}>
+                        {!s.orderId && (
+                          <button
+                            type="button"
+                            onClick={() => void voidSale(s)}
+                            className="flex items-center gap-1 hover:text-red-500 transition-colors"
+                            style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}
+                            title="Anular venta"
+                          >
+                            <Undo2 size={13} /> Anular
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))}

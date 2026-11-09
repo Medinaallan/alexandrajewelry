@@ -2,8 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { Plus, Edit2, Trash2, ToggleLeft, ToggleRight, X, ImageIcon, Upload, Download, FileSpreadsheet } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { useAdmin } from '../../contexts/AdminContext';
-import { useData } from '../../contexts/DataContext';
 import { useAdminProducts } from '../../hooks/useAdminProducts';
+import { useAdminCategories } from '../../hooks/useAdminCategories';
 import { api } from '../../lib/api';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { AdminSidebar } from '../../components/admin/AdminSidebar';
@@ -439,8 +439,10 @@ function ProductBulkModal({ token, categories, subcategories, onDone }: BulkProp
 
 export default function AdminProductsPage() {
   const { token } = useAdmin();
-  const { categories, subcategories } = useData();
-  const { products, error: loadError, refetch } = useAdminProducts();
+  const { categories, subcategories, error: categoriesError, refetch: refetchCategories } = useAdminCategories();
+  const { products, error: productsError, refetch: refetchProducts } = useAdminProducts();
+  const loadError = productsError || categoriesError;
+  const refetch = async () => { await Promise.all([refetchProducts(), refetchCategories()]); };
   const { t } = useLanguage();
   const [search, setSearch] = useState('');
 
