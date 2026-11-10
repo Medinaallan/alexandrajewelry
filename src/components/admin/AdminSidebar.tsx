@@ -1,11 +1,11 @@
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Package, Tag, Layers, LogOut, Gem, MessageSquare, Boxes, ShoppingBag, BarChart2, ChevronDown, ClipboardList, Users, type LucideIcon } from 'lucide-react';
+import { LayoutDashboard, Package, Tag, Layers, LogOut, Gem, MessageSquare, Boxes, ShoppingBag, BarChart2, ChevronDown, ClipboardList, Users, Mail, Settings, type LucideIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useAdmin } from '../../contexts/AdminContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import Swal from 'sweetalert2';
 import { api } from '../../lib/api';
-import { NEW_ORDER_EVENT, ORDERS_CHANGED_EVENT, ORDER_POLL_MS, playChime } from '../../lib/orderAlerts';
+import { MESSAGES_CHANGED_EVENT, NEW_ORDER_EVENT, ORDERS_CHANGED_EVENT, ORDER_POLL_MS, playChime } from '../../lib/orderAlerts';
 
 const navItemsTop = [
   { to: '/admin/dashboard', Icon: LayoutDashboard, labelKey: 'admin.dashboard.title' },
@@ -17,6 +17,7 @@ const navItemsTop = [
 const navItemsBottom = [
   { to: '/admin/reports', Icon: BarChart2, labelKey: 'admin.reports.title' },
   { to: '/admin/users', Icon: Users, labelKey: 'admin.users.title' },
+  { to: '/admin/settings', Icon: Settings, labelKey: 'admin.settings.title' },
 ];
 
 const dropdowns = [
@@ -167,6 +168,7 @@ export function AdminSidebar() {
   const location = useLocation();
   const [pendingCount, setPendingCount] = useState(0);
   const [pendingOrders, setPendingOrders] = useState(0);
+  const [unreadMessages, setUnreadMessages] = useState(0);
   const [openDropdown, setOpenDropdown] = useState<string | null>(
     dropdowns.find((d) => location.pathname.startsWith(d.basePath))?.key ?? null
   );
@@ -208,6 +210,24 @@ export function AdminSidebar() {
       document.title = baseTitle;
     };
   }, [token, navigate]);
+
+  // Unread contact messages: same rhythm as the orders
+  useEffect(() => {
+    if (!token) return;
+    let cancelled = false;
+    const check = () =>
+      api.admin.contact.unreadCount(token)
+        .then(({ count }) => { if (!cancelled) setUnreadMessages(count); })
+        .catch(() => {});
+    void check();
+    const timer = window.setInterval(() => void check(), ORDER_POLL_MS);
+    window.addEventListener(MESSAGES_CHANGED_EVENT, check);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+      window.removeEventListener(MESSAGES_CHANGED_EVENT, check);
+    };
+  }, [token]);
 
   useEffect(() => {
     const active = dropdowns.find((d) => location.pathname.startsWith(d.basePath));
@@ -264,6 +284,28 @@ export function AdminSidebar() {
               }}
             >
               {pendingOrders}
+            </span>
+          )}
+        </NavLink>
+
+        {/* Contact form inbox */}
+        <NavLink to="/admin/messages" style={navLinkStyle}>
+          <Mail size={16} />
+          <span className="flex-1">Mensajes</span>
+          {unreadMessages > 0 && (
+            <span
+              style={{
+                background: 'var(--gold)',
+                color: '#000',
+                fontSize: '0.65rem',
+                fontWeight: 700,
+                borderRadius: '10px',
+                padding: '1px 6px',
+                minWidth: '18px',
+                textAlign: 'center',
+              }}
+            >
+              {unreadMessages}
             </span>
           )}
         </NavLink>

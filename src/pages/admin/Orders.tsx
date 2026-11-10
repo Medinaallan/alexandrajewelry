@@ -9,11 +9,12 @@ import { AdminSidebar } from '../../components/admin/AdminSidebar';
 import { formatPrice } from '../../utils/formatPrice';
 import type { Order, OrderStatus } from '../../types';
 
-const STATUSES: OrderStatus[] = ['pending', 'confirmed', 'paid', 'shipped', 'delivered', 'cancelled'];
+const STATUSES: OrderStatus[] = ['pending', 'confirmed', 'review', 'paid', 'shipped', 'delivered', 'cancelled'];
 
 const STATUS_COLOR: Record<OrderStatus, string> = {
   pending: '#f59e0b',
   confirmed: '#3b82f6',
+  review: '#0ea5e9',
   paid: '#22c55e',
   shipped: '#8b5cf6',
   delivered: '#16a34a',
@@ -21,12 +22,14 @@ const STATUS_COLOR: Record<OrderStatus, string> = {
 };
 
 // In these statuses the order's units are already out of stock
-const STOCK_TAKEN: OrderStatus[] = ['paid', 'shipped', 'delivered'];
+const STOCK_TAKEN: OrderStatus[] = ['review', 'paid', 'shipped', 'delivered'];
 
 /** WhatsApp chat with the customer, with the order number already written. */
 function customerWhatsAppUrl(order: Order): string | null {
-  const digits = order.customerPhone.replace(/\D/g, '');
+  let digits = order.customerPhone.replace(/\D/g, '');
   if (digits.length < 7) return null;
+  // The store is in the US: a 10-digit number gets the +1 country code
+  if (digits.length === 10) digits = `1${digits}`;
   const firstName = order.customerName.trim().split(/\s+/)[0] ?? '';
   const text = `Hola ${firstName}, te escribimos de Alexandra Jewelry por tu pedido #${order.id}.`;
   return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
@@ -60,8 +63,11 @@ function PayPalPaymentNote({ order }: { order: Order }) {
           {amountDiffers && ' ≠ total del pedido'}
         </div>
       )}
+      {order.status === 'review' && (
+        <div style={{ color: '#b45309' }}>Stock apartado. Verifica en PayPal y marca como Pagado</div>
+      )}
       {(order.status === 'pending' || order.status === 'confirmed') && (
-        <div style={{ color: '#b45309' }}>Verifica en PayPal antes de marcar como pagado</div>
+        <div style={{ color: '#ef4444', fontWeight: 700 }}>Pagado, pero sin stock: repón el stock o reembolsa en PayPal</div>
       )}
     </div>
   );
@@ -127,9 +133,13 @@ export default function AdminOrdersPage() {
       const returnsStock = STOCK_TAKEN.includes(order.status);
       const answer = await Swal.fire({
         title: `¿Cancelar el pedido #${order.id}?`,
-        text: returnsStock
-          ? 'Las unidades vuelven al stock y sus ventas se quitan de los reportes.'
-          : 'El cliente ya no podrá recibir este pedido.',
+        text: [
+          returnsStock
+            ? 'Las unidades vuelven al stock y sus ventas se quitan de los reportes.'
+            : 'El cliente ya no podrá recibir este pedido.',
+          order.paymentRef ? `Este pedido tiene un pago PayPal (${order.paymentRef}): recuerda reembolsarlo desde PayPal.` : '',
+          order.customerEmail ? 'Se avisará al cliente por correo.' : '',
+        ].filter(Boolean).join(' '),
         icon: 'warning',
         showCancelButton: true,
         confirmButtonText: 'Sí, cancelar pedido',
@@ -263,6 +273,9 @@ export default function AdminOrdersPage() {
                             </a>
                           )}
                         </div>
+                        {o.customerEmail && (
+                          <a href={`mailto:${o.customerEmail}`} className="block hover:text-(--gold)" style={{ textDecoration: 'underline' }}>{o.customerEmail}</a>
+                        )}
                         <div>{[o.customerAddress, o.customerCity].filter(Boolean).join(', ')}</div>
                         {o.notes && <div style={{ fontStyle: 'italic', marginTop: '4px' }}>“{o.notes}”</div>}
                       </td>
@@ -309,7 +322,7 @@ export default function AdminOrdersPage() {
                         </select>
                       </td>
                       <td style={{ ...cell, whiteSpace: 'nowrap' }}>
-                        {new Date(o.createdAt).toLocaleString('es-VE', { dateStyle: 'short', timeStyle: 'short' })}
+                        {new Date(o.createdAt).toLocaleString('es-US', { dateStyle: 'short', timeStyle: 'short' })}
                       </td>
                     </tr>
                   ))}

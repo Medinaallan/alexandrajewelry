@@ -39,10 +39,13 @@ export default function CheckoutPage() {
     receiptMissing: boolean;
     /** PayPal capture id once the customer paid */
     paypalRef?: string;
+    /** Paid, but a product sold out meanwhile */
+    stockShort?: boolean;
   } | null>(null);
   const [form, setForm] = useState<CheckoutForm>({
     name: '',
     phone: '',
+    email: '',
     address: '',
     city: '',
     notes: '',
@@ -57,6 +60,7 @@ export default function CheckoutPage() {
     const e: Partial<Record<keyof CheckoutForm, string>> = {};
     if (!form.name.trim()) e.name = t('checkout.required');
     if (!form.phone.trim()) e.phone = t('checkout.required');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) e.email = t('contact.invalidEmail');
     if (!form.address.trim()) e.address = t('checkout.required');
     if (!form.city.trim()) e.city = t('checkout.required');
     setErrors(e);
@@ -133,8 +137,8 @@ export default function CheckoutPage() {
           orderId={placed.id}
           total={placed.total}
           phone={form.phone}
-          onPaid={(paypalRef) => {
-            setPlaced((p) => (p ? { ...p, paypalRef } : p));
+          onPaid={(paypalRef, stockShort) => {
+            setPlaced((p) => (p ? { ...p, paypalRef, stockShort } : p));
             setStep('success');
           }}
         />
@@ -176,7 +180,9 @@ export default function CheckoutPage() {
         </p>
         {form.paymentMethod === 'paypal' && placed && (
           <p style={{ fontSize: '0.875rem', marginBottom: '2rem', lineHeight: 1.6, color: placed.paypalRef ? 'var(--text)' : '#b45309' }}>
-            {placed.paypalRef ? `${t('checkout.paypalPaid')} ${placed.paypalRef}` : t('checkout.paypalPending')}
+            {placed.paypalRef
+              ? `${placed.stockShort ? t('checkout.paypalPaidShort') : t('checkout.paypalPaid')} ${placed.paypalRef}`
+              : t('checkout.paypalPending')}
           </p>
         )}
         {placed?.receiptMissing && (
@@ -242,6 +248,9 @@ export default function CheckoutPage() {
                   <input id="checkout-phone" autoComplete="tel" className="form-input" type="tel" placeholder={t('checkout.phone')} value={form.phone} onChange={(e) => set('phone', e.target.value)} />
                 </CheckoutField>
               </div>
+              <CheckoutField label={t('checkout.email')} error={errors.email} htmlFor="checkout-email">
+                <input id="checkout-email" autoComplete="email" className="form-input" type="email" placeholder={t('checkout.emailHint')} value={form.email} onChange={(e) => set('email', e.target.value)} />
+              </CheckoutField>
               <CheckoutField label={t('checkout.address')} error={errors.address} htmlFor="checkout-address">
                 <input id="checkout-address" autoComplete="street-address" className="form-input" placeholder={t('checkout.address')} value={form.address} onChange={(e) => set('address', e.target.value)} />
               </CheckoutField>

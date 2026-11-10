@@ -1,8 +1,10 @@
 import { useState } from 'react';
-import { MessageCircle, Clock, MapPin, Globe, Hash } from 'lucide-react';
+import { MessageCircle, MapPin, Phone, Mail } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { Button } from '../../components/ui/Button';
 import { WHATSAPP_URL } from '../../utils/generateWhatsAppMessage';
+import { api } from '../../lib/api';
+import { STORE } from '../../utils/store';
 
 interface FormState {
   name: string;
@@ -17,6 +19,7 @@ export default function ContactPage() {
   const [errors, setErrors] = useState<Partial<FormState>>({});
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [sendError, setSendError] = useState('');
 
   const validate = (): boolean => {
     const newErrors: Partial<FormState> = {};
@@ -31,9 +34,24 @@ export default function ContactPage() {
     e.preventDefault();
     if (!validate()) return;
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 1000)); // Simulate API call
-    setLoading(false);
-    setSubmitted(true);
+    setSendError('');
+    try {
+      await api.contact.send({
+        name: form.name.trim(),
+        email: form.email.trim(),
+        phone: form.phone.trim(),
+        message: form.message.trim(),
+      });
+      setSubmitted(true);
+    } catch (err) {
+      setSendError(
+        err instanceof Error && err.message !== 'Failed to fetch'
+          ? err.message
+          : 'No pudimos enviar tu mensaje. Intenta de nuevo o escríbenos por WhatsApp.'
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   const inputProps = (field: keyof FormState) => ({
@@ -105,6 +123,11 @@ export default function ContactPage() {
                   />
                 </FormField>
 
+                {sendError && (
+                  <p role="alert" style={{ fontSize: '0.8125rem', color: '#ef4444', padding: '0.625rem 0.875rem', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
+                    {sendError}
+                  </p>
+                )}
                 <Button type="submit" variant="gold" isLoading={loading} className="self-start">
                   {t('contact.form.send')}
                 </Button>
@@ -132,65 +155,33 @@ export default function ContactPage() {
               </a>
             </div>
 
-            {/* Hours */}
-              <div className="flex flex-col gap-5 p-8" style={{ border: '1px solid var(--border)' }}>
-              <Clock size={22} style={{ color: 'var(--gold)' }} />
-              <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.25rem' }}>{t('contact.hours')}</h3>
-              <div className="flex flex-col gap-1.5">
-                {[
-                  { days: es ? 'Lunes – Viernes' : 'Monday – Friday', hours: '9:00 AM – 6:00 PM' },
-                  { days: es ? 'Sábado' : 'Saturday', hours: '10:00 AM – 4:00 PM' },
-                  { days: es ? 'Domingo' : 'Sunday', hours: es ? 'Cerrado' : 'Closed' },
-                ].map(({ days, hours }) => (
-                  <div key={days} className="flex justify-between text-sm">
-                    <span style={{ color: 'var(--text-muted)' }}>{days}</span>
-                    <span style={{ color: 'var(--text)', fontWeight: 500 }}>{hours}</span>
-                  </div>
-                ))}
-              </div>
+            {/* Phone and email */}
+              <div className="flex flex-col gap-4 p-8" style={{ border: '1px solid var(--border)' }}>
+              <Phone size={22} style={{ color: 'var(--gold)' }} />
+              <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.25rem' }}>{es ? 'Llámanos o escríbenos' : 'Call or email us'}</h3>
+              <a href={STORE.phoneHref} className="flex items-center gap-2 text-sm hover:text-(--gold)" style={{ color: 'var(--text)' }}>
+                <Phone size={14} /> {STORE.phone}
+              </a>
+              <a href={`mailto:${STORE.email}`} className="flex items-center gap-2 text-sm hover:text-(--gold)" style={{ color: 'var(--text)' }}>
+                <Mail size={14} /> {STORE.email}
+              </a>
             </div>
 
-            {/* Location (simulated map) */}
+            {/* Location */}
               <div className="flex flex-col gap-5 p-8" style={{ border: '1px solid var(--border)' }}>
               <MapPin size={22} style={{ color: 'var(--gold)' }} />
-              <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.25rem' }}>{t('contact.location')}</h3>
-              <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-                {es ? '123 Calle de la Joyería, Ciudad de Lujo' : '123 Jewelry Lane, Luxury City'}
-              </p>
-              {/* Simulated map */}
-              <div
-                className="w-full mt-2 flex items-center justify-center"
-                style={{ height: '160px', background: 'var(--gray-100)', border: '1px solid var(--border)', position: 'relative', overflow: 'hidden' }}
-              >
-                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, #e8e8e8 25%, #f0f0f0 50%, #e8e8e8 75%)', backgroundSize: '400% 400%', animation: 'shimmer 3s ease infinite' }} />
-                <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-                  <MapPin size={28} style={{ color: 'var(--gold)' }} />
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                    {es ? 'Mapa de Ubicación' : 'Location Map'}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Social */}
-            <div className="flex flex-col gap-3">
-              <p className="section-label">{t('contact.social')}</p>
-              <div className="flex gap-3">
-                {[
-                { Icon: Globe, label: 'Instagram', href: '#' },
-                { Icon: Hash, label: 'Facebook', href: '#' },
-                ].map(({ Icon, label, href }) => (
-                  <a
-                    key={label}
-                    href={href}
-                    aria-label={label}
-                    className="flex items-center gap-2 px-4 py-2.5 text-xs uppercase tracking-widest border border-(--border) hover:border-(--gold) hover:text-(--gold) transition-all"
-                    style={{ color: 'var(--text-muted)' }}
-                  >
-                    <Icon size={14} /> {label}
-                  </a>
-                ))}
-              </div>
+              <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.25rem' }}>{es ? 'Visítanos en nuestra tienda' : 'Visit us at our store'}</h3>
+              <a href={STORE.mapsUrl} target="_blank" rel="noopener noreferrer" className="text-sm hover:text-(--gold)" style={{ color: 'var(--text-muted)', lineHeight: 1.6 }}>
+                {STORE.street}<br />{STORE.cityLine}
+              </a>
+              <iframe
+                title={es ? 'Mapa de la tienda' : 'Store map'}
+                src={STORE.mapsEmbed}
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                className="w-full mt-2"
+                style={{ height: '220px', border: '1px solid var(--border)' }}
+              />
             </div>
           </div>
         </div>

@@ -110,7 +110,7 @@ export default function AdminSalesHistoryPage() {
                         ) : 'Mostrador'}
                       </td>
                       <td style={{ padding: '10px 12px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
-                        {new Date(s.createdAt).toLocaleString('es-VE', { dateStyle: 'short', timeStyle: 'short' })}
+                        {new Date(s.createdAt).toLocaleString('es-US', { dateStyle: 'short', timeStyle: 'short' })}
                       </td>
                       <td style={{ padding: '10px 12px' }}>
                         {!s.orderId && (

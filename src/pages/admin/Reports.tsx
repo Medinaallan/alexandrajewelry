@@ -276,7 +276,7 @@ export default function AdminReportsPage() {
                           <td style={{ padding: '10px 12px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{s.orderId ? `Web #${s.orderId}` : 'Mostrador'}</td>
                           <td style={{ padding: '10px 12px', color: 'var(--text-muted)' }}>{s.soldBy || '—'}</td>
                           <td style={{ padding: '10px 12px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
-                            {new Date(s.createdAt).toLocaleString('es-VE', { dateStyle: 'short', timeStyle: 'short' })}
+                            {new Date(s.createdAt).toLocaleString('es-US', { dateStyle: 'short', timeStyle: 'short' })}
                           </td>
                         </tr>
                       ))}

@@ -7,8 +7,11 @@ type Props = {
   orderId: number;
   total: number;
   phone: string;
-  /** Called once PayPal took the money and the order has the payment noted. */
-  onPaid(captureId: string): void;
+  /**
+   * Called once PayPal took the money and the order has the payment noted.
+   * `stockShort`: a product sold out meanwhile; the store will contact them.
+   */
+  onPaid(captureId: string, stockShort: boolean): void;
 };
 
 type State =
@@ -47,8 +50,16 @@ export function PayPalPay({ orderId, total, phone, onPaid }: Props) {
         if (closed || !container.current) return;
         const instance = paypal.Buttons({
           style: { layout: 'vertical', shape: 'rect', label: 'pay' },
-          createOrder: (_data, actions) =>
-            actions.order.create({
+          createOrder: async (_data, actions) => {
+            // Still payable and in stock? The API also says the exact amount.
+            let amount = total;
+            try {
+              amount = (await api.orders.checkPaypal(orderId, phone)).total;
+            } catch (err) {
+              setState({ kind: 'failed', message: err instanceof Error && err.message !== 'Failed to fetch' ? err.message : 'No pudimos verificar tu pedido. Intenta de nuevo.' });
+              throw err;
+            }
+            return actions.order.create({
               intent: 'CAPTURE',
               purchase_units: [
                 {
@@ -56,10 +67,11 @@ export function PayPalPay({ orderId, total, phone, onPaid }: Props) {
                   invoice_id: `AJW-${orderId}`,
                   custom_id: String(orderId),
                   description: `Alexandra Jewelry - Pedido #${orderId}`,
-                  amount: { currency_code: PAYPAL_CURRENCY, value: total.toFixed(2) },
+                  amount: { currency_code: PAYPAL_CURRENCY, value: amount.toFixed(2) },
                 },
               ],
-            }),
+            });
+          },
           onApprove: async (_data, actions) => {
             const result = await actions.order.capture();
             const capture = captureOf(result);
@@ -68,14 +80,15 @@ export function PayPalPay({ orderId, total, phone, onPaid }: Props) {
               return;
             }
             try {
-              await api.orders.reportPaypal(orderId, phone, capture.id, Number(capture.amount?.value ?? total));
-              paidRef.current(capture.id);
+              const { stockShort } = await api.orders.reportPaypal(orderId, phone, capture.id, Number(capture.amount?.value ?? total));
+              paidRef.current(capture.id, stockShort);
             } catch {
               setState({ kind: 'unreported', captureId: capture.id });
             }
           },
+          // A failed check already put its own message
           onError: () =>
-            setState({ kind: 'failed', message: 'Hubo un problema con PayPal. No se te cobró; intenta de nuevo.' }),
+            setState((prev) => (prev.kind === 'failed' ? prev : { kind: 'failed', message: 'Hubo un problema con PayPal. No se te cobró; intenta de nuevo.' })),
         });
         buttons = instance;
         return instance.render(container.current).then(() => {

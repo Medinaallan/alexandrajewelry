@@ -250,7 +250,7 @@ export default function AdminUsersPage() {
                           </button>
                         </td>
                         <td className="px-4 py-3" style={{ color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
-                          {new Date(u.createdAt).toLocaleDateString('es-VE')}
+                          {new Date(u.createdAt).toLocaleDateString('es-US')}
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-1">

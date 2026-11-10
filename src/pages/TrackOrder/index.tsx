@@ -14,6 +14,7 @@ const STEPS: OrderStatus[] = ['pending', 'confirmed', 'paid', 'shipped', 'delive
 const STEP_HELP: Record<OrderStatus, string> = {
   pending: 'Recibimos tu pedido. Pronto te contactaremos para confirmarlo.',
   confirmed: 'Confirmamos tu pedido y estamos esperando tu pago.',
+  review: 'Recibimos tu pago con PayPal y lo estamos verificando.',
   paid: 'Recibimos tu pago. Estamos preparando tu pedido.',
   shipped: 'Tu pedido va en camino.',
   delivered: 'Tu pedido fue entregado. ¡Gracias por tu compra!',
@@ -51,7 +52,8 @@ export default function TrackOrderPage() {
     }
   };
 
-  const currentStep = order ? STEPS.indexOf(order.status) : -1;
+  // "review" sits between confirmed and paid
+  const currentStep = order ? (order.status === 'review' ? STEPS.indexOf('confirmed') : STEPS.indexOf(order.status)) : -1;
   const labelStyle: React.CSSProperties = { fontSize: '0.6875rem', fontWeight: 500, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-muted)' };
 
   return (
@@ -92,7 +94,7 @@ export default function TrackOrderPage() {
                 {t('checkout.orderNumber')} #{order.id}
               </h2>
               <span style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
-                {t('track.placed')} {new Date(order.createdAt).toLocaleDateString('es-VE', { dateStyle: 'long' })}
+                {t('track.placed')} {new Date(order.createdAt).toLocaleDateString('es-US', { dateStyle: 'long' })}
               </span>
             </div>
 
@@ -130,6 +132,8 @@ export default function TrackOrderPage() {
                   {order.paymentMethod === 'paypal' && (order.status === 'pending' || order.status === 'confirmed') && (
                     order.paymentReported ? (
                       <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginTop: '0.75rem' }}>{t('track.paypalReported')}</p>
+                    ) : !order.canPay ? (
+                      <p style={{ fontSize: '0.875rem', color: '#b45309', marginTop: '0.75rem' }}>{t('track.paypalExpired')}</p>
                     ) : (
                       <div className="mt-6 max-w-sm mx-auto">
                         <p style={{ fontSize: '0.875rem', color: '#b45309', marginBottom: '1rem', textAlign: 'center' }}>{t('track.paypalDue')}</p>
@@ -137,7 +141,9 @@ export default function TrackOrderPage() {
                           orderId={order.id}
                           total={order.total}
                           phone={orderPhone}
-                          onPaid={() => setOrder((o) => (o ? { ...o, paymentReported: true } : o))}
+                          onPaid={(_ref, stockShort) =>
+                            setOrder((o) => (o ? { ...o, paymentReported: true, canPay: false, status: stockShort ? o.status : 'review' } : o))
+                          }
                         />
                       </div>
                     )

@@ -88,7 +88,7 @@ export default function AdminStockMovementsPage() {
                         <td style={{ padding: '10px 12px', color: 'var(--text-muted)' }}>{m.notes || '—'}</td>
                         <td style={{ padding: '10px 12px', color: 'var(--text-muted)' }}>{m.createdBy || '—'}</td>
                         <td style={{ padding: '10px 12px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
-                          {new Date(m.createdAt).toLocaleString('es-VE', { dateStyle: 'short', timeStyle: 'short' })}
+                          {new Date(m.createdAt).toLocaleString('es-US', { dateStyle: 'short', timeStyle: 'short' })}
                         </td>
                       </tr>
                     ))}

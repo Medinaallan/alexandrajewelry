@@ -1,6 +1,21 @@
-import type { Product, Category, Subcategory, Testimonial, AdminUser, CheckoutForm, CartItem, ProductImage, StockProduct, StockMovement, Sale, SaleReport, Order, OrderStatus, OrderTracking } from '../types';
+import type { Product, Category, Subcategory, Testimonial, AdminUser, CheckoutForm, CartItem, ProductImage, StockProduct, StockMovement, Sale, SaleReport, Order, OrderStatus, OrderTracking, ContactMessage } from '../types';
 
 import type { BulkProductRow } from './productExcel';
+
+/** The email account the store sends with (the password is never returned) */
+export type MailSettings = {
+  user: string;
+  host: string;
+  port: number;
+  hasPassword: boolean;
+  passwordUnreadable: boolean;
+  /** panel: saved in Configuración · worker: server secrets · none: emails are off */
+  source: 'panel' | 'worker' | 'none';
+  /** Inbox that receives the store notices */
+  notifyEmail: string;
+  updatedAt: string | null;
+  updatedBy: string;
+};
 
 const BASE =import.meta.env.VITE_API_URL ?? 'http://localhost:8787';
 
@@ -68,6 +83,7 @@ export const api = {
       const data = {
         name: form.name,
         phone: form.phone,
+        email: form.email,
         address: form.address,
         city: form.city,
         notes: form.notes,
@@ -86,12 +102,23 @@ export const api = {
     // The customer checks an order with its number and the phone used to place it
     track: (id: number, phone: string) =>
       request<OrderTracking>(`/api/orders/track?id=${id}&phone=${encodeURIComponent(phone)}`),
-    // Notes a PayPal payment on the order; the admin verifies it in PayPal
+    // Right before opening PayPal: still payable and in stock? Answers the amount.
+    checkPaypal: (id: number, phone: string) =>
+      request<{ total: number }>(`/api/orders/${id}/paypal/check`, {
+        method: 'POST',
+        body: JSON.stringify({ phone }),
+      }),
+    // Notes a PayPal payment on the order (and sets its stock aside); the admin verifies it in PayPal
     reportPaypal: (id: number, phone: string, captureId: string, amount: number) =>
-      request<{ ok: true }>(`/api/orders/${id}/paypal`, {
+      request<{ ok: true; stockShort: boolean }>(`/api/orders/${id}/paypal`, {
         method: 'POST',
         body: JSON.stringify({ phone, captureId, amount }),
       }),
+  },
+
+  contact: {
+    send: (data: { name: string; email: string; phone: string; message: string }) =>
+      request<{ id: number }>('/api/contact', { method: 'POST', body: JSON.stringify(data) }),
   },
 
   // ─── Admin (requires JWT token) ─────────────────────────────────────────────
@@ -233,6 +260,42 @@ export const api = {
         const res = await send(`/api/orders/${id}/receipt`, { headers: authHeaders(token) });
         return res.blob();
       },
+    },
+
+    contact: {
+      list: (token: string) =>
+        request<ContactMessage[]>('/api/contact', { headers: authHeaders(token) }),
+      unreadCount: (token: string) =>
+        request<{ count: number }>('/api/contact/unread-count', { headers: authHeaders(token) }),
+      markRead: (token: string, id: number, read: boolean) =>
+        request<ContactMessage>(`/api/contact/${id}/read`, {
+          method: 'PATCH',
+          headers: authHeaders(token),
+          body: JSON.stringify({ read }),
+        }),
+      remove: (token: string, id: number) =>
+        request<{ ok: true }>(`/api/contact/${id}`, { method: 'DELETE', headers: authHeaders(token) }),
+    },
+
+    // Store settings (administrators only)
+    settings: {
+      getMail: (token: string) =>
+        request<MailSettings>('/api/settings/mail', { headers: authHeaders(token) }),
+      // An empty password keeps the one already saved
+      saveMail: (token: string, data: { user: string; password: string; host: string; port: number }) =>
+        request<{ ok: true }>('/api/settings/mail', {
+          method: 'PUT',
+          headers: authHeaders(token),
+          body: JSON.stringify(data),
+        }),
+      deleteMail: (token: string) =>
+        request<{ ok: true }>('/api/settings/mail', { method: 'DELETE', headers: authHeaders(token) }),
+      testMail: (token: string, to: string) =>
+        request<{ ok: true; to: string }>('/api/settings/mail/test', {
+          method: 'POST',
+          headers: authHeaders(token),
+          body: JSON.stringify({ to }),
+        }),
     },
 
     users: {

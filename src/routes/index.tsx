@@ -4,6 +4,7 @@ import { useData } from '../contexts/DataContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Header } from '../components/layout/Header';
 import { Footer } from '../components/layout/Footer';
+import { CookieNotice } from '../components/layout/CookieNotice';
 import { CartDrawer } from '../components/cart/CartDrawer';
 import { AdminRoute } from './AdminRoute';
 
@@ -15,6 +16,7 @@ const AboutPage        = lazy(() => import('../pages/About'));
 const ContactPage      = lazy(() => import('../pages/Contact'));
 const CheckoutPage     = lazy(() => import('../pages/Checkout'));
 const TrackOrderPage   = lazy(() => import('../pages/TrackOrder'));
+const LegalPage        = lazy(() => import('../pages/Legal'));
 const AdminLoginPage   = lazy(() => import('../pages/admin/Login'));
 const AdminDashboard   = lazy(() => import('../pages/admin/Dashboard'));
 const AdminProducts    = lazy(() => import('../pages/admin/Products'));
@@ -28,6 +30,8 @@ const AdminSalesHistory  = lazy(() => import('../pages/admin/SalesHistory'));
 const AdminReports       = lazy(() => import('../pages/admin/Reports'));
 const AdminOrders        = lazy(() => import('../pages/admin/Orders'));
 const AdminUsers         = lazy(() => import('../pages/admin/Users'));
+const AdminMessages      = lazy(() => import('../pages/admin/Messages'));
+const AdminSettings      = lazy(() => import('../pages/admin/Settings'));
 
 function PageLoader() {
   return (
@@ -86,6 +90,7 @@ function StoreLayout({ children }: { children: React.ReactNode }) {
       <CartDrawer />
       {children}
       <Footer />
+      <CookieNotice />
     </>
   );
 }
@@ -136,6 +141,14 @@ export function AppRoutes() {
           }
         />
         <Route
+          path="/legal/:doc"
+          element={
+            <StoreLayout>
+              <LegalPage />
+            </StoreLayout>
+          }
+        />
+        <Route
           path="/track"
           element={
             <StoreLayout>
@@ -154,6 +167,22 @@ export function AppRoutes() {
 
         {/* ── Admin routes ──────────────────────────────────────────────── */}
         <Route path="/admin" element={<AdminLoginPage />} />
+        <Route
+          path="/admin/settings"
+          element={
+            <AdminRoute>
+              <AdminSettings />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/messages"
+          element={
+            <AdminRoute>
+              <AdminMessages />
+            </AdminRoute>
+          }
+        />
         <Route
           path="/admin/users"
           element={

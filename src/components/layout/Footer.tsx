@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom';
-import { Globe, Hash, ExternalLink, Heart } from 'lucide-react';
+import { MapPin, Phone } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useData } from '../../contexts/DataContext';
+import { STORE } from '../../utils/store';
 
 export function Footer() {
   const { t, language } = useLanguage();
@@ -24,9 +25,10 @@ export function Footer() {
   ];
 
   const legalLinks = [
-    { to: '#', label: t('footer.privacy') },
-    { to: '#', label: t('footer.terms') },
-    { to: '#', label: t('footer.returns') },
+    { to: '/legal/privacy', label: t('footer.privacy') },
+    { to: '/legal/terms', label: t('footer.terms') },
+    { to: '/legal/returns', label: t('footer.returns') },
+    { to: '/legal/cookies', label: 'Política de Cookies' },
   ];
 
   return (
@@ -66,23 +68,15 @@ export function Footer() {
             <p style={{ fontSize: '0.875rem', lineHeight: '1.7', color: 'var(--gray-500)' }}>
               {t('footer.tagline')}
             </p>
-            {/* Socials */}
-            <div className="flex items-center gap-3 mt-2">
-              {[
-              { Icon: Globe, label: 'Instagram' },
-              { Icon: Hash, label: 'Facebook' },
-              { Icon: ExternalLink, label: 'Twitter / X' },
-              ].map(({ Icon, label }) => (
-                <a
-                  key={label}
-                  href="#"
-                  aria-label={label}
-                  className="p-2 border border-[#2a2a2a] hover:border-(--gold) hover:text-(--gold) transition-all duration-300"
-                  style={{ color: 'var(--gray-500)' }}
-                >
-                  <Icon size={15} />
-                </a>
-              ))}
+            {/* Store */}
+            <div className="flex flex-col gap-2 mt-2" style={{ fontSize: '0.8125rem' }}>
+              <a href={STORE.mapsUrl} target="_blank" rel="noopener noreferrer" className="flex items-start gap-2 hover:text-(--gold) transition-colors">
+                <MapPin size={14} style={{ marginTop: 3, flexShrink: 0 }} />
+                <span>{STORE.street}, {STORE.cityLine}</span>
+              </a>
+              <a href={STORE.phoneHref} className="flex items-center gap-2 hover:text-(--gold) transition-colors">
+                <Phone size={14} /> {STORE.phone}
+              </a>
             </div>
           </div>
 
@@ -106,7 +100,7 @@ export function Footer() {
           <p
             style={{ fontSize: '0.8125rem', color: 'var(--gray-700)', display: 'flex', alignItems: 'center', gap: '4px' }}
           >
-            Made with <Heart size={11} style={{ color: 'var(--gold)' }} /> by Alexandra
+            {STORE.address}
           </p>
         </div>
       </div>

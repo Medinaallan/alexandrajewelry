@@ -73,13 +73,15 @@ export interface CatalogFilters {
 export interface CheckoutForm {
   name: string;
   phone: string;
+  email: string;
   address: string;
   city: string;
   notes: string;
   paymentMethod: 'transfer' | 'googlepay' | 'paypal' | 'whatsapp';
 }
 
-export type OrderStatus = 'pending' | 'confirmed' | 'paid' | 'shipped' | 'delivered' | 'cancelled';
+// `review`: PayPal payment reported by the customer, not verified yet (stock already taken)
+export type OrderStatus = 'pending' | 'confirmed' | 'review' | 'paid' | 'shipped' | 'delivered' | 'cancelled';
 
 export interface OrderItem {
   productId: number;
@@ -94,6 +96,7 @@ export interface Order {
   id: number;
   customerName: string;
   customerPhone: string;
+  customerEmail: string;
   customerAddress: string;
   customerCity: string;
   notes: string;
@@ -116,6 +119,8 @@ export interface OrderTracking {
   createdAt: string;
   /** A PayPal payment was already noted on the order */
   paymentReported: boolean;
+  /** PayPal order still waiting for its payment (within its 24 hours) */
+  canPay: boolean;
   items: { name: string; quantity: number; subtotal: number }[];
 }
 
@@ -227,4 +232,15 @@ export interface AdminContextType {
   token: string | null;
   login: (username: string, password: string) => Promise<boolean>;
   logout: () => void;
+}
+
+/** A message sent from the contact form */
+export interface ContactMessage {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  message: string;
+  read: boolean;
+  createdAt: string;
 }

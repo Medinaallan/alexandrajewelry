@@ -4,6 +4,8 @@
 export const NEW_ORDER_EVENT = 'admin:new-order';
 /** Fired after an order status changes (the menu badge updates right away). */
 export const ORDERS_CHANGED_EVENT = 'admin:orders-changed';
+/** Fired after the admin reads or deletes a contact message */
+export const MESSAGES_CHANGED_EVENT = 'admin:messages-changed';
 
 export const ORDER_POLL_MS = 60_000;
 
