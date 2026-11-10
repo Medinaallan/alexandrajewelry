@@ -1,10 +1,9 @@
 import { useState } from 'react';
-import { MessageCircle, MapPin, Phone, Mail } from 'lucide-react';
+import { MessageCircle, MapPin, Phone, Mail, Clock } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { Button } from '../../components/ui/Button';
-import { WHATSAPP_URL } from '../../utils/generateWhatsAppMessage';
 import { api } from '../../lib/api';
-import { STORE } from '../../utils/store';
+import { mapsLinks, telHref, useSiteConfig, whatsappUrl } from '../../lib/siteConfig';
 
 interface FormState {
   name: string;
@@ -20,6 +19,8 @@ export default function ContactPage() {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [sendError, setSendError] = useState('');
+  const { store } = useSiteConfig();
+  const maps = mapsLinks(store);
 
   const validate = (): boolean => {
     const newErrors: Partial<FormState> = {};
@@ -145,7 +146,7 @@ export default function ContactPage() {
                 {t('contact.privacy')}
               </p>
               <a
-                href={WHATSAPP_URL}
+                href={whatsappUrl(store.whatsapp)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn-gold self-start mt-2 flex items-center gap-2"
@@ -159,24 +160,33 @@ export default function ContactPage() {
               <div className="flex flex-col gap-4 p-8" style={{ border: '1px solid var(--border)' }}>
               <Phone size={22} style={{ color: 'var(--gold)' }} />
               <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.25rem' }}>{es ? 'Llámanos o escríbenos' : 'Call or email us'}</h3>
-              <a href={STORE.phoneHref} className="flex items-center gap-2 text-sm hover:text-(--gold)" style={{ color: 'var(--text)' }}>
-                <Phone size={14} /> {STORE.phone}
+              <a href={telHref(store.phone)} className="flex items-center gap-2 text-sm hover:text-(--gold)" style={{ color: 'var(--text)' }}>
+                <Phone size={14} /> {store.phone}
               </a>
-              <a href={`mailto:${STORE.email}`} className="flex items-center gap-2 text-sm hover:text-(--gold)" style={{ color: 'var(--text)' }}>
-                <Mail size={14} /> {STORE.email}
+              <a href={`mailto:${store.email}`} className="flex items-center gap-2 text-sm hover:text-(--gold)" style={{ color: 'var(--text)' }}>
+                <Mail size={14} /> {store.email}
               </a>
             </div>
+
+            {/* Hours (Configuración > Mi tienda) */}
+            {store.hours && (
+              <div className="flex flex-col gap-4 p-8" style={{ border: '1px solid var(--border)' }}>
+                <Clock size={22} style={{ color: 'var(--gold)' }} />
+                <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.25rem' }}>{t('contact.hours')}</h3>
+                <p className="text-sm" style={{ color: 'var(--text)', whiteSpace: 'pre-line', lineHeight: 1.8 }}>{store.hours}</p>
+              </div>
+            )}
 
             {/* Location */}
               <div className="flex flex-col gap-5 p-8" style={{ border: '1px solid var(--border)' }}>
               <MapPin size={22} style={{ color: 'var(--gold)' }} />
               <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.25rem' }}>{es ? 'Visítanos en nuestra tienda' : 'Visit us at our store'}</h3>
-              <a href={STORE.mapsUrl} target="_blank" rel="noopener noreferrer" className="text-sm hover:text-(--gold)" style={{ color: 'var(--text-muted)', lineHeight: 1.6 }}>
-                {STORE.street}<br />{STORE.cityLine}
+              <a href={maps.url} target="_blank" rel="noopener noreferrer" className="text-sm hover:text-(--gold)" style={{ color: 'var(--text-muted)', lineHeight: 1.6 }}>
+                {store.street}<br />{store.cityLine}
               </a>
               <iframe
                 title={es ? 'Mapa de la tienda' : 'Store map'}
-                src={STORE.mapsEmbed}
+                src={maps.embed}
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
                 className="w-full mt-2"

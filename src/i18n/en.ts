@@ -9,14 +9,14 @@ export const en: Record<string, string> = {
   'nav.admin': 'Admin',
 
   // ─── Topbar ───────────────────────────────────────────────────────────────
-  'topbar.message': 'Free shipping nationwide · Exclusive designs · Quality guaranteed',
+  'topbar.message': '',
 
   // ─── Hero ─────────────────────────────────────────────────────────────────
-  'hero.label': 'New Collection 2026',
+  'hero.label': 'Alexandra Jewelry',
   'hero.title': 'Timeless elegance\nin every detail.',
-  'hero.subtitle': 'Discover fine handcrafted jewelry made with noble metals and selected precious stones.',
+  'hero.subtitle': 'Discover our jewelry selection. Shop online or visit our store.',
   'hero.cta': 'Explore Collection',
-  'hero.secondary': 'Our Story',
+  'hero.secondary': 'About us',
 
   // ─── Categories ───────────────────────────────────────────────────────────
   'categories.title': 'Shop by Category',
@@ -29,17 +29,17 @@ export const en: Record<string, string> = {
   'featured.viewAll': 'View All Pieces',
 
   // ─── Features ─────────────────────────────────────────────────────────────
-  'features.auth.title': 'Authenticity Guarantee',
-  'features.auth.desc': '18K gold and certified gemstones',
-  'features.design.title': 'Custom Design',
-  'features.design.desc': 'Bespoke craftsmanship in our atelier',
-  'features.care.title': 'Free Maintenance',
-  'features.care.desc': 'Complimentary cleaning for the first year',
-  'features.ship.title': 'Secure Shipping',
-  'features.ship.desc': 'Fully guaranteed and insured delivery',
+  'features.store.title': 'Store in North Adams',
+  'features.store.desc': 'Visit us in Massachusetts',
+  'features.track.title': 'Track your order',
+  'features.track.desc': 'Check its status online',
+  'features.help.title': 'WhatsApp support',
+  'features.help.desc': 'Message us and we will help',
+  'features.returns.title': 'Returns',
+  'features.returns.desc': 'Up to 14 days after delivery',
 
   // ─── Banner ───────────────────────────────────────────────────────────────
-  'banner.title': 'Timeless elegance,\nhandmade.',
+  'banner.title': 'Find the perfect\npiece for you.',
   'banner.subtitle': 'Every piece tells a story. Let yours begin here.',
   'banner.cta': 'Discover Now',
 
@@ -69,7 +69,7 @@ export const en: Record<string, string> = {
 
   // ─── Catalog ──────────────────────────────────────────────────────────────
   'catalog.title': 'Our Collection',
-  'catalog.subtitle': 'Handcrafted pieces of timeless beauty',
+  'catalog.subtitle': 'Find the perfect piece for you',
   'catalog.filter.category': 'Category',
   'catalog.filter.allCategories': 'All Categories',
   'catalog.filter.price': 'Price Range',
@@ -122,6 +122,7 @@ export const en: Record<string, string> = {
   'cart.subtotal': 'Subtotal',
   'cart.shipping': 'Shipping',
   'cart.shippingFree': 'Free',
+  'cart.shippingTbd': 'Arranged with the store',
   'cart.total': 'Total',
   'cart.checkout': 'Place Order',
   'cart.clear': 'Clear Cart',
@@ -170,8 +171,8 @@ export const en: Record<string, string> = {
   'checkout.receiptNotUploaded': 'Your order was placed, but we could not save the receipt. Please send it to us on WhatsApp.',
 
   // ─── About ────────────────────────────────────────────────────────────────
-  'about.title': 'Our Story',
-  'about.subtitle': 'Crafting moments of lasting beauty since 2010',
+  'about.title': 'About us',
+  'about.subtitle': 'Jewelry store in North Adams, Massachusetts',
   'about.mission.title': 'Our Mission',
   'about.vision.title': 'Our Vision',
   'about.values.title': 'Our Values',
@@ -194,7 +195,7 @@ export const en: Record<string, string> = {
   'contact.social': 'Follow Us',
 
   // ─── Footer ───────────────────────────────────────────────────────────────
-  'footer.tagline': 'Handcrafted fine jewelry of timeless elegance.',
+  'footer.tagline': 'Jewelry store in North Adams, Massachusetts.',
   'footer.catalog': 'Catalog',
   'footer.company': 'Company',
   'footer.legal': 'Legal',

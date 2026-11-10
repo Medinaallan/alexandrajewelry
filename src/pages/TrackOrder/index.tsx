@@ -6,15 +6,18 @@ import { api } from '../../lib/api';
 import { formatPrice } from '../../utils/formatPrice';
 import { Button } from '../../components/ui/Button';
 import { PayPalPay } from '../../components/checkout/PayPalPay';
+import { BankAccounts } from '../../components/checkout/BankAccounts';
+import { useSiteConfig } from '../../lib/siteConfig';
 import type { OrderStatus, OrderTracking } from '../../types';
 
 // The normal path of an order; "cancelled" is shown apart
-const STEPS: OrderStatus[] = ['pending', 'confirmed', 'paid', 'shipped', 'delivered'];
+// "confirmed" and "review" (payment being checked) show on the first step
+const STEPS: OrderStatus[] = ['pending', 'paid', 'shipped', 'delivered'];
 
 const STEP_HELP: Record<OrderStatus, string> = {
   pending: 'Recibimos tu pedido. Pronto te contactaremos para confirmarlo.',
   confirmed: 'Confirmamos tu pedido y estamos esperando tu pago.',
-  review: 'Recibimos tu pago con PayPal y lo estamos verificando.',
+  review: 'Recibimos tu pago y lo estamos verificando.',
   paid: 'Recibimos tu pago. Estamos preparando tu pedido.',
   shipped: 'Tu pedido va en camino.',
   delivered: 'Tu pedido fue entregado. ¡Gracias por tu compra!',
@@ -31,6 +34,39 @@ export default function TrackOrderPage() {
   const [order, setOrder] = useState<OrderTracking | null>(null);
   // Phone of the order shown (the input may be edited afterwards)
   const [orderPhone, setOrderPhone] = useState('');
+  const config = useSiteConfig();
+  const [receipt, setReceipt] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadMsg, setUploadMsg] = useState<{ ok: boolean; text: string } | null>(null);
+
+  const sendReceipt = async () => {
+    if (!order || !receipt) return;
+    if (!['image/jpeg', 'image/png', 'image/webp', 'application/pdf'].includes(receipt.type)) {
+      setUploadMsg({ ok: false, text: 'El comprobante debe ser una foto (JPG, PNG, WebP) o un PDF.' });
+      return;
+    }
+    if (receipt.size > 5 * 1024 * 1024) {
+      setUploadMsg({ ok: false, text: 'El archivo no puede pesar más de 5 MB.' });
+      return;
+    }
+    setUploading(true);
+    setUploadMsg(null);
+    try {
+      const { stockShort } = await api.orders.uploadReceipt(order.id, orderPhone, receipt);
+      setOrder({ ...order, receiptSent: true, canUploadReceipt: false, status: stockShort ? order.status : 'review' });
+      setReceipt(null);
+      setUploadMsg({
+        ok: true,
+        text: stockShort
+          ? 'Recibimos tu comprobante, pero uno de los productos se agotó. Te contactaremos para resolverlo.'
+          : 'Recibimos tu comprobante. Lo verificaremos y te avisaremos.',
+      });
+    } catch (err) {
+      setUploadMsg({ ok: false, text: err instanceof Error && err.message !== 'Failed to fetch' ? err.message : 'No se pudo enviar. Intenta de nuevo.' });
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,8 +88,7 @@ export default function TrackOrderPage() {
     }
   };
 
-  // "review" sits between confirmed and paid
-  const currentStep = order ? (order.status === 'review' ? STEPS.indexOf('confirmed') : STEPS.indexOf(order.status)) : -1;
+  const currentStep = order ? (['confirmed', 'review'].includes(order.status) ? 0 : STEPS.indexOf(order.status)) : -1;
   const labelStyle: React.CSSProperties = { fontSize: '0.6875rem', fontWeight: 500, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-muted)' };
 
   return (
@@ -105,7 +140,7 @@ export default function TrackOrderPage() {
                 </p>
               ) : (
                 <>
-                  <ol className="grid grid-cols-5 gap-2 mb-5" aria-label="Estado del pedido">
+                  <ol className="grid grid-cols-4 gap-2 mb-5" aria-label="Estado del pedido">
                     {STEPS.map((step, i) => {
                       const done = i <= currentStep;
                       return (
@@ -129,6 +164,24 @@ export default function TrackOrderPage() {
                     })}
                   </ol>
                   <p style={{ fontSize: '0.9375rem', color: 'var(--text)' }}>{STEP_HELP[order.status]}</p>
+                  {order.canUploadReceipt && (
+                    <div className="mt-6 flex flex-col gap-3" style={{ borderTop: '1px solid var(--border)', paddingTop: '1.25rem' }}>
+                      <p style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
+                        {order.receiptSent ? 'Ya recibimos un comprobante. Si necesitas, puedes enviar otro:' : 'Paga por transferencia y envíanos el comprobante'}
+                      </p>
+                      {!order.receiptSent && <BankAccounts accounts={config.bankAccounts} />}
+                      <label className="flex flex-col items-center gap-2 py-6 border-2 border-dashed border-(--border) cursor-pointer hover:border-(--gold) transition-colors" style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>
+                        {receipt ? receipt.name : 'Toca aquí para elegir la foto o el PDF del comprobante'}
+                        <input type="file" accept="image/*,.pdf" className="hidden" onChange={(e) => { setReceipt(e.target.files?.[0] ?? null); setUploadMsg(null); }} />
+                      </label>
+                      <Button type="button" variant="gold" isLoading={uploading} disabled={!receipt} onClick={() => void sendReceipt()} className="justify-center">
+                        Enviar comprobante
+                      </Button>
+                    </div>
+                  )}
+                  {uploadMsg && (
+                    <p role="status" style={{ fontSize: '0.875rem', marginTop: '0.75rem', color: uploadMsg.ok ? '#16a34a' : '#ef4444' }}>{uploadMsg.text}</p>
+                  )}
                   {order.paymentMethod === 'paypal' && (order.status === 'pending' || order.status === 'confirmed') && (
                     order.paymentReported ? (
                       <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginTop: '0.75rem' }}>{t('track.paypalReported')}</p>

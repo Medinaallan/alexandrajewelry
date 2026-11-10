@@ -33,6 +33,7 @@ const AdminUsers         = lazy(() => import('../pages/admin/Users'));
 const AdminMessages      = lazy(() => import('../pages/admin/Messages'));
 const AdminSettings      = lazy(() => import('../pages/admin/Settings'));
 const AdminCustomers     = lazy(() => import('../pages/admin/Customers'));
+const AdminHelp          = lazy(() => import('../pages/admin/Help'));
 const ResetPasswordPage  = lazy(() => import('../pages/admin/ResetPassword'));
 
 function PageLoader() {
@@ -170,6 +171,14 @@ export function AppRoutes() {
         {/* ── Admin routes ──────────────────────────────────────────────── */}
         <Route path="/admin" element={<AdminLoginPage />} />
         <Route path="/admin/reset-password" element={<ResetPasswordPage />} />
+        <Route
+          path="/admin/help"
+          element={
+            <AdminRoute>
+              <AdminHelp />
+            </AdminRoute>
+          }
+        />
         <Route
           path="/admin/customers"
           element={

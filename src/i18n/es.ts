@@ -9,14 +9,14 @@ export const es: Record<string, string> = {
   'nav.admin': 'Admin',
 
   // ─── Topbar ───────────────────────────────────────────────────────────────
-  'topbar.message': 'Envíos a todo el país · Diseños exclusivos · Calidad garantizada',
+  'topbar.message': '',
 
   // ─── Hero ─────────────────────────────────────────────────────────────────
-  'hero.label': 'Nueva Colección 2026',
+  'hero.label': 'Alexandra Jewelry',
   'hero.title': 'Elegancia atemporal\nen cada detalle.',
-  'hero.subtitle': 'Descubre piezas finas de joyería hechas a mano con metales nobles y piedras preciosas seleccionadas.',
+  'hero.subtitle': 'Descubre nuestra selección de joyas. Compra en línea o visítanos en la tienda.',
   'hero.cta': 'Explorar Colección',
-  'hero.secondary': 'Nuestra Historia',
+  'hero.secondary': 'Conócenos',
 
   // ─── Categories ───────────────────────────────────────────────────────────
   'categories.title': 'Compra por Categoría',
@@ -29,17 +29,17 @@ export const es: Record<string, string> = {
   'featured.viewAll': 'Ver Todas las Piezas',
 
   // ─── Features ─────────────────────────────────────────────────────────────
-  'features.auth.title': 'Garantía de Autenticidad',
-  'features.auth.desc': 'Oro de 18k y gemas certificadas',
-  'features.design.title': 'Diseño Personalizado',
-  'features.design.desc': 'Fabricación a medida en taller',
-  'features.care.title': 'Mantenimiento Gratis',
-  'features.care.desc': 'Limpieza por el primer año',
-  'features.ship.title': 'Envío Seguro',
-  'features.ship.desc': 'Entrega garantizada y asegurada',
+  'features.store.title': 'Tienda en North Adams',
+  'features.store.desc': 'Visítanos en Massachusetts',
+  'features.track.title': 'Sigue tu pedido',
+  'features.track.desc': 'Consulta su estado en línea',
+  'features.help.title': 'Atención por WhatsApp',
+  'features.help.desc': 'Escríbenos y te ayudamos',
+  'features.returns.title': 'Devoluciones',
+  'features.returns.desc': 'Hasta 14 días después de recibirlo',
 
   // ─── Banner ───────────────────────────────────────────────────────────────
-  'banner.title': 'Elegancia atemporal,\nhecha a mano.',
+  'banner.title': 'Encuentra la pieza\nperfecta para ti.',
   'banner.subtitle': 'Cada pieza cuenta una historia. Deja que la tuya comience aquí.',
   'banner.cta': 'Descubrir Ahora',
 
@@ -69,7 +69,7 @@ export const es: Record<string, string> = {
 
   // ─── Catalog ──────────────────────────────────────────────────────────────
   'catalog.title': 'Nuestra Colección',
-  'catalog.subtitle': 'Piezas artesanales de belleza atemporal',
+  'catalog.subtitle': 'Encuentra la pieza perfecta para ti',
   'catalog.filter.category': 'Categoría',
   'catalog.filter.allCategories': 'Todas las Categorías',
   'catalog.filter.price': 'Rango de Precio',
@@ -122,6 +122,7 @@ export const es: Record<string, string> = {
   'cart.subtotal': 'Subtotal',
   'cart.shipping': 'Envío',
   'cart.shippingFree': 'Gratis',
+  'cart.shippingTbd': 'Se coordina con la tienda',
   'cart.total': 'Total',
   'cart.checkout': 'Hacer Pedido',
   'cart.clear': 'Vaciar Carrito',
@@ -170,8 +171,8 @@ export const es: Record<string, string> = {
   'checkout.receiptNotUploaded': 'Tu pedido quedó registrado, pero no pudimos guardar el comprobante. Envíanoslo por WhatsApp, por favor.',
 
   // ─── About ────────────────────────────────────────────────────────────────
-  'about.title': 'Nuestra Historia',
-  'about.subtitle': 'Creando momentos de belleza duradera desde 2010',
+  'about.title': 'Sobre nosotros',
+  'about.subtitle': 'Tienda de joyería en North Adams, Massachusetts',
   'about.mission.title': 'Nuestra Misión',
   'about.vision.title': 'Nuestra Visión',
   'about.values.title': 'Nuestros Valores',
@@ -194,7 +195,7 @@ export const es: Record<string, string> = {
   'contact.social': 'Síguenos',
 
   // ─── Footer ───────────────────────────────────────────────────────────────
-  'footer.tagline': 'Joyería fina artesanal de elegancia atemporal.',
+  'footer.tagline': 'Tienda de joyería en North Adams, Massachusetts.',
   'footer.catalog': 'Catálogo',
   'footer.company': 'Empresa',
   'footer.legal': 'Legal',

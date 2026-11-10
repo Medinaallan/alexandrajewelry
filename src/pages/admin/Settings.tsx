@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
-import { ArrowLeft, ChevronRight, Mail, Wallet, Square, Smartphone, Apple, type LucideIcon } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Mail, Wallet, Square, Smartphone, Apple, Store, Landmark, type LucideIcon } from 'lucide-react';
 import { useAdmin } from '../../contexts/AdminContext';
 import { api } from '../../lib/api';
 import { AdminSidebar } from '../../components/admin/AdminSidebar';
 import { MailSection } from './settings/MailSection';
 import { PaypalSection } from './settings/PaypalSection';
 import { ComingSoonSection } from './settings/ComingSoonSection';
+import { StoreSection } from './settings/StoreSection';
+import { BankSection } from './settings/BankSection';
 
 type Tone = 'ok' | 'warn' | 'off';
 type Status = { tone: Tone; text: string };
@@ -16,11 +18,27 @@ type Option = {
   title: string;
   description: string;
   Icon: LucideIcon;
-  group: 'Notificaciones' | 'Pagos';
+  group: 'Mi tienda' | 'Notificaciones' | 'Pagos';
   render: () => React.ReactNode;
 };
 
 const OPTIONS: Option[] = [
+  {
+    key: 'store',
+    title: 'Mi tienda',
+    description: 'Dirección, teléfono, WhatsApp, horario, correos y mensaje de la barra superior.',
+    Icon: Store,
+    group: 'Mi tienda',
+    render: () => <StoreSection />,
+  },
+  {
+    key: 'bank',
+    title: 'Cuentas bancarias',
+    description: 'Las cuentas que ve el cliente cuando paga por transferencia.',
+    Icon: Landmark,
+    group: 'Pagos',
+    render: () => <BankSection />,
+  },
   {
     key: 'mail',
     title: 'Correo',
@@ -111,6 +129,12 @@ function useStatuses(): Record<string, Status> {
     api.admin.settings.getMail(token)
       .then((m) => set('mail', m.source === 'none' ? { tone: 'warn', text: 'Sin configurar' } : { tone: 'ok', text: m.user ? `Activo · ${m.user}` : 'Activo' }))
       .catch(() => set('mail', { tone: 'warn', text: 'No se pudo leer' }));
+    api.admin.settings.getStore(token)
+      .then((st) => set('store', { tone: 'ok', text: [st.street, st.cityLine].filter(Boolean).join(', ') || st.name }))
+      .catch(() => set('store', { tone: 'warn', text: 'No se pudo leer' }));
+    api.admin.settings.getBank(token)
+      .then(({ accounts }) => set('bank', accounts.length ? { tone: 'ok', text: accounts.length === 1 ? '1 cuenta' : `${accounts.length} cuentas` } : { tone: 'warn', text: 'Sin cuentas: agrega al menos una' }))
+      .catch(() => set('bank', { tone: 'warn', text: 'No se pudo leer' }));
     api.admin.settings.getPaypal(token)
       .then((p) => set('paypal', !p.configured ? { tone: 'warn', text: 'Sin configurar' } : p.enabled ? { tone: 'ok', text: 'Activo' } : { tone: 'off', text: 'Desactivado' }))
       .catch(() => set('paypal', { tone: 'warn', text: 'No se pudo leer' }));
@@ -166,7 +190,7 @@ export default function AdminSettingsPage() {
             <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '2rem' }}>
               Solo los administradores pueden ver y cambiar esta sección.
             </p>
-            {(['Notificaciones', 'Pagos'] as const).map((group) => (
+            {(['Mi tienda', 'Pagos', 'Notificaciones'] as const).map((group) => (
               <section key={group} style={{ marginBottom: '2rem' }}>
                 <h2 style={{ fontSize: '0.6875rem', fontWeight: 500, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>
                   {group}

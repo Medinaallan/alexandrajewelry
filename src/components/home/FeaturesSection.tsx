@@ -1,27 +1,12 @@
-import { Shield, Hammer, ShieldCheck, Truck } from 'lucide-react';
+import { Store, PackageSearch, MessageCircle, RotateCcw } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 const features = [
-  {
-    Icon: Shield,
-    titleKey: 'features.auth.title',
-    descKey: 'features.auth.desc',
-  },
-  {
-    Icon: Hammer,
-    titleKey: 'features.design.title',
-    descKey: 'features.design.desc',
-  },
-  {
-    Icon: ShieldCheck,
-    titleKey: 'features.care.title',
-    descKey: 'features.care.desc',
-  },
-  {
-    Icon: Truck,
-    titleKey: 'features.ship.title',
-    descKey: 'features.ship.desc',
-  },
+  // Only what the store really offers (no unconfirmed claims)
+  { Icon: Store, titleKey: 'features.store.title', descKey: 'features.store.desc' },
+  { Icon: PackageSearch, titleKey: 'features.track.title', descKey: 'features.track.desc' },
+  { Icon: MessageCircle, titleKey: 'features.help.title', descKey: 'features.help.desc' },
+  { Icon: RotateCcw, titleKey: 'features.returns.title', descKey: 'features.returns.desc' },
 ];
 
 export function FeaturesSection() {

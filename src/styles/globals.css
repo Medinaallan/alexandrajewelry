@@ -380,9 +380,12 @@
     display: flex;
     min-height: 100vh;
   }
+  /* Stays in place while the page scrolls; the menu scrolls on its own */
   .admin-sidebar {
-    width: 260px;
-    min-height: 100vh;
+    width: 272px;
+    height: 100vh;
+    position: sticky;
+    top: 0;
     background: var(--black);
     flex-shrink: 0;
     display: flex;
@@ -390,12 +393,53 @@
   }
   .admin-content {
     flex: 1;
+    min-width: 0;
     background: var(--bg-subtle);
     overflow-y: auto;
   }
+  .admin-nav-row { cursor: pointer; }
+  .admin-nav-row:hover { background: rgba(255, 255, 255, 0.06) !important; color: #ffffff !important; }
+  .admin-nav-row:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+  .admin-mobile-bar,
+  .admin-sidebar-close,
+  .admin-sidebar-overlay { display: none; }
 
+  /* Small screens: a top bar with a "Menú" button; the menu slides in */
   @media (max-width: 768px) {
-    .admin-sidebar { display: none; }
+    .admin-layout { padding-top: 56px; }
+    .admin-mobile-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 56px;
+      padding: 0 16px;
+      background: var(--black);
+      z-index: 40;
+    }
+    .admin-sidebar {
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 60;
+      width: min(320px, 88vw);
+      transform: translateX(-100%);
+      transition: transform 0.25s ease;
+    }
+    .admin-sidebar.is-open { transform: translateX(0); }
+    .admin-sidebar-close { display: inline-flex; }
+    .admin-sidebar-overlay {
+      display: block;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 50;
+    }
+    .admin-content { padding: 1.25rem !important; }
   }
 }
 

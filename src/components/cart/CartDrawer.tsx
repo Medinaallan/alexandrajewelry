@@ -171,7 +171,7 @@ export function CartDrawer() {
               </div>
               <div className="flex justify-between text-sm">
                 <span style={{ color: 'var(--text-muted)' }}>{t('cart.shipping')}</span>
-                <span style={{ color: 'var(--gold)' }}>{t('cart.shippingFree')}</span>
+                <span style={{ color: 'var(--text-muted)' }}>{t('cart.shippingTbd')}</span>
               </div>
               <div
                 className="flex justify-between pt-2 mt-1"

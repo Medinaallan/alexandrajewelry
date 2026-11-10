@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { api } from '../../lib/api';
 import { captureOf, loadPayPal, PAYPAL_CURRENCY } from '../../lib/paypal';
-import { loadPaymentConfig } from '../../lib/paymentConfig';
+import { loadSiteConfig } from '../../lib/siteConfig';
 import { formatPrice } from '../../utils/formatPrice';
 
 type Props = {
@@ -43,7 +43,7 @@ export function PayPalPay({ orderId, total, phone, onPaid }: Props) {
     let buttons: { close(): Promise<void> } | null = null;
     const unavailable = 'El pago con PayPal no está disponible en este momento. Escríbenos y te ayudamos a pagar.';
 
-    loadPaymentConfig()
+    loadSiteConfig()
       .then(({ paypal: config }) => {
         if (!config.enabled) throw new Error(unavailable);
         return loadPayPal(config.clientId);

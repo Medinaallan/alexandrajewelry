@@ -1,14 +1,20 @@
 import { Link, Navigate, useParams } from 'react-router-dom';
-import { STORE } from '../../utils/store';
+import { useSiteConfig, type StoreInfo } from '../../lib/siteConfig';
 
 type Section = { title: string; body: (string | string[])[] };
 type Doc = { title: string; intro: string; sections: Section[] };
 
 const UPDATED = '9 de noviembre de 2026';
 
-const contactLine = `${STORE.name}, ${STORE.address}. Teléfono ${STORE.phone}. Correo ${STORE.email}.`;
-
-export const LEGAL_DOCS: Record<string, Doc> = {
+/** The documents, with the store details from Configuración > Mi tienda. */
+function legalDocs(store: StoreInfo): Record<string, Doc> {
+  const STORE = { ...store, address: [store.street, store.cityLine].filter(Boolean).join(', ') };
+  const contactLine = [
+    `${STORE.name}${STORE.address ? `, ${STORE.address}` : ''}.`,
+    STORE.phone && `Teléfono ${STORE.phone}.`,
+    STORE.email && `Correo ${STORE.email}.`,
+  ].filter(Boolean).join(' ');
+  return {
   privacy: {
     title: 'Política de Privacidad',
     intro: `En ${STORE.name} cuidamos tus datos. Aquí explicamos qué información recogemos, para qué la usamos y qué derechos tienes.`,
@@ -149,39 +155,23 @@ export const LEGAL_DOCS: Record<string, Doc> = {
 
   returns: {
     title: 'Política de Devoluciones',
-    intro: 'Queremos que ames tu joya. Si algo no está bien, escríbenos y lo resolvemos.',
+    intro: 'Si algo no está bien con tu compra, escríbenos y lo resolvemos contigo.',
     sections: [
       {
         title: 'Plazo',
         body: [
-          'Puedes pedir un cambio o devolución dentro de los 14 días siguientes a recibir tu pedido. Escríbenos antes de enviar nada, indicando tu número de pedido.',
-        ],
-      },
-      {
-        title: 'Condiciones',
-        body: [
-          [
-            'La pieza debe estar sin usar, en perfecto estado y con su empaque original.',
-            'Por higiene, los aretes (pendientes) no se aceptan en devolución, salvo que tengan un defecto.',
-            'Las piezas hechas o ajustadas a medida (grabados, tallas especiales) no tienen devolución, salvo defecto.',
-          ],
-        ],
-      },
-      {
-        title: 'Productos defectuosos o equivocados',
-        body: [
-          'Si tu pedido llega dañado, con un defecto o no es lo que pediste, avísanos dentro de las 48 horas siguientes a recibirlo, con fotos. Lo cambiamos o te devolvemos el dinero, y nosotros cubrimos el envío.',
-        ],
-      },
-      {
-        title: 'Reembolsos',
-        body: [
-          'Una vez que recibimos y revisamos la pieza, te devolvemos el dinero por el mismo medio de pago. Si pagaste con PayPal, el reembolso se hace por PayPal. Salvo defecto o error nuestro, el costo del envío de la devolución corre por tu cuenta.',
+          'Puedes pedir un cambio o una devolución hasta 14 días después de recibir tu pedido. Pasado ese plazo no se aceptan devoluciones.',
         ],
       },
       {
         title: 'Cómo pedirlo',
-        body: [`Escríbenos a ${STORE.email}, llama al ${STORE.phone} o usa el formulario de contacto.`],
+        body: [
+          `Antes de enviar nada, escríbenos con tu número de pedido a ${STORE.email}, llama al ${STORE.phone} o usa el formulario de contacto. Te diremos cómo seguir en tu caso.`,
+        ],
+      },
+      {
+        title: 'Reembolsos',
+        body: ['Si corresponde devolverte el dinero, lo coordinamos contigo. Si pagaste con PayPal, el reembolso se hace por PayPal.'],
       },
     ],
   },
@@ -229,10 +219,13 @@ export const LEGAL_DOCS: Record<string, Doc> = {
       },
     ],
   },
-};
+  };
+}
 
 export default function LegalPage() {
   const { doc = '' } = useParams();
+  const { store } = useSiteConfig();
+  const LEGAL_DOCS = legalDocs(store);
   const page = LEGAL_DOCS[doc];
   if (!page) return <Navigate to="/" replace />;
 

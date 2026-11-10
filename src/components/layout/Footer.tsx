@@ -2,11 +2,12 @@ import { Link } from 'react-router-dom';
 import { MapPin, Phone } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useData } from '../../contexts/DataContext';
-import { STORE } from '../../utils/store';
+import { mapsLinks, telHref, useSiteConfig } from '../../lib/siteConfig';
 
 export function Footer() {
   const { t, language } = useLanguage();
   const { categories } = useData();
+  const { store } = useSiteConfig();
   const year = new Date().getFullYear();
 
   // The store's real categories (the catalog filters by category id)
@@ -70,12 +71,12 @@ export function Footer() {
             </p>
             {/* Store */}
             <div className="flex flex-col gap-2 mt-2" style={{ fontSize: '0.8125rem' }}>
-              <a href={STORE.mapsUrl} target="_blank" rel="noopener noreferrer" className="flex items-start gap-2 hover:text-(--gold) transition-colors">
+              <a href={mapsLinks(store).url} target="_blank" rel="noopener noreferrer" className="flex items-start gap-2 hover:text-(--gold) transition-colors">
                 <MapPin size={14} style={{ marginTop: 3, flexShrink: 0 }} />
-                <span>{STORE.street}, {STORE.cityLine}</span>
+                <span>{[store.street, store.cityLine].filter(Boolean).join(', ')}</span>
               </a>
-              <a href={STORE.phoneHref} className="flex items-center gap-2 hover:text-(--gold) transition-colors">
-                <Phone size={14} /> {STORE.phone}
+              <a href={telHref(store.phone)} className="flex items-center gap-2 hover:text-(--gold) transition-colors">
+                <Phone size={14} /> {store.phone}
               </a>
             </div>
           </div>
@@ -100,7 +101,7 @@ export function Footer() {
           <p
             style={{ fontSize: '0.8125rem', color: 'var(--gray-700)', display: 'flex', alignItems: 'center', gap: '4px' }}
           >
-            {STORE.address}
+            {[store.street, store.cityLine].filter(Boolean).join(', ')}
           </p>
         </div>
       </div>

@@ -1,6 +1,9 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Download, FileText, MessageCircle, Pencil, Plus, Search, StickyNote } from 'lucide-react';
+import {
+  BadgeCheck, CheckCircle2, ChevronDown, Clock, Download, ExternalLink, FileText, Hand, MessageCircle, Package, Pencil, Plus,
+  Search, Send, StickyNote, Undo2, XCircle, type LucideIcon,
+} from 'lucide-react';
 import Swal from 'sweetalert2';
 import { NEW_ORDER_EVENT, ORDERS_CHANGED_EVENT } from '../../lib/orderAlerts';
 import { useAdmin } from '../../contexts/AdminContext';
@@ -13,23 +16,106 @@ import { OrderEditor } from '../../components/admin/OrderEditor';
 import { downloadExcel, datedName, MONEY_FORMAT, DATE_FORMAT } from '../../lib/adminExcel';
 import type { Order, OrderStatus } from '../../types';
 
-/** Orders whose products and customer data can still be changed */
-const canEdit = (o: Order) => (o.status === 'pending' || o.status === 'confirmed') && !o.paymentRef;
+// ─── Where each order is in its life ─────────────────────────────────────────
+// The operator never picks a status from a list. The system moves orders on
+// its own where it can (PayPal payment or transfer receipt -> payment to
+// verify; unpaid PayPal after 24 h -> cancelled), and for the rest she presses
+// the one button that says what just happened ("Ya me pagó", "Ya lo envié").
 
-const STATUSES: OrderStatus[] = ['pending', 'confirmed', 'review', 'paid', 'shipped', 'delivered', 'cancelled'];
+type Stage = 'verify' | 'collect' | 'waiting' | 'ship' | 'shipped' | 'done' | 'cancelled';
 
-const STATUS_COLOR: Record<OrderStatus, string> = {
-  pending: '#f59e0b',
-  confirmed: '#3b82f6',
-  review: '#0ea5e9',
-  paid: '#22c55e',
-  shipped: '#8b5cf6',
-  delivered: '#16a34a',
-  cancelled: '#ef4444',
+const isOpen = (o: Order) => o.status === 'pending' || o.status === 'confirmed';
+
+function stageOf(o: Order): Stage {
+  if (o.status === 'cancelled') return 'cancelled';
+  if (o.status === 'delivered') return 'done';
+  if (o.status === 'shipped') return 'shipped';
+  if (o.status === 'paid') return 'ship';
+  if (o.status === 'review') return 'verify';
+  // Still open but paid on PayPal: the stock ran out while paying -> verify too
+  if (o.paymentRef) return 'verify';
+  // Web PayPal orders wait for the customer; panel orders are collected by her
+  if (o.paymentMethod === 'paypal' && o.source === 'web') return 'waiting';
+  return 'collect';
+}
+
+const STAGE: Record<Stage, { label: string; color: string; Icon: LucideIcon }> = {
+  verify: { label: 'Pago por verificar', color: '#0284c7', Icon: BadgeCheck },
+  collect: { label: 'Por cobrar', color: '#d97706', Icon: Hand },
+  waiting: { label: 'Esperando pago del cliente', color: '#6b7280', Icon: Clock },
+  ship: { label: 'Para enviar', color: '#7c3aed', Icon: Package },
+  shipped: { label: 'Enviado', color: '#4f46e5', Icon: Send },
+  done: { label: 'Entregado', color: '#16a34a', Icon: CheckCircle2 },
+  cancelled: { label: 'Cancelado', color: '#ef4444', Icon: XCircle },
 };
 
-// In these statuses the order's units are already out of stock
-const STOCK_TAKEN: OrderStatus[] = ['review', 'paid', 'shipped', 'delivered'];
+type View = 'todo' | Stage | 'all';
+const VIEWS: { id: View; label: string; stages: Stage[] }[] = [
+  { id: 'todo', label: 'Por hacer', stages: ['verify', 'collect', 'ship'] },
+  { id: 'verify', label: 'Pagos por verificar', stages: ['verify'] },
+  { id: 'collect', label: 'Por cobrar', stages: ['collect'] },
+  { id: 'ship', label: 'Para enviar', stages: ['ship'] },
+  { id: 'waiting', label: 'Esperando pago', stages: ['waiting'] },
+  { id: 'shipped', label: 'Enviados', stages: ['shipped'] },
+  { id: 'done', label: 'Entregados', stages: ['done'] },
+  { id: 'cancelled', label: 'Cancelados', stages: ['cancelled'] },
+  { id: 'all', label: 'Todos', stages: ['verify', 'collect', 'waiting', 'ship', 'shipped', 'done', 'cancelled'] },
+];
+// Links from the summary page (?view=attend means "por cobrar")
+const VIEW_ALIASES: Record<string, View> = { attend: 'collect' };
+
+type Step = { label: string; to: OrderStatus; Icon: LucideIcon; confirm: string; primary?: boolean };
+
+/** The buttons for the next thing that happens to the order. */
+function nextSteps(o: Order): Step[] {
+  const mail = o.customerEmail ? ' Le avisamos al cliente por correo.' : '';
+  switch (stageOf(o)) {
+    case 'verify':
+      return [{
+        label: 'Sí, el pago llegó',
+        to: 'paid',
+        Icon: BadgeCheck,
+        primary: true,
+        confirm: `Confirmas que el dinero del pedido #${o.id} (${formatPrice(o.total)}) ya está en la cuenta de la tienda. El pedido pasa a «Para enviar».${mail}`,
+      }];
+    case 'collect':
+      return [{
+        label: 'Ya me pagó',
+        to: 'paid',
+        Icon: BadgeCheck,
+        primary: true,
+        confirm: `Confirmas que el cliente ya pagó ${formatPrice(o.total)}. Se descuenta el stock y se registra la venta. El pedido pasa a «Para enviar».${mail}`,
+      }];
+    case 'ship':
+      return [
+        { label: 'Ya lo envié', to: 'shipped', Icon: Send, primary: true, confirm: `El pedido #${o.id} pasa a «Enviado».${mail}` },
+        { label: 'Lo entregué en mano', to: 'delivered', Icon: Hand, confirm: `El cliente ya tiene su pedido #${o.id}. Queda como «Entregado».${mail}` },
+      ];
+    case 'shipped':
+      return [{ label: 'El cliente ya lo recibió', to: 'delivered', Icon: CheckCircle2, primary: true, confirm: `El pedido #${o.id} queda como «Entregado».${mail}` }];
+    default:
+      return [];
+  }
+}
+
+/** One step back, for a button pressed by mistake. */
+function undoStep(o: Order): Step | null {
+  const mail = o.customerEmail ? ' (el cliente no recibe otro correo por esto)' : '';
+  switch (o.status) {
+    case 'paid':
+      return o.paymentRef || o.receiptAt
+        ? { label: 'Deshacer: volver a «Pago por verificar»', to: 'review', Icon: Undo2, confirm: `El pedido #${o.id} vuelve a «Pago por verificar».` }
+        : { label: 'Deshacer: todavía no pagó', to: 'pending', Icon: Undo2, confirm: `El pedido #${o.id} vuelve a «Por cobrar». El stock se devuelve y la venta se quita de los reportes.` };
+    case 'shipped':
+      return { label: 'Deshacer: todavía no lo envié', to: 'paid', Icon: Undo2, confirm: `El pedido #${o.id} vuelve a «Para enviar».` };
+    case 'delivered':
+      return { label: 'Deshacer: todavía no lo recibió', to: 'paid', Icon: Undo2, confirm: `El pedido #${o.id} vuelve a «Para enviar».` };
+    case 'review':
+      return { label: 'El pago no llegó', to: 'pending', Icon: Undo2, confirm: `El pedido #${o.id} vuelve a «Por cobrar» y el stock apartado se libera. Contacta al cliente para resolverlo${mail}.` };
+    default:
+      return null;
+  }
+}
 
 /** WhatsApp chat with the customer, with the order number already written. */
 function customerWhatsAppUrl(order: Order): string | null {
@@ -42,43 +128,9 @@ function customerWhatsAppUrl(order: Order): string | null {
   return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
 }
 
-/**
- * What the customer's browser reported about their PayPal payment. It is not
- * verified: check it in PayPal before marking the order as paid.
- */
-function PayPalPaymentNote({ order }: { order: Order }) {
-  const small: React.CSSProperties = { marginTop: '4px', fontSize: '0.75rem', lineHeight: 1.4 };
-  if (!order.paymentRef) {
-    return <div style={{ ...small, color: 'var(--text-muted)' }}>Sin pago reportado</div>;
-  }
-  const amountDiffers = order.paymentAmount != null && Math.abs(order.paymentAmount - order.total) > 0.009;
-  return (
-    <div style={small}>
-      <a
-        href={`https://www.paypal.com/activity/payment/${encodeURIComponent(order.paymentRef)}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        title="Abrir la transacción en PayPal (inicia sesión con la cuenta de la tienda)"
-        className="hover:text-(--gold)"
-        style={{ textDecoration: 'underline', fontFamily: 'monospace' }}
-      >
-        {order.paymentRef}
-      </a>
-      {order.paymentAmount != null && (
-        <div style={{ color: amountDiffers ? '#ef4444' : 'var(--text-muted)', fontWeight: amountDiffers ? 700 : 400 }}>
-          {formatPrice(order.paymentAmount)}
-          {amountDiffers && ' ≠ total del pedido'}
-        </div>
-      )}
-      {order.status === 'review' && (
-        <div style={{ color: '#b45309' }}>Stock apartado. Verifica en PayPal y marca como Pagado</div>
-      )}
-      {(order.status === 'pending' || order.status === 'confirmed') && (
-        <div style={{ color: '#ef4444', fontWeight: 700 }}>Pagado, pero sin stock: repón el stock o reembolsa en PayPal</div>
-      )}
-    </div>
-  );
-}
+const canEdit = (o: Order) => isOpen(o) && !o.paymentRef && !o.receiptAt;
+
+// ─── Page ────────────────────────────────────────────────────────────────────
 
 export default function AdminOrdersPage() {
   const { token } = useAdmin();
@@ -87,6 +139,18 @@ export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [busy, setBusy] = useState<number | null>(null);
+  const [params] = useSearchParams();
+  const initialView = (() => {
+    const v = params.get('view') ?? '';
+    const view = (VIEW_ALIASES[v] ?? v) as View;
+    return VIEWS.some((x) => x.id === view) ? view : params.get('q') ? 'all' : 'todo';
+  })();
+  const [view, setView] = useState<View>(initialView);
+  // ?q= comes from the Customers page ("Ver pedidos")
+  const [search, setSearch] = useState(() => params.get('q') ?? '');
+  const [editor, setEditor] = useState<{ open: boolean; order: Order | null }>({ open: false, order: null });
+  const [moreFor, setMoreFor] = useState<number | null>(null);
 
   const fetchData = useCallback(async () => {
     if (!token) return;
@@ -103,24 +167,78 @@ export default function AdminOrdersPage() {
 
   useEffect(() => { void fetchData(); }, [fetchData]);
 
-  // Reload when the panel announces a new order
+  // Reload when the panel announces a new order or payment
   useEffect(() => {
     const onNew = () => void fetchData();
     window.addEventListener(NEW_ORDER_EVENT, onNew);
     return () => window.removeEventListener(NEW_ORDER_EVENT, onNew);
   }, [fetchData]);
 
-  const [statusFilter, setStatusFilter] = useState<OrderStatus | ''>('');
-  // ?q= comes from the Customers page ("Ver pedidos")
-  const [params] = useSearchParams();
-  const [search, setSearch] = useState(() => params.get('q') ?? '');
-  const [editor, setEditor] = useState<{ open: boolean; order: Order | null }>({ open: false, order: null });
+  const replace = (updated: Order) => setOrders((prev) => prev.map((o) => (o.id === updated.id ? updated : o)));
 
   const onSaved = (saved: Order) => {
     setOrders((prev) => (prev.some((o) => o.id === saved.id) ? prev.map((o) => (o.id === saved.id ? saved : o)) : [saved, ...prev]));
     setEditor({ open: false, order: null });
     window.dispatchEvent(new Event(ORDERS_CHANGED_EVENT));
     void Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: `Pedido #${saved.id} guardado`, showConfirmButton: false, timer: 2500 });
+  };
+
+  /** Runs one step after she confirms what it will do. */
+  const runStep = async (order: Order, step: Step) => {
+    if (!token) return;
+    const { isConfirmed } = await Swal.fire({
+      title: step.label,
+      text: step.confirm,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, confirmar',
+      cancelButtonText: 'No',
+      reverseButtons: true,
+    });
+    if (!isConfirmed) return;
+    setBusy(order.id);
+    try {
+      replace(await api.admin.orders.updateStatus(token, order.id, step.to));
+      setError('');
+      setMoreFor(null);
+      window.dispatchEvent(new Event(ORDERS_CHANGED_EVENT));
+      void Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Listo', showConfirmButton: false, timer: 2000 });
+    } catch (err) {
+      void Swal.fire('No se pudo', err instanceof Error ? err.message : t('admin.orders.error'), 'error');
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const cancelOrder = async (order: Order) => {
+    if (!token) return;
+    const stockBack = ['review', 'paid', 'shipped', 'delivered'].includes(order.status);
+    const { isConfirmed } = await Swal.fire({
+      title: `¿Cancelar el pedido #${order.id}?`,
+      text: [
+        stockBack ? 'Las piezas vuelven al stock y la venta se quita de los reportes.' : 'El pedido queda cancelado.',
+        order.paymentRef ? `Este pedido se pagó con PayPal (${order.paymentRef}): devuélvele el dinero al cliente desde PayPal.` : '',
+        order.receiptAt ? 'El cliente envió un comprobante de transferencia: si te pagó, devuélvele el dinero.' : '',
+        order.customerEmail ? 'Le avisamos al cliente por correo.' : '',
+      ].filter(Boolean).join(' '),
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, cancelar pedido',
+      cancelButtonText: 'No',
+      confirmButtonColor: '#ef4444',
+      reverseButtons: true,
+    });
+    if (!isConfirmed) return;
+    setBusy(order.id);
+    try {
+      replace(await api.admin.orders.updateStatus(token, order.id, 'cancelled'));
+      setMoreFor(null);
+      window.dispatchEvent(new Event(ORDERS_CHANGED_EVENT));
+    } catch (err) {
+      void Swal.fire('No se pudo', err instanceof Error ? err.message : t('admin.orders.error'), 'error');
+    } finally {
+      setBusy(null);
+    }
   };
 
   const editNotes = async (order: Order) => {
@@ -137,78 +255,7 @@ export default function AdminOrdersPage() {
     });
     if (!isConfirmed) return;
     try {
-      const updated = await api.admin.orders.setNotes(token, order.id, String(value ?? '').trim());
-      setOrders((prev) => prev.map((o) => (o.id === updated.id ? updated : o)));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('admin.orders.error'));
-    }
-  };
-
-  const exportExcel = (list: Order[]) =>
-    void downloadExcel(datedName('pedidos'), 'Pedidos', [
-      { header: 'Pedido', width: 9, value: (o: Order) => o.id },
-      { header: 'Fecha', width: 18, value: (o) => new Date(o.createdAt), format: DATE_FORMAT },
-      { header: 'Estado', width: 18, value: (o) => t(`admin.orders.status.${o.status}`) },
-      { header: 'Origen', width: 10, value: (o) => (o.source === 'manual' ? 'Panel' : 'Web') },
-      { header: 'Cliente', width: 24, value: (o) => o.customerName },
-      { header: 'Teléfono', width: 16, value: (o) => o.customerPhone },
-      { header: 'Correo', width: 26, value: (o) => o.customerEmail },
-      { header: 'Dirección', width: 30, value: (o) => [o.customerAddress, o.customerCity].filter(Boolean).join(', ') },
-      { header: 'Productos', width: 40, value: (o) => (Array.isArray(o.items) ? o.items : []).map((i) => `${i.quantity} x ${i.name} (${i.code})`).join('; ') },
-      { header: 'Total', width: 12, value: (o) => o.total, format: MONEY_FORMAT },
-      { header: 'Forma de pago', width: 16, value: (o) => t(`checkout.${o.paymentMethod}`) },
-      { header: 'Referencia PayPal', width: 20, value: (o) => o.paymentRef ?? '' },
-      { header: 'Notas del cliente', width: 30, value: (o) => o.notes },
-      { header: 'Nota interna', width: 30, value: (o) => o.adminNotes },
-    ], list);
-
-  const counts = useMemo(() => {
-    const byStatus = {} as Record<OrderStatus, number>;
-    for (const o of orders) byStatus[o.status] = (byStatus[o.status] ?? 0) + 1;
-    return byStatus;
-  }, [orders]);
-
-  const visible = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    const qDigits = q.replace(/\D/g, '');
-    return orders.filter((o) => {
-      if (statusFilter && o.status !== statusFilter) return false;
-      if (!q) return true;
-      return (
-        String(o.id) === q.replace(/^#/, '') ||
-        o.customerName.toLowerCase().includes(q) ||
-        o.customerCity.toLowerCase().includes(q) ||
-        (qDigits.length >= 3 && o.customerPhone.replace(/\D/g, '').includes(qDigits))
-      );
-    });
-  }, [orders, statusFilter, search]);
-
-  const changeStatus = async (order: Order, status: OrderStatus) => {
-    if (!token || status === order.status) return;
-    if (status === 'cancelled') {
-      const returnsStock = STOCK_TAKEN.includes(order.status);
-      const answer = await Swal.fire({
-        title: `¿Cancelar el pedido #${order.id}?`,
-        text: [
-          returnsStock
-            ? 'Las unidades vuelven al stock y sus ventas se quitan de los reportes.'
-            : 'El cliente ya no podrá recibir este pedido.',
-          order.paymentRef ? `Este pedido tiene un pago PayPal (${order.paymentRef}): recuerda reembolsarlo desde PayPal.` : '',
-          order.customerEmail ? 'Se avisará al cliente por correo.' : '',
-        ].filter(Boolean).join(' '),
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Sí, cancelar pedido',
-        cancelButtonText: 'No',
-        confirmButtonColor: '#ef4444',
-      });
-      if (!answer.isConfirmed) return;
-    }
-    try {
-      const updated = await api.admin.orders.updateStatus(token, order.id, status);
-      setOrders((prev) => prev.map((o) => (o.id === updated.id ? updated : o)));
-      setError('');
-      window.dispatchEvent(new Event(ORDERS_CHANGED_EVENT));
+      replace(await api.admin.orders.setNotes(token, order.id, String(value ?? '').trim()));
     } catch (err) {
       setError(err instanceof Error ? err.message : t('admin.orders.error'));
     }
@@ -231,191 +278,261 @@ export default function AdminOrdersPage() {
     }
   };
 
-  const sectionCard: React.CSSProperties = {
-    background: 'var(--bg)',
-    border: '1px solid var(--border)',
-    borderRadius: 'var(--radius)',
-    padding: '24px',
-  };
-  const cell: React.CSSProperties = { padding: '10px 12px', color: 'var(--text-muted)', verticalAlign: 'top' };
+  const exportExcel = (list: Order[]) =>
+    void downloadExcel(datedName('pedidos'), 'Pedidos', [
+      { header: 'Pedido', width: 9, value: (o: Order) => o.id },
+      { header: 'Fecha', width: 18, value: (o) => new Date(o.createdAt), format: DATE_FORMAT },
+      { header: 'Estado', width: 22, value: (o) => STAGE[stageOf(o)].label },
+      { header: 'Origen', width: 10, value: (o) => (o.source === 'manual' ? 'Panel' : 'Web') },
+      { header: 'Cliente', width: 24, value: (o) => o.customerName },
+      { header: 'Teléfono', width: 16, value: (o) => o.customerPhone },
+      { header: 'Correo', width: 26, value: (o) => o.customerEmail },
+      { header: 'Dirección', width: 30, value: (o) => [o.customerAddress, o.customerCity].filter(Boolean).join(', ') },
+      { header: 'Productos', width: 40, value: (o) => (Array.isArray(o.items) ? o.items : []).map((i) => `${i.quantity} x ${i.name} (${i.code})`).join('; ') },
+      { header: 'Total', width: 12, value: (o) => o.total, format: MONEY_FORMAT },
+      { header: 'Forma de pago', width: 16, value: (o) => t(`checkout.${o.paymentMethod}`) },
+      { header: 'Referencia PayPal', width: 20, value: (o) => o.paymentRef ?? '' },
+      { header: 'Notas del cliente', width: 30, value: (o) => o.notes },
+      { header: 'Nota interna', width: 30, value: (o) => o.adminNotes },
+    ], list);
+
+  const counts = useMemo(() => {
+    const byStage = {} as Record<Stage, number>;
+    for (const o of orders) byStage[stageOf(o)] = (byStage[stageOf(o)] ?? 0) + 1;
+    return byStage;
+  }, [orders]);
+  const countFor = (v: (typeof VIEWS)[number]) => v.stages.reduce((n, s) => n + (counts[s] ?? 0), 0);
+
+  const visible = useMemo(() => {
+    const stages = VIEWS.find((v) => v.id === view)?.stages ?? [];
+    const q = search.trim().toLowerCase();
+    const qDigits = q.replace(/\D/g, '');
+    return orders.filter((o) => {
+      if (!q && !stages.includes(stageOf(o))) return false;
+      if (!q) return true;
+      return (
+        String(o.id) === q.replace(/^#/, '') ||
+        o.customerName.toLowerCase().includes(q) ||
+        o.customerCity.toLowerCase().includes(q) ||
+        o.customerEmail.toLowerCase().includes(q) ||
+        (qDigits.length >= 3 && o.customerPhone.replace(/\D/g, '').includes(qDigits))
+      );
+    });
+  }, [orders, view, search]);
+
+  const linkBtn = 'inline-flex items-center gap-1.5 hover:text-(--gold) transition-colors';
 
   return (
     <div className="admin-layout">
       <AdminSidebar />
       <div className="admin-content p-8">
         {/* Header */}
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-8">
-          <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: '2rem', fontWeight: 300, color: 'var(--text)' }}>
-            {t('admin.orders.title')}
-          </h1>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => exportExcel(visible)} disabled={visible.length === 0} title="Exporta los pedidos que se ven con el filtro actual">
-              <Download size={14} /> Exportar a Excel
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+          <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: '2.25rem', fontWeight: 300, color: 'var(--text)' }}>Pedidos</h1>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" onClick={() => exportExcel(visible)} disabled={visible.length === 0} title="Exporta los pedidos que se ven ahora">
+              <Download size={16} /> Exportar a Excel
             </Button>
-            <Button variant="gold" size="sm" onClick={() => setEditor({ open: true, order: null })}>
-              <Plus size={14} /> Nuevo pedido
+            <Button variant="gold" onClick={() => setEditor({ open: true, order: null })}>
+              <Plus size={18} /> Nuevo pedido
             </Button>
           </div>
         </div>
         <OrderEditor isOpen={editor.open} order={editor.order} onClose={() => setEditor({ open: false, order: null })} onSaved={onSaved} />
 
-        {error && <p role="alert" style={{ color: '#ef4444', fontSize: '0.8125rem', marginBottom: '12px' }}>{error}</p>}
+        {error && <p role="alert" style={{ color: '#ef4444', fontSize: '0.9375rem', marginBottom: '12px' }}>{error}</p>}
 
-        {/* Filters */}
-        <div className="flex flex-wrap items-center gap-2 mb-4">
-          {(['', ...STATUSES] as const).map((s) => {
-            const active = statusFilter === s;
-            const n = s ? counts[s] ?? 0 : orders.length;
+        {/* Views */}
+        <div className="flex flex-wrap items-center gap-2 mb-3">
+          {VIEWS.map((v) => {
+            const active = view === v.id && !search;
+            const n = countFor(v);
             return (
               <button
-                key={s || 'all'}
+                key={v.id}
                 type="button"
-                onClick={() => setStatusFilter(s)}
+                onClick={() => { setView(v.id); setSearch(''); }}
                 aria-pressed={active}
                 style={{
-                  padding: '6px 12px',
-                  fontSize: '0.75rem',
-                  borderRadius: 'var(--radius)',
-                  border: `1px solid ${active ? (s ? STATUS_COLOR[s] : 'var(--gold)') : 'var(--border)'}`,
-                  background: active ? 'var(--bg-subtle)' : 'var(--bg)',
+                  padding: '8px 14px',
+                  fontSize: '0.9375rem',
+                  borderRadius: '999px',
+                  border: `2px solid ${active ? 'var(--gold)' : 'var(--border)'}`,
+                  background: active ? 'rgba(201,164,93,0.15)' : 'var(--bg)',
                   color: active ? 'var(--text)' : 'var(--text-muted)',
+                  fontWeight: active ? 600 : 400,
                 }}
               >
-                {s ? t(`admin.orders.status.${s}`) : 'Todos'} ({n})
+                {v.label} ({n})
               </button>
             );
           })}
-          <div className="relative ml-auto">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }} />
-            <input
-              type="search"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar: #pedido, cliente, teléfono, ciudad"
-              aria-label="Buscar pedidos"
-              className="form-input"
-              style={{ paddingLeft: '2rem', width: '280px', padding: '0.5rem 0.75rem 0.5rem 2rem', fontSize: '0.8125rem' }}
-            />
-          </div>
+        </div>
+        <div className="relative mb-6" style={{ maxWidth: 420 }}>
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }} />
+          <input
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Buscar por número, nombre, teléfono o ciudad"
+            aria-label="Buscar pedidos"
+            className="form-input"
+            style={{ padding: '0.625rem 0.75rem 0.625rem 2.25rem', fontSize: '0.9375rem' }}
+          />
         </div>
 
-        <div style={sectionCard}>
-          {loading ? (
-            <p style={{ color: 'var(--text-muted)' }}>{t('common.loading')}</p>
-          ) : orders.length === 0 ? (
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>{t('admin.orders.empty')}</p>
-          ) : visible.length === 0 ? (
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Ningún pedido coincide con el filtro.</p>
-          ) : (
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8125rem' }}>
-                <thead>
-                  <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                    {['#', t('admin.orders.customer'), t('admin.orders.items'), t('admin.orders.total'), t('admin.orders.payment'), t('admin.orders.status'), t('admin.orders.date')].map((h) => (
-                      <th key={h} style={{ textAlign: 'left', padding: '8px 12px', color: 'var(--text-muted)', fontWeight: 500, fontSize: '0.75rem', letterSpacing: '0.04em' }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {visible.map((o) => (
-                    <tr key={o.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                      <td style={{ ...cell, color: 'var(--text)', fontWeight: 500 }}>
-                        {o.id}
-                        {o.source === 'manual' && (
-                          <div title="Pedido cargado desde el panel" style={{ fontSize: '0.625rem', fontWeight: 600, letterSpacing: '0.06em', color: 'var(--gold)', marginTop: 2 }}>PANEL</div>
+        {loading && orders.length === 0 ? (
+          <p style={{ color: 'var(--text-muted)', fontSize: '1rem' }}>Cargando…</p>
+        ) : visible.length === 0 ? (
+          <p className="p-8 text-center" style={{ color: 'var(--text-muted)', fontSize: '1rem', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '10px' }}>
+            {search ? 'Ningún pedido coincide con la búsqueda.' : view === 'todo' ? '¡Todo al día! No hay pedidos pendientes.' : 'No hay pedidos aquí.'}
+          </p>
+        ) : (
+          <ul className="flex flex-col gap-4">
+            {visible.map((o) => {
+              const stage = stageOf(o);
+              const st = STAGE[stage];
+              const steps = nextSteps(o);
+              const undo = undoStep(o);
+              const wa = customerWhatsAppUrl(o);
+              const amountDiffers = o.paymentAmount != null && Math.abs(o.paymentAmount - o.total) > 0.009;
+              const stockShort = isOpen(o) && Boolean(o.paymentRef);
+              return (
+                <li key={o.id} style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderLeft: `5px solid ${st.color}`, borderRadius: '10px' }}>
+                  {/* Top line */}
+                  <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3" style={{ borderBottom: '1px solid var(--border)' }}>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <span style={{ fontSize: '1.25rem', fontWeight: 700 }}>#{o.id}</span>
+                      <span className="inline-flex items-center gap-1.5" style={{ fontSize: '0.9375rem', fontWeight: 600, color: st.color }}>
+                        <st.Icon size={18} /> {st.label}
+                      </span>
+                      {o.source === 'manual' && (
+                        <span style={{ fontSize: '0.75rem', padding: '2px 8px', borderRadius: 999, border: '1px solid var(--border)', color: 'var(--text-muted)' }}>Cargado en el panel</span>
+                      )}
+                    </div>
+                    <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>
+                      {new Date(o.createdAt).toLocaleString('es-US', { dateStyle: 'medium', timeStyle: 'short' })}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_1fr_auto] gap-5 px-5 py-4" style={{ fontSize: '0.9375rem' }}>
+                    {/* Customer */}
+                    <div className="flex flex-col gap-1">
+                      <span style={{ fontWeight: 600, fontSize: '1rem' }}>{o.customerName}</span>
+                      <span className="flex flex-wrap items-center gap-3">
+                        {o.customerPhone}
+                        {wa && (
+                          <a href={wa} target="_blank" rel="noopener noreferrer" className={linkBtn} style={{ color: '#16a34a', fontWeight: 600 }}>
+                            <MessageCircle size={16} /> Escribirle por WhatsApp
+                          </a>
                         )}
-                      </td>
-                      <td style={cell}>
-                        <div style={{ color: 'var(--text)', fontWeight: 500 }}>{o.customerName}</div>
-                        <div className="flex items-center gap-2">
-                          {o.customerPhone}
-                          {customerWhatsAppUrl(o) && (
-                            <a
-                              href={customerWhatsAppUrl(o)!}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              title="Escribir al cliente por WhatsApp"
-                              aria-label={`Escribir a ${o.customerName} por WhatsApp`}
-                              className="inline-flex items-center gap-1 hover:text-(--gold) transition-colors"
-                              style={{ color: '#22c55e', fontSize: '0.75rem' }}
-                            >
-                              <MessageCircle size={13} /> WhatsApp
-                            </a>
+                      </span>
+                      {o.customerEmail && <a href={`mailto:${o.customerEmail}`} className="underline hover:text-(--gold)" style={{ color: 'var(--text-muted)' }}>{o.customerEmail}</a>}
+                      {(o.customerAddress || o.customerCity) && <span style={{ color: 'var(--text-muted)' }}>{[o.customerAddress, o.customerCity].filter(Boolean).join(', ')}</span>}
+                      {o.notes && <span style={{ fontStyle: 'italic', color: 'var(--text-muted)' }}>Nota del cliente: “{o.notes}”</span>}
+                      {o.adminNotes && (
+                        <span className="flex items-start gap-1.5 mt-1 p-2" style={{ background: 'rgba(201,164,93,0.12)', whiteSpace: 'pre-wrap', borderRadius: 6 }}>
+                          <StickyNote size={15} style={{ marginTop: 3, flexShrink: 0, color: 'var(--gold)' }} /> {o.adminNotes}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Products and payment */}
+                    <div className="flex flex-col gap-1">
+                      {(Array.isArray(o.items) ? o.items : []).map((item) => (
+                        <span key={item.productId}>
+                          {item.quantity} × {item.name} <span style={{ color: 'var(--text-muted)', fontSize: '0.8125rem' }}>({item.code})</span>
+                        </span>
+                      ))}
+                      <span style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--gold)', marginTop: 4 }}>{formatPrice(o.total)}</span>
+                      <span style={{ color: 'var(--text-muted)' }}>Pago: {t(`checkout.${o.paymentMethod}`)}</span>
+
+                      {/* Proof of payment, when there is one */}
+                      {o.paymentRef && (
+                        <span className="flex flex-col gap-0.5 mt-1">
+                          <a href={`https://www.paypal.com/activity/payment/${encodeURIComponent(o.paymentRef)}`} target="_blank" rel="noopener noreferrer" className={`${linkBtn} underline`} style={{ fontWeight: 600 }}>
+                            <ExternalLink size={15} /> Ver el pago en PayPal
+                          </a>
+                          {o.paymentAmount != null && (
+                            <span style={{ color: amountDiffers ? '#ef4444' : 'var(--text-muted)', fontWeight: amountDiffers ? 700 : 400 }}>
+                              Pagó {formatPrice(o.paymentAmount)}{amountDiffers && ` (el pedido es de ${formatPrice(o.total)})`}
+                            </span>
                           )}
-                        </div>
-                        {o.customerEmail && (
-                          <a href={`mailto:${o.customerEmail}`} className="block hover:text-(--gold)" style={{ textDecoration: 'underline' }}>{o.customerEmail}</a>
-                        )}
-                        <div>{[o.customerAddress, o.customerCity].filter(Boolean).join(', ')}</div>
-                        {o.notes && <div style={{ fontStyle: 'italic', marginTop: '4px' }}>“{o.notes}”</div>}
-                        {o.adminNotes && (
-                          <div className="flex items-start gap-1" style={{ marginTop: '6px', padding: '4px 6px', background: 'rgba(201,164,93,0.1)', color: 'var(--text)', whiteSpace: 'pre-wrap' }}>
-                            <StickyNote size={12} style={{ marginTop: 2, flexShrink: 0, color: 'var(--gold)' }} /> {o.adminNotes}
-                          </div>
-                        )}
-                      </td>
-                      <td style={cell}>
-                        {(Array.isArray(o.items) ? o.items : []).map((item) => (
-                          <div key={item.productId}>
-                            {item.quantity} × {item.name}
-                            <span style={{ fontFamily: 'monospace', fontSize: '0.7rem' }}> ({item.code})</span>
-                          </div>
-                        ))}
-                      </td>
-                      <td style={{ ...cell, fontWeight: 700, color: 'var(--gold)', whiteSpace: 'nowrap' }}>{formatPrice(o.total)}</td>
-                      <td style={cell}>
-                        <div>{t(`checkout.${o.paymentMethod}`)}</div>
-                        {o.paymentMethod === 'paypal' && <PayPalPaymentNote order={o} />}
-                        {o.paymentMethod === 'transfer' && (
-                          <button
-                            type="button"
-                            onClick={() => void openReceipt(o)}
-                            className="flex items-center gap-1 hover:text-(--gold) transition-colors"
-                            style={{ marginTop: '4px', fontSize: '0.75rem', textDecoration: 'underline' }}
-                          >
-                            <FileText size={12} /> {t('admin.orders.viewReceipt')}
-                          </button>
-                        )}
-                      </td>
-                      <td style={cell}>
-                        <select
-                          aria-label={t('admin.orders.status')}
-                          value={o.status}
-                          onChange={(e) => void changeStatus(o, e.target.value as OrderStatus)}
-                          style={{
-                            background: 'var(--bg-secondary)',
-                            border: `1px solid ${STATUS_COLOR[o.status] ?? 'var(--border)'}`,
-                            borderRadius: 'var(--radius)',
-                            padding: '4px 8px',
-                            color: 'var(--text)',
-                            fontSize: '0.75rem',
-                          }}
+                        </span>
+                      )}
+                      {o.paymentMethod === 'transfer' && (o.receiptAt || ['review', 'paid', 'shipped', 'delivered'].includes(o.status)) && (
+                        <button type="button" onClick={() => void openReceipt(o)} className={`${linkBtn} underline mt-1`} style={{ fontWeight: o.receiptAt ? 600 : 400 }}>
+                          <FileText size={15} /> {o.receiptAt ? 'Ver comprobante de transferencia' : 'Ver comprobante (si lo envió)'}
+                        </button>
+                      )}
+                      {stockShort && (
+                        <span className="mt-1 p-2" style={{ background: 'rgba(239,68,68,0.08)', color: '#b91c1c', borderRadius: 6, fontWeight: 600 }}>
+                          El cliente pagó, pero ya no hay stock suficiente. Agrega stock y confirma el pago, o cancela el pedido y devuélvele el dinero.
+                        </span>
+                      )}
+                      {stage === 'waiting' && (
+                        <span style={{ color: 'var(--text-muted)', marginTop: 4 }}>El cliente todavía no pagó con PayPal. Si no paga en 24 horas, el pedido se cancela solo.</span>
+                      )}
+                      {stage === 'collect' && o.receiptAt && (
+                        <span style={{ color: '#b45309', marginTop: 4, fontWeight: 600 }}>El cliente envió un comprobante. Revísalo y, si el dinero llegó, pulsa «Ya me pagó».</span>
+                      )}
+                      {stage === 'collect' && o.paymentMethod === 'transfer' && !o.receiptAt && (
+                        <span style={{ color: 'var(--text-muted)', marginTop: 4 }}>Cuando el cliente suba el comprobante, este pedido pasa solo a «Pago por verificar».</span>
+                      )}
+                    </div>
+
+                    {/* What to do now */}
+                    <div className="flex flex-col gap-2 lg:min-w-[230px]">
+                      {steps.map((step) => (
+                        <Button
+                          key={step.to}
+                          variant={step.primary ? 'gold' : 'outline'}
+                          onClick={() => void runStep(o, step)}
+                          isLoading={busy === o.id && step.primary}
+                          disabled={busy === o.id}
+                          className="justify-center"
                         >
-                          {STATUSES.map((s) => (
-                            <option key={s} value={s}>{t(`admin.orders.status.${s}`)}</option>
-                          ))}
-                        </select>
-                        <div className="flex flex-col items-start gap-1" style={{ marginTop: 8, fontSize: '0.75rem' }}>
+                          <step.Icon size={18} /> {step.label}
+                        </Button>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() => setMoreFor((id) => (id === o.id ? null : o.id))}
+                        aria-expanded={moreFor === o.id}
+                        className="inline-flex items-center justify-center gap-1 py-2 hover:text-(--gold)"
+                        style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}
+                      >
+                        Más opciones <ChevronDown size={15} style={{ transform: moreFor === o.id ? 'rotate(180deg)' : 'none' }} />
+                      </button>
+                      {moreFor === o.id && (
+                        <div className="flex flex-col items-start gap-2 p-3" style={{ background: 'var(--bg-subtle)', borderRadius: 8, fontSize: '0.875rem' }}>
                           {canEdit(o) && (
-                            <button type="button" onClick={() => setEditor({ open: true, order: o })} className="flex items-center gap-1 hover:text-(--gold)">
-                              <Pencil size={12} /> Editar
+                            <button type="button" className={linkBtn} onClick={() => setEditor({ open: true, order: o })}>
+                              <Pencil size={15} /> Editar cliente o productos
                             </button>
                           )}
-                          <button type="button" onClick={() => void editNotes(o)} className="flex items-center gap-1 hover:text-(--gold)">
-                            <StickyNote size={12} /> {o.adminNotes ? 'Editar nota' : 'Nota interna'}
+                          <button type="button" className={linkBtn} onClick={() => void editNotes(o)}>
+                            <StickyNote size={15} /> {o.adminNotes ? 'Editar nota interna' : 'Agregar nota interna'}
                           </button>
+                          {undo && (
+                            <button type="button" className={linkBtn} onClick={() => void runStep(o, undo)}>
+                              <Undo2 size={15} /> {undo.label}
+                            </button>
+                          )}
+                          {o.status !== 'cancelled' && o.status !== 'delivered' && (
+                            <button type="button" className={`${linkBtn} hover:text-red-500`} style={{ color: '#b91c1c' }} onClick={() => void cancelOrder(o)}>
+                              <XCircle size={15} /> Cancelar pedido
+                            </button>
+                          )}
                         </div>
-                      </td>
-                      <td style={{ ...cell, whiteSpace: 'nowrap' }}>
-                        {new Date(o.createdAt).toLocaleString('es-US', { dateStyle: 'short', timeStyle: 'short' })}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+                      )}
+                    </div>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </div>
     </div>
   );

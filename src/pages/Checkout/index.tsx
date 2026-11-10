@@ -7,7 +7,8 @@ import { formatPrice } from '../../utils/formatPrice';
 import { generateWhatsAppMessage } from '../../utils/generateWhatsAppMessage';
 import { Button } from '../../components/ui/Button';
 import { PayPalPay } from '../../components/checkout/PayPalPay';
-import { loadPaymentConfig } from '../../lib/paymentConfig';
+import { useSiteConfig } from '../../lib/siteConfig';
+import { BankAccounts } from '../../components/checkout/BankAccounts';
 import { api } from '../../lib/api';
 import type { CheckoutForm } from '../../types';
 
@@ -53,16 +54,9 @@ export default function CheckoutPage() {
     paymentMethod: 'transfer',
   });
   const [errors, setErrors] = useState<Partial<Record<keyof CheckoutForm, string>>>({});
-  // PayPal is shown once the store settings say it's on
-  const [paypalOn, setPaypalOn] = useState(false);
-
-  useEffect(() => {
-    let active = true;
-    loadPaymentConfig()
-      .then(({ paypal }) => { if (active) setPaypalOn(paypal.enabled); })
-      .catch(() => { if (active) setPaypalOn(false); });
-    return () => { active = false; };
-  }, []);
+  // PayPal, bank accounts and WhatsApp come from the store settings
+  const config = useSiteConfig();
+  const paypalOn = config.paypal.enabled;
 
   const methods = PAYMENT_METHODS.filter(({ id }) => id !== 'paypal' || paypalOn);
   // If PayPal was picked and then turns out to be off, fall back to transfer
@@ -107,7 +101,7 @@ export default function CheckoutPage() {
 
       let whatsappUrl: string | undefined;
       if (form.paymentMethod === 'whatsapp') {
-        whatsappUrl = generateWhatsAppMessage(items, order.total, form.name, order.id);
+        whatsappUrl = generateWhatsAppMessage(config.store.whatsapp, items, order.total, form.name, order.id);
         // May be blocked as a pop-up; the success screen also shows the link
         window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
       }
@@ -201,6 +195,14 @@ export default function CheckoutPage() {
               ? `${placed.stockShort ? t('checkout.paypalPaidShort') : t('checkout.paypalPaid')} ${placed.paypalRef}`
               : t('checkout.paypalPending')}
           </p>
+        )}
+        {form.paymentMethod === 'transfer' && placed && !transferFile && (
+          <div className="text-left mb-8 flex flex-col gap-3">
+            <p style={{ fontSize: '0.9375rem', lineHeight: 1.6 }}>
+              Haz la transferencia por <strong>{formatPrice(placed.total)}</strong> y luego sube el comprobante desde «Sigue tu pedido».
+            </p>
+            <BankAccounts accounts={config.bankAccounts} />
+          </div>
         )}
         {placed?.receiptMissing && (
           <p style={{ fontSize: '0.875rem', color: '#ef4444', marginBottom: '2rem' }}>
@@ -318,11 +320,13 @@ export default function CheckoutPage() {
               <div className="p-6" style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border)' }}>
                 {form.paymentMethod === 'transfer' && (
                   <div className="flex flex-col gap-4">
-                    <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', lineHeight: 1.7 }}>
-                      {language === 'es'
-                        ? 'Por favor realiza tu transferencia a los datos bancarios que te enviaremos por mensaje. Luego sube el comprobante.'
-                        : 'Please make your transfer to the bank details we will send you by message. Then upload your receipt.'}
-                    </p>
+                    {config.bankAccounts.length > 0 && (
+                      <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', lineHeight: 1.7 }}>
+                        Haz la transferencia por el total del pedido a una de estas cuentas y sube aquí la foto o el PDF del comprobante.
+                        Si todavía no pagaste, también puedes subirlo después desde «Sigue tu pedido».
+                      </p>
+                    )}
+                    <BankAccounts accounts={config.bankAccounts} />
                     <label className="flex flex-col items-center gap-3 py-8 border-2 border-dashed border-(--border) cursor-pointer hover:border-(--gold) transition-colors">
                       <Upload size={24} style={{ color: transferFile ? 'var(--gold)' : 'var(--text-muted)' }} />
                       <span style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', textAlign: 'center' }}>
@@ -395,7 +399,7 @@ export default function CheckoutPage() {
                   </div>
                   <div className="flex justify-between text-sm">
                     <span style={{ color: 'var(--text-muted)' }}>{t('cart.shipping')}</span>
-                    <span style={{ color: 'var(--gold)' }}>{t('cart.shippingFree')}</span>
+                    <span style={{ color: 'var(--text-muted)' }}>{t('cart.shippingTbd')}</span>
                   </div>
                   <div className="flex justify-between pt-3 mt-1" style={{ borderTop: '1px solid var(--border)' }}>
                     <span style={{ fontFamily: 'var(--font-serif)', fontSize: '1.0625rem' }}>{t('cart.total')}</span>

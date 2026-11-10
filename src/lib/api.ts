@@ -2,6 +2,36 @@ import type { Product, Category, Subcategory, Testimonial, AdminUser, CheckoutFo
 
 import type { BulkProductRow } from './productExcel';
 
+/** Configuración > Mi tienda */
+export type StoreSettings = {
+  name: string;
+  street: string;
+  cityLine: string;
+  phone: string;
+  whatsapp: string;
+  email: string;
+  notifyEmail: string;
+  hours: string;
+  topbarMessage: string;
+};
+
+/** Configuración > Cuentas bancarias */
+export type BankAccountSetting = { bank: string; holder: string; number: string; details: string };
+
+/** The summary page */
+export type DashboardData = {
+  toAttend: number;
+  toVerify: number;
+  stockShort: number;
+  toShip: number;
+  paypalWaiting: number;
+  ordersToday: number;
+  unreadMessages: number;
+  pendingReviews: number;
+  lowStock: { id: number; code: string; name: string; stock: number; minStock: number }[];
+  salesToday: { count: number; units: number; total: number };
+};
+
 /** Customer and products of an order typed in the panel */
 export type AdminOrderInput = {
   name: string;
@@ -114,6 +144,13 @@ export const api = {
     // The customer checks an order with its number and the phone used to place it
     track: (id: number, phone: string) =>
       request<OrderTracking>(`/api/orders/track?id=${id}&phone=${encodeURIComponent(phone)}`),
+    // The customer attaches the transfer receipt after ordering
+    uploadReceipt: (id: number, phone: string, file: File) => {
+      const form = new FormData();
+      form.append('phone', phone);
+      form.append('receipt', file);
+      return request<{ ok: true; stockShort: boolean }>(`/api/orders/${id}/receipt`, { method: 'POST', body: form });
+    },
     // Right before opening PayPal: still payable and in stock? Answers the amount.
     checkPaypal: (id: number, phone: string) =>
       request<{ total: number }>(`/api/orders/${id}/paypal/check`, {
@@ -130,10 +167,13 @@ export const api = {
 
   // Public store settings (nothing secret)
   config: {
-    payments: () =>
-      request<{ paypal: { configured: false } | { configured: true; enabled: boolean; clientId: string } }>(
-        '/api/settings/public/payments'
-      ),
+    // Store details, bank accounts and PayPal, as set in the panel
+    site: () =>
+      request<{
+        store: Omit<StoreSettings, 'notifyEmail'>;
+        bankAccounts: BankAccountSetting[];
+        paypal: { configured: false } | { configured: true; enabled: boolean; clientId: string };
+      }>('/api/settings/public'),
   },
 
   contact: {
@@ -272,8 +312,11 @@ export const api = {
       list: (token: string) =>
         request<Order[]>('/api/orders', { headers: authHeaders(token) }),
       // Cheap call the panel polls to announce new orders
+      // What needs the operator: to collect payment, to verify a payment, to ship
       pendingCount: (token: string) =>
-        request<{ count: number; lastId: number | null }>('/api/orders/pending-count', { headers: authHeaders(token) }),
+        request<{ count: number; toAttend: number; toVerify: number; toShip: number; lastId: number | null }>('/api/orders/pending-count', { headers: authHeaders(token) }),
+      dashboard: (token: string) =>
+        request<DashboardData>('/api/orders/dashboard', { headers: authHeaders(token) }),
       // Orders taken outside the website (WhatsApp, Instagram, the store)
       createManual: (token: string, data: AdminOrderInput) =>
         request<Order>('/api/orders/manual', { method: 'POST', headers: authHeaders(token), body: JSON.stringify(data) }),
@@ -325,6 +368,14 @@ export const api = {
         }),
       deleteMail: (token: string) =>
         request<{ ok: true }>('/api/settings/mail', { method: 'DELETE', headers: authHeaders(token) }),
+      getStore: (token: string) =>
+        request<StoreSettings>('/api/settings/store', { headers: authHeaders(token) }),
+      saveStore: (token: string, data: StoreSettings) =>
+        request<StoreSettings>('/api/settings/store', { method: 'PUT', headers: authHeaders(token), body: JSON.stringify(data) }),
+      getBank: (token: string) =>
+        request<{ accounts: BankAccountSetting[] }>('/api/settings/bank', { headers: authHeaders(token) }),
+      saveBank: (token: string, accounts: BankAccountSetting[]) =>
+        request<{ accounts: BankAccountSetting[] }>('/api/settings/bank', { method: 'PUT', headers: authHeaders(token), body: JSON.stringify({ accounts }) }),
       getPaypal: (token: string) =>
         request<{ configured: boolean; enabled: boolean; clientId: string }>('/api/settings/paypal', { headers: authHeaders(token) }),
       savePaypal: (token: string, data: { enabled: boolean; clientId: string }) =>

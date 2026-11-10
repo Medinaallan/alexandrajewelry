@@ -108,6 +108,8 @@ export interface Order {
   /** PayPal capture id reported by the customer's browser (not verified) */
   paymentRef: string | null;
   paymentAmount: number | null;
+  /** When the customer attached the transfer receipt */
+  receiptAt: string | null;
   /** web: placed on the site · manual: entered in the panel */
   source: 'web' | 'manual';
   /** Only the store sees these */
@@ -126,6 +128,10 @@ export interface OrderTracking {
   paymentReported: boolean;
   /** PayPal order still waiting for its payment (within its 24 hours) */
   canPay: boolean;
+  /** Transfer: the customer already attached the receipt */
+  receiptSent: boolean;
+  /** Transfer order still waiting: the receipt can be attached */
+  canUploadReceipt: boolean;
   items: { name: string; quantity: number; subtotal: number }[];
 }
 
@@ -138,6 +144,9 @@ export interface Testimonial {
   text: string;
   textEn: string;
   avatar: string;
+  /** Only the store sees these */
+  email?: string;
+  productPurchased?: string;
   status: 'pending' | 'approved' | 'rejected';
   createdAt: string;
 }

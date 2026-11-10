@@ -1,7 +1,9 @@
-import { useLanguage } from '../../contexts/LanguageContext';
+import { useSiteConfig } from '../../lib/siteConfig';
 
+/** Message set in Configuración > Mi tienda; hidden when empty. */
 export function TopBar() {
-  const { t } = useLanguage();
+  const { store } = useSiteConfig();
+  if (!store.topbarMessage) return null;
 
   return (
     <div
@@ -15,7 +17,7 @@ export function TopBar() {
         fontWeight: 400,
       }}
     >
-      {t('topbar.message')}
+      {store.topbarMessage}
     </div>
   );
 }

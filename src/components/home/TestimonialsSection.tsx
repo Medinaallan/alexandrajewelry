@@ -82,7 +82,7 @@ export function TestimonialsSection() {
               ${t('testimonials.form.productPurchased')}
             </label>
             <input id="swal-product" maxlength="200"
-              placeholder="Anillo Gold 14K" style="${INPUT_STYLE}" />
+              placeholder="Ej: anillo, collar, aretes" style="${INPUT_STYLE}" />
           </div>
         </div>
       `,

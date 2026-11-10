@@ -170,6 +170,13 @@ export default function AdminTestimonialsPage() {
                       <span style={{ fontWeight: 500, fontSize: '0.9375rem', color: 'var(--text)' }}>
                         {item.name}
                       </span>
+                      {(item.email || item.productPurchased) && (
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                          {item.email && <a href={`mailto:${item.email}`} className="underline hover:text-(--gold)">{item.email}</a>}
+                          {item.email && item.productPurchased && ' · '}
+                          {item.productPurchased && `Compró: ${item.productPurchased}`}
+                        </span>
+                      )}
                       {item.location && (
                         <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                           · {item.location}
