@@ -141,6 +141,7 @@ export const es: Record<string, string> = {
   'checkout.transferUpload': 'Subir Comprobante',
   'checkout.transferDrag': 'Arrastra el comprobante aquí o haz clic para subir',
   'checkout.googlepay': 'Google Pay',
+  'checkout.cash': 'Efectivo',
   'checkout.paypal': 'PayPal o tarjeta',
   'checkout.whatsapp': 'WhatsApp',
   'checkout.orderSummary': 'Resumen del Pedido',

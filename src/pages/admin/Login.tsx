@@ -4,6 +4,8 @@ import { Gem, Eye, EyeOff } from 'lucide-react';
 import { useAdmin } from '../../contexts/AdminContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { Button } from '../../components/ui/Button';
+import Swal from 'sweetalert2';
+import { api } from '../../lib/api';
 
 export default function AdminLoginPage() {
   const { login, isAuthenticated } = useAdmin();
@@ -18,6 +20,30 @@ export default function AdminLoginPage() {
 
   // If already authenticated redirect
   if (isAuthenticated) return <Navigate to="/admin/dashboard" replace />;
+
+  const forgot = async () => {
+    const { value } = await Swal.fire({
+      title: '¿Olvidaste tu contraseña?',
+      text: 'Escribe tu usuario o tu correo. Te enviaremos un enlace para crear una nueva (vence en 1 hora).',
+      input: 'text',
+      inputValue: username,
+      inputPlaceholder: 'Usuario o correo',
+      showCancelButton: true,
+      confirmButtonText: 'Enviar enlace',
+      cancelButtonText: 'Cancelar',
+      showLoaderOnConfirm: true,
+      inputValidator: (v) => (v.trim() ? null : 'Escribe tu usuario o tu correo'),
+      preConfirm: async (v: string) => {
+        try {
+          return await api.auth.forgot(v.trim());
+        } catch (err) {
+          Swal.showValidationMessage(err instanceof Error ? err.message : 'No se pudo enviar. Intenta de nuevo.');
+          return false;
+        }
+      },
+    });
+    if (value) void Swal.fire('Revisa tu correo', value.message, 'success');
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -107,6 +133,14 @@ export default function AdminLoginPage() {
           <Button type="submit" variant="gold" isLoading={loading} className="w-full justify-center mt-2">
             {t('admin.login.submit')}
           </Button>
+          <button
+            type="button"
+            onClick={() => void forgot()}
+            className="self-center underline hover:text-(--gold)"
+            style={{ fontSize: '0.8125rem', color: 'var(--gray-500)' }}
+          >
+            ¿Olvidaste tu contraseña?
+          </button>
         </form>
       </div>
     </div>

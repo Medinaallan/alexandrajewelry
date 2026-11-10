@@ -141,6 +141,7 @@ export const en: Record<string, string> = {
   'checkout.transferUpload': 'Upload Receipt',
   'checkout.transferDrag': 'Drop receipt here or click to upload',
   'checkout.googlepay': 'Google Pay',
+  'checkout.cash': 'Cash',
   'checkout.paypal': 'PayPal or card',
   'checkout.whatsapp': 'WhatsApp',
   'checkout.orderSummary': 'Order Summary',

@@ -1,5 +1,5 @@
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Package, Tag, Layers, LogOut, Gem, MessageSquare, Boxes, ShoppingBag, BarChart2, ChevronDown, ClipboardList, Users, Mail, Settings, type LucideIcon } from 'lucide-react';
+import { LayoutDashboard, Package, Tag, Layers, LogOut, Gem, MessageSquare, Boxes, ShoppingBag, BarChart2, ChevronDown, ClipboardList, Users, Mail, Settings, Contact, type LucideIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useAdmin } from '../../contexts/AdminContext';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -286,6 +286,11 @@ export function AdminSidebar() {
               {pendingOrders}
             </span>
           )}
+        </NavLink>
+
+        <NavLink to="/admin/customers" style={navLinkStyle}>
+          <Contact size={16} />
+          Clientes
         </NavLink>
 
         {/* Contact form inbox */}

@@ -1,6 +1,18 @@
-import type { Product, Category, Subcategory, Testimonial, AdminUser, CheckoutForm, CartItem, ProductImage, StockProduct, StockMovement, Sale, SaleReport, Order, OrderStatus, OrderTracking, ContactMessage } from '../types';
+import type { Product, Category, Subcategory, Testimonial, AdminUser, CheckoutForm, CartItem, ProductImage, StockProduct, StockMovement, Sale, SaleReport, Order, OrderStatus, OrderTracking, ContactMessage, Customer } from '../types';
 
 import type { BulkProductRow } from './productExcel';
+
+/** Customer and products of an order typed in the panel */
+export type AdminOrderInput = {
+  name: string;
+  phone: string;
+  email: string;
+  address: string;
+  city: string;
+  notes: string;
+  paymentMethod: 'transfer' | 'paypal' | 'whatsapp' | 'cash';
+  items: { productId: number; quantity: number }[];
+};
 
 /** The email account the store sends with (the password is never returned) */
 export type MailSettings = {
@@ -116,6 +128,14 @@ export const api = {
       }),
   },
 
+  // Public store settings (nothing secret)
+  config: {
+    payments: () =>
+      request<{ paypal: { configured: false } | { configured: true; enabled: boolean; clientId: string } }>(
+        '/api/settings/public/payments'
+      ),
+  },
+
   contact: {
     send: (data: { name: string; email: string; phone: string; message: string }) =>
       request<{ id: number }>('/api/contact', { method: 'POST', body: JSON.stringify(data) }),
@@ -129,6 +149,11 @@ export const api = {
         method: 'POST',
         body: JSON.stringify({ username, password }),
       }),
+    // Emails a one-hour link to set a new password (same answer if the user doesn't exist)
+    forgot: (login: string) =>
+      request<{ ok: true; message: string }>('/api/auth/forgot', { method: 'POST', body: JSON.stringify({ login }) }),
+    reset: (token: string, password: string) =>
+      request<{ ok: true }>('/api/auth/reset', { method: 'POST', body: JSON.stringify({ token, password }) }),
   },
 
   admin: {
@@ -249,6 +274,16 @@ export const api = {
       // Cheap call the panel polls to announce new orders
       pendingCount: (token: string) =>
         request<{ count: number; lastId: number | null }>('/api/orders/pending-count', { headers: authHeaders(token) }),
+      // Orders taken outside the website (WhatsApp, Instagram, the store)
+      createManual: (token: string, data: AdminOrderInput) =>
+        request<Order>('/api/orders/manual', { method: 'POST', headers: authHeaders(token), body: JSON.stringify(data) }),
+      // Only while the order hasn't taken stock (pending / confirmed, no PayPal payment)
+      update: (token: string, id: number, data: AdminOrderInput) =>
+        request<Order>(`/api/orders/${id}`, { method: 'PUT', headers: authHeaders(token), body: JSON.stringify(data) }),
+      setNotes: (token: string, id: number, adminNotes: string) =>
+        request<Order>(`/api/orders/${id}/notes`, { method: 'PATCH', headers: authHeaders(token), body: JSON.stringify({ adminNotes }) }),
+      customers: (token: string) =>
+        request<Customer[]>('/api/orders/customers', { headers: authHeaders(token) }),
       updateStatus: (token: string, id: number, status: OrderStatus) =>
         request<Order>(`/api/orders/${id}/status`, {
           method: 'PATCH',
@@ -290,6 +325,14 @@ export const api = {
         }),
       deleteMail: (token: string) =>
         request<{ ok: true }>('/api/settings/mail', { method: 'DELETE', headers: authHeaders(token) }),
+      getPaypal: (token: string) =>
+        request<{ configured: boolean; enabled: boolean; clientId: string }>('/api/settings/paypal', { headers: authHeaders(token) }),
+      savePaypal: (token: string, data: { enabled: boolean; clientId: string }) =>
+        request<{ ok: true }>('/api/settings/paypal', {
+          method: 'PUT',
+          headers: authHeaders(token),
+          body: JSON.stringify(data),
+        }),
       testMail: (token: string, to: string) =>
         request<{ ok: true; to: string }>('/api/settings/mail/test', {
           method: 'POST',

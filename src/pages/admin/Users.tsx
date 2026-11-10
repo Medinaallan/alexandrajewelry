@@ -282,7 +282,8 @@ export default function AdminUsersPage() {
         </div>
 
         <p style={{ marginTop: '12px', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-          Todos los usuarios son administradores: tienen acceso completo al panel.
+          Todos los usuarios son administradores: tienen acceso completo al panel. Al cambiar la contraseña de un usuario o
+          desactivarlo, se cierran todas sus sesiones abiertas (si es tu propio usuario, tendrás que volver a entrar).
         </p>
       </div>
     </div>

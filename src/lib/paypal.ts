@@ -1,9 +1,9 @@
-// PayPal JS SDK, used with the store's public Client ID only.
+// PayPal JS SDK, used with the store's public Client ID only (set in the
+// admin panel, Configuración > PayPal; see paymentConfig.ts).
 // Without the account's secret the API cannot confirm payments with PayPal,
 // so a payment made here is reported to the order and the admin checks it
 // in PayPal before marking the order paid.
 
-export const PAYPAL_CLIENT_ID: string = import.meta.env.VITE_PAYPAL_CLIENT_ID ?? '';
 export const PAYPAL_CURRENCY = 'USD';
 
 type OrderActions = {
@@ -41,12 +41,12 @@ declare global {
 let loading: Promise<PayPalNamespace> | null = null;
 
 /** Loads the SDK once; later calls reuse it. */
-export function loadPayPal(): Promise<PayPalNamespace> {
+export function loadPayPal(clientId: string): Promise<PayPalNamespace> {
   if (window.paypal) return Promise.resolve(window.paypal);
   if (!loading) {
     loading = new Promise((resolve, reject) => {
       const params = new URLSearchParams({
-        'client-id': PAYPAL_CLIENT_ID,
+        'client-id': clientId,
         currency: PAYPAL_CURRENCY,
         intent: 'capture',
         components: 'buttons',

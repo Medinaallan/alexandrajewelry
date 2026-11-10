@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Check, Upload, ArrowLeft } from 'lucide-react';
 import { useCart } from '../../contexts/CartContext';
@@ -7,6 +7,7 @@ import { formatPrice } from '../../utils/formatPrice';
 import { generateWhatsAppMessage } from '../../utils/generateWhatsAppMessage';
 import { Button } from '../../components/ui/Button';
 import { PayPalPay } from '../../components/checkout/PayPalPay';
+import { loadPaymentConfig } from '../../lib/paymentConfig';
 import { api } from '../../lib/api';
 import type { CheckoutForm } from '../../types';
 
@@ -52,6 +53,22 @@ export default function CheckoutPage() {
     paymentMethod: 'transfer',
   });
   const [errors, setErrors] = useState<Partial<Record<keyof CheckoutForm, string>>>({});
+  // PayPal is shown once the store settings say it's on
+  const [paypalOn, setPaypalOn] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    loadPaymentConfig()
+      .then(({ paypal }) => { if (active) setPaypalOn(paypal.enabled); })
+      .catch(() => { if (active) setPaypalOn(false); });
+    return () => { active = false; };
+  }, []);
+
+  const methods = PAYMENT_METHODS.filter(({ id }) => id !== 'paypal' || paypalOn);
+  // If PayPal was picked and then turns out to be off, fall back to transfer
+  useEffect(() => {
+    if (!paypalOn && form.paymentMethod === 'paypal') setForm((p) => ({ ...p, paymentMethod: 'transfer' }));
+  }, [paypalOn, form.paymentMethod]);
 
   const set = <K extends keyof CheckoutForm>(key: K, value: CheckoutForm[K]) =>
     setForm((p) => ({ ...p, [key]: value }));
@@ -268,8 +285,8 @@ export default function CheckoutPage() {
                 {t('checkout.paymentMethod')}
               </h2>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {PAYMENT_METHODS.map(({ id, icon }) => (
+              <div className={`grid grid-cols-1 gap-3 ${methods.length === 3 ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
+                {methods.map(({ id, icon }) => (
                   <button
                     key={id}
                     type="button"

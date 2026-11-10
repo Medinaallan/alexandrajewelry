@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { api } from '../../lib/api';
-import { captureOf, loadPayPal, PAYPAL_CLIENT_ID, PAYPAL_CURRENCY } from '../../lib/paypal';
+import { captureOf, loadPayPal, PAYPAL_CURRENCY } from '../../lib/paypal';
+import { loadPaymentConfig } from '../../lib/paymentConfig';
 import { formatPrice } from '../../utils/formatPrice';
 
 type Props = {
@@ -38,14 +39,15 @@ export function PayPalPay({ orderId, total, phone, onPaid }: Props) {
   paidRef.current = onPaid;
 
   useEffect(() => {
-    if (!PAYPAL_CLIENT_ID) {
-      setState({ kind: 'failed', message: 'El pago con PayPal no está disponible en este momento. Escríbenos y te ayudamos a pagar.' });
-      return;
-    }
     let closed = false;
     let buttons: { close(): Promise<void> } | null = null;
+    const unavailable = 'El pago con PayPal no está disponible en este momento. Escríbenos y te ayudamos a pagar.';
 
-    loadPayPal()
+    loadPaymentConfig()
+      .then(({ paypal: config }) => {
+        if (!config.enabled) throw new Error(unavailable);
+        return loadPayPal(config.clientId);
+      })
       .then((paypal) => {
         if (closed || !container.current) return;
         const instance = paypal.Buttons({
@@ -95,8 +97,12 @@ export function PayPalPay({ orderId, total, phone, onPaid }: Props) {
           if (!closed) setState({ kind: 'ready' });
         });
       })
-      .catch(() => {
-        if (!closed) setState({ kind: 'failed', message: 'No pudimos cargar PayPal. Revisa tu conexión y recarga la página.' });
+      .catch((err: unknown) => {
+        if (closed) return;
+        const message = err instanceof Error && err.message === unavailable
+          ? unavailable
+          : 'No pudimos cargar PayPal. Revisa tu conexión y recarga la página.';
+        setState({ kind: 'failed', message });
       });
 
     return () => {

@@ -84,7 +84,8 @@ export default function AdminReportsPage() {
   }, [sales, period, customFrom, customTo]);
 
   const summary = useMemo(() => {
-    // Profit uses each product's current cost (sales don't store the cost they had)
+    // Profit uses the cost each sale recorded; older sales without one fall
+    // back to the product's current cost
     const costOf = new Map(products.map((p) => [p.id, p.cost ?? null]));
     let revenue = 0, units = 0, webRevenue = 0, counterRevenue = 0, profit = 0, revenueWithCost = 0;
     const orders = new Set<number>();
@@ -96,7 +97,7 @@ export default function AdminReportsPage() {
       units += s.quantity;
       if (s.orderId) { webRevenue += s.total; orders.add(s.orderId); } else counterRevenue += s.total;
 
-      const cost = costOf.get(s.productId);
+      const cost = s.unitCost ?? costOf.get(s.productId);
       const lineProfit = cost == null ? null : s.total - cost * s.quantity;
       if (lineProfit === null) missingCost.add(s.productName);
       else { profit += lineProfit; revenueWithCost += s.total; }
@@ -201,7 +202,7 @@ export default function AdminReportsPage() {
               ))}
             </div>
             <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '2rem' }}>
-              La ganancia se calcula con el costo actual de cada producto.
+              La ganancia usa el costo que tenía cada producto al venderse.
               {summary.missingCost.length > 0 && (
                 <> No incluye {summary.missingCost.length === 1 ? 'un producto' : `${summary.missingCost.length} productos`} sin costo registrado ({summary.missingCost.slice(0, 3).join(', ')}{summary.missingCost.length > 3 ? '…' : ''}).</>
               )}

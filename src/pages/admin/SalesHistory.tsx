@@ -1,6 +1,8 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { Undo2 } from 'lucide-react';
+import { Undo2, Download } from 'lucide-react';
+import { Button } from '../../components/ui/Button';
+import { downloadExcel, datedName, MONEY_FORMAT, DATE_FORMAT } from '../../lib/adminExcel';
 import Swal from 'sweetalert2';
 import { useAdmin } from '../../contexts/AdminContext';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -76,6 +78,27 @@ export default function AdminSalesHistoryPage() {
           <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: '2rem', fontWeight: 300, color: 'var(--text)' }}>
             {t('admin.sales.recent')}
           </h1>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={sales.length === 0}
+            onClick={() =>
+              void downloadExcel(datedName('ventas'), 'Ventas', [
+                { header: 'Fecha', width: 18, value: (s: Sale) => new Date(s.createdAt), format: DATE_FORMAT },
+                { header: 'Producto', width: 30, value: (s) => s.productName },
+                { header: 'Cantidad', width: 10, value: (s) => s.quantity },
+                { header: 'Precio unitario', width: 15, value: (s) => s.unitPrice, format: MONEY_FORMAT },
+                { header: 'Costo unitario', width: 15, value: (s) => s.unitCost ?? null, format: MONEY_FORMAT },
+                { header: 'Total', width: 14, value: (s) => s.total, format: MONEY_FORMAT },
+                { header: 'Ganancia', width: 14, value: (s) => (s.unitCost == null ? null : s.total - s.unitCost * s.quantity), format: MONEY_FORMAT },
+                { header: 'Origen', width: 14, value: (s) => (s.orderId ? `Pedido #${s.orderId}` : 'Mostrador') },
+                { header: 'Vendido por', width: 14, value: (s) => s.soldBy },
+                { header: 'Notas', width: 30, value: (s) => s.notes },
+              ], sales)
+            }
+          >
+            <Download size={14} /> Exportar a Excel
+          </Button>
         </div>
 
         {error && <p role="alert" style={{ color: '#ef4444', fontSize: '0.8125rem', marginBottom: '12px' }}>{error}</p>}

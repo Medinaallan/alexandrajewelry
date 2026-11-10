@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
-import { FileText, MessageCircle, Search } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
+import { Download, FileText, MessageCircle, Pencil, Plus, Search, StickyNote } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { NEW_ORDER_EVENT, ORDERS_CHANGED_EVENT } from '../../lib/orderAlerts';
 import { useAdmin } from '../../contexts/AdminContext';
@@ -7,7 +8,13 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { api } from '../../lib/api';
 import { AdminSidebar } from '../../components/admin/AdminSidebar';
 import { formatPrice } from '../../utils/formatPrice';
+import { Button } from '../../components/ui/Button';
+import { OrderEditor } from '../../components/admin/OrderEditor';
+import { downloadExcel, datedName, MONEY_FORMAT, DATE_FORMAT } from '../../lib/adminExcel';
 import type { Order, OrderStatus } from '../../types';
+
+/** Orders whose products and customer data can still be changed */
+const canEdit = (o: Order) => (o.status === 'pending' || o.status === 'confirmed') && !o.paymentRef;
 
 const STATUSES: OrderStatus[] = ['pending', 'confirmed', 'review', 'paid', 'shipped', 'delivered', 'cancelled'];
 
@@ -104,7 +111,56 @@ export default function AdminOrdersPage() {
   }, [fetchData]);
 
   const [statusFilter, setStatusFilter] = useState<OrderStatus | ''>('');
-  const [search, setSearch] = useState('');
+  // ?q= comes from the Customers page ("Ver pedidos")
+  const [params] = useSearchParams();
+  const [search, setSearch] = useState(() => params.get('q') ?? '');
+  const [editor, setEditor] = useState<{ open: boolean; order: Order | null }>({ open: false, order: null });
+
+  const onSaved = (saved: Order) => {
+    setOrders((prev) => (prev.some((o) => o.id === saved.id) ? prev.map((o) => (o.id === saved.id ? saved : o)) : [saved, ...prev]));
+    setEditor({ open: false, order: null });
+    window.dispatchEvent(new Event(ORDERS_CHANGED_EVENT));
+    void Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: `Pedido #${saved.id} guardado`, showConfirmButton: false, timer: 2500 });
+  };
+
+  const editNotes = async (order: Order) => {
+    if (!token) return;
+    const { value, isConfirmed } = await Swal.fire({
+      title: `Nota interna · pedido #${order.id}`,
+      text: 'Solo la ve la tienda.',
+      input: 'textarea',
+      inputValue: order.adminNotes,
+      inputAttributes: { maxlength: '2000' },
+      showCancelButton: true,
+      confirmButtonText: 'Guardar',
+      cancelButtonText: 'Cancelar',
+    });
+    if (!isConfirmed) return;
+    try {
+      const updated = await api.admin.orders.setNotes(token, order.id, String(value ?? '').trim());
+      setOrders((prev) => prev.map((o) => (o.id === updated.id ? updated : o)));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('admin.orders.error'));
+    }
+  };
+
+  const exportExcel = (list: Order[]) =>
+    void downloadExcel(datedName('pedidos'), 'Pedidos', [
+      { header: 'Pedido', width: 9, value: (o: Order) => o.id },
+      { header: 'Fecha', width: 18, value: (o) => new Date(o.createdAt), format: DATE_FORMAT },
+      { header: 'Estado', width: 18, value: (o) => t(`admin.orders.status.${o.status}`) },
+      { header: 'Origen', width: 10, value: (o) => (o.source === 'manual' ? 'Panel' : 'Web') },
+      { header: 'Cliente', width: 24, value: (o) => o.customerName },
+      { header: 'Teléfono', width: 16, value: (o) => o.customerPhone },
+      { header: 'Correo', width: 26, value: (o) => o.customerEmail },
+      { header: 'Dirección', width: 30, value: (o) => [o.customerAddress, o.customerCity].filter(Boolean).join(', ') },
+      { header: 'Productos', width: 40, value: (o) => (Array.isArray(o.items) ? o.items : []).map((i) => `${i.quantity} x ${i.name} (${i.code})`).join('; ') },
+      { header: 'Total', width: 12, value: (o) => o.total, format: MONEY_FORMAT },
+      { header: 'Forma de pago', width: 16, value: (o) => t(`checkout.${o.paymentMethod}`) },
+      { header: 'Referencia PayPal', width: 20, value: (o) => o.paymentRef ?? '' },
+      { header: 'Notas del cliente', width: 30, value: (o) => o.notes },
+      { header: 'Nota interna', width: 30, value: (o) => o.adminNotes },
+    ], list);
 
   const counts = useMemo(() => {
     const byStatus = {} as Record<OrderStatus, number>;
@@ -188,11 +244,20 @@ export default function AdminOrdersPage() {
       <AdminSidebar />
       <div className="admin-content p-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-8">
           <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: '2rem', fontWeight: 300, color: 'var(--text)' }}>
             {t('admin.orders.title')}
           </h1>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => exportExcel(visible)} disabled={visible.length === 0} title="Exporta los pedidos que se ven con el filtro actual">
+              <Download size={14} /> Exportar a Excel
+            </Button>
+            <Button variant="gold" size="sm" onClick={() => setEditor({ open: true, order: null })}>
+              <Plus size={14} /> Nuevo pedido
+            </Button>
+          </div>
         </div>
+        <OrderEditor isOpen={editor.open} order={editor.order} onClose={() => setEditor({ open: false, order: null })} onSaved={onSaved} />
 
         {error && <p role="alert" style={{ color: '#ef4444', fontSize: '0.8125rem', marginBottom: '12px' }}>{error}</p>}
 
@@ -254,7 +319,12 @@ export default function AdminOrdersPage() {
                 <tbody>
                   {visible.map((o) => (
                     <tr key={o.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                      <td style={{ ...cell, color: 'var(--text)', fontWeight: 500 }}>{o.id}</td>
+                      <td style={{ ...cell, color: 'var(--text)', fontWeight: 500 }}>
+                        {o.id}
+                        {o.source === 'manual' && (
+                          <div title="Pedido cargado desde el panel" style={{ fontSize: '0.625rem', fontWeight: 600, letterSpacing: '0.06em', color: 'var(--gold)', marginTop: 2 }}>PANEL</div>
+                        )}
+                      </td>
                       <td style={cell}>
                         <div style={{ color: 'var(--text)', fontWeight: 500 }}>{o.customerName}</div>
                         <div className="flex items-center gap-2">
@@ -278,6 +348,11 @@ export default function AdminOrdersPage() {
                         )}
                         <div>{[o.customerAddress, o.customerCity].filter(Boolean).join(', ')}</div>
                         {o.notes && <div style={{ fontStyle: 'italic', marginTop: '4px' }}>“{o.notes}”</div>}
+                        {o.adminNotes && (
+                          <div className="flex items-start gap-1" style={{ marginTop: '6px', padding: '4px 6px', background: 'rgba(201,164,93,0.1)', color: 'var(--text)', whiteSpace: 'pre-wrap' }}>
+                            <StickyNote size={12} style={{ marginTop: 2, flexShrink: 0, color: 'var(--gold)' }} /> {o.adminNotes}
+                          </div>
+                        )}
                       </td>
                       <td style={cell}>
                         {(Array.isArray(o.items) ? o.items : []).map((item) => (
@@ -320,6 +395,16 @@ export default function AdminOrdersPage() {
                             <option key={s} value={s}>{t(`admin.orders.status.${s}`)}</option>
                           ))}
                         </select>
+                        <div className="flex flex-col items-start gap-1" style={{ marginTop: 8, fontSize: '0.75rem' }}>
+                          {canEdit(o) && (
+                            <button type="button" onClick={() => setEditor({ open: true, order: o })} className="flex items-center gap-1 hover:text-(--gold)">
+                              <Pencil size={12} /> Editar
+                            </button>
+                          )}
+                          <button type="button" onClick={() => void editNotes(o)} className="flex items-center gap-1 hover:text-(--gold)">
+                            <StickyNote size={12} /> {o.adminNotes ? 'Editar nota' : 'Nota interna'}
+                          </button>
+                        </div>
                       </td>
                       <td style={{ ...cell, whiteSpace: 'nowrap' }}>
                         {new Date(o.createdAt).toLocaleString('es-US', { dateStyle: 'short', timeStyle: 'short' })}

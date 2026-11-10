@@ -77,7 +77,8 @@ export interface CheckoutForm {
   address: string;
   city: string;
   notes: string;
-  paymentMethod: 'transfer' | 'googlepay' | 'paypal' | 'whatsapp';
+  // cash: only for orders entered in the panel
+  paymentMethod: 'transfer' | 'googlepay' | 'paypal' | 'whatsapp' | 'cash';
 }
 
 // `review`: PayPal payment reported by the customer, not verified yet (stock already taken)
@@ -107,6 +108,10 @@ export interface Order {
   /** PayPal capture id reported by the customer's browser (not verified) */
   paymentRef: string | null;
   paymentAmount: number | null;
+  /** web: placed on the site · manual: entered in the panel */
+  source: 'web' | 'manual';
+  /** Only the store sees these */
+  adminNotes: string;
   createdAt: string;
 }
 
@@ -175,6 +180,8 @@ export interface Sale {
   productName: string;
   quantity: number;
   unitPrice: number;
+  /** Product cost when it was sold (null: the product had no cost) */
+  unitCost?: number | null;
   total: number;
   notes: string;
   soldBy: string;
@@ -243,4 +250,20 @@ export interface ContactMessage {
   message: string;
   read: boolean;
   createdAt: string;
+}
+
+/** A customer, built from the orders (same phone = same customer) */
+export interface Customer {
+  key: string;
+  name: string;
+  phone: string;
+  email: string;
+  city: string;
+  orders: number;
+  openOrders: number;
+  /** Total of paid / shipped / delivered / under-review orders */
+  spent: number;
+  lastOrderAt: string;
+  firstOrderAt: string;
+  orderIds: number[];
 }
