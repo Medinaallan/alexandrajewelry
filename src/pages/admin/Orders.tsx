@@ -19,7 +19,8 @@ import type { Order, OrderStatus } from '../../types';
 // ─── Where each order is in its life ─────────────────────────────────────────
 // The operator never picks a status from a list. The system moves orders on
 // its own where it can (PayPal payment or transfer receipt -> payment to
-// verify; unpaid PayPal after 24 h -> cancelled), and for the rest she presses
+// verify; Square card / Google Pay / Apple Pay payment -> paid, ready to ship;
+// unpaid PayPal or Square after 24 h -> cancelled), and for the rest she presses
 // the one button that says what just happened ("Ya me pagó", "Ya lo envié").
 
 type Stage = 'verify' | 'collect' | 'waiting' | 'ship' | 'shipped' | 'done' | 'cancelled';
@@ -34,8 +35,8 @@ function stageOf(o: Order): Stage {
   if (o.status === 'review') return 'verify';
   // Still open but paid on PayPal: the stock ran out while paying -> verify too
   if (o.paymentRef) return 'verify';
-  // Web PayPal orders wait for the customer; panel orders are collected by her
-  if (o.paymentMethod === 'paypal' && o.source === 'web') return 'waiting';
+  // Web PayPal / Square orders wait for the customer; panel orders are collected by her
+  if ((o.paymentMethod === 'paypal' || o.paymentMethod === 'square') && o.source === 'web') return 'waiting';
   return 'collect';
 }
 
@@ -217,7 +218,11 @@ export default function AdminOrdersPage() {
       title: `¿Cancelar el pedido #${order.id}?`,
       text: [
         stockBack ? 'Las piezas vuelven al stock y la venta se quita de los reportes.' : 'El pedido queda cancelado.',
-        order.paymentRef ? `Este pedido se pagó con PayPal (${order.paymentRef}): devuélvele el dinero al cliente desde PayPal.` : '',
+        order.paymentRef
+          ? order.paymentMethod === 'square'
+            ? `Este pedido se pagó con Square (${order.paymentRef}): devuélvele el dinero al cliente desde el panel de Square (Ventas → Transacciones).`
+            : `Este pedido se pagó con PayPal (${order.paymentRef}): devuélvele el dinero al cliente desde PayPal.`
+          : '',
         order.receiptAt ? 'El cliente envió un comprobante de transferencia: si te pagó, devuélvele el dinero.' : '',
         order.customerEmail ? 'Le avisamos al cliente por correo.' : '',
       ].filter(Boolean).join(' '),
@@ -291,7 +296,7 @@ export default function AdminOrdersPage() {
       { header: 'Productos', width: 40, value: (o) => (Array.isArray(o.items) ? o.items : []).map((i) => `${i.quantity} x ${i.name} (${i.code})`).join('; ') },
       { header: 'Total', width: 12, value: (o) => o.total, format: MONEY_FORMAT },
       { header: 'Forma de pago', width: 16, value: (o) => t(`checkout.${o.paymentMethod}`) },
-      { header: 'Referencia PayPal', width: 20, value: (o) => o.paymentRef ?? '' },
+      { header: 'Referencia de pago (PayPal / Square)', width: 24, value: (o) => o.paymentRef ?? '' },
       { header: 'Notas del cliente', width: 30, value: (o) => o.notes },
       { header: 'Nota interna', width: 30, value: (o) => o.adminNotes },
     ], list);
@@ -450,9 +455,18 @@ export default function AdminOrdersPage() {
                       {/* Proof of payment, when there is one */}
                       {o.paymentRef && (
                         <span className="flex flex-col gap-0.5 mt-1">
-                          <a href={`https://www.paypal.com/activity/payment/${encodeURIComponent(o.paymentRef)}`} target="_blank" rel="noopener noreferrer" className={`${linkBtn} underline`} style={{ fontWeight: 600 }}>
-                            <ExternalLink size={15} /> Ver el pago en PayPal
-                          </a>
+                          {o.paymentMethod === 'square' ? (
+                            <>
+                              <a href="https://app.squareup.com/dashboard/sales/transactions" target="_blank" rel="noopener noreferrer" className={`${linkBtn} underline`} style={{ fontWeight: 600 }}>
+                                <ExternalLink size={15} /> Ver pagos en Square
+                              </a>
+                              <span style={{ color: 'var(--text-muted)', fontSize: '0.8125rem' }}>Cobro confirmado por Square · Ref. {o.paymentRef}</span>
+                            </>
+                          ) : (
+                            <a href={`https://www.paypal.com/activity/payment/${encodeURIComponent(o.paymentRef)}`} target="_blank" rel="noopener noreferrer" className={`${linkBtn} underline`} style={{ fontWeight: 600 }}>
+                              <ExternalLink size={15} /> Ver el pago en PayPal
+                            </a>
+                          )}
                           {o.paymentAmount != null && (
                             <span style={{ color: amountDiffers ? '#ef4444' : 'var(--text-muted)', fontWeight: amountDiffers ? 700 : 400 }}>
                               Pagó {formatPrice(o.paymentAmount)}{amountDiffers && ` (el pedido es de ${formatPrice(o.total)})`}
@@ -471,7 +485,7 @@ export default function AdminOrdersPage() {
                         </span>
                       )}
                       {stage === 'waiting' && (
-                        <span style={{ color: 'var(--text-muted)', marginTop: 4 }}>El cliente todavía no pagó con PayPal. Si no paga en 24 horas, el pedido se cancela solo.</span>
+                        <span style={{ color: 'var(--text-muted)', marginTop: 4 }}>El cliente todavía no pagó con {o.paymentMethod === 'square' ? 'tarjeta / Google Pay / Apple Pay' : 'PayPal'}. Si no paga en 24 horas, el pedido se cancela solo.</span>
                       )}
                       {stage === 'collect' && o.receiptAt && (
                         <span style={{ color: '#b45309', marginTop: 4, fontWeight: 600 }}>El cliente envió un comprobante. Revísalo y, si el dinero llegó, pulsa «Ya me pagó».</span>

@@ -7,22 +7,19 @@ import { formatPrice } from '../../utils/formatPrice';
 import { generateWhatsAppMessage } from '../../utils/generateWhatsAppMessage';
 import { Button } from '../../components/ui/Button';
 import { PayPalPay } from '../../components/checkout/PayPalPay';
+import { SquarePay } from '../../components/checkout/SquarePay';
+import { PaymentOptions, type PayOption } from '../../components/checkout/PaymentOptions';
+import { isSquareChoice, methodOf, useApplePayAvailable, type PayChoice } from '../../lib/payChoice';
 import { useSiteConfig } from '../../lib/siteConfig';
 import { BankAccounts } from '../../components/checkout/BankAccounts';
 import { api } from '../../lib/api';
 import type { CheckoutForm } from '../../types';
 
-// PayPal orders go through 'pay' (the order exists, the buttons are shown)
+// PayPal and Square orders go through 'pay' (the order exists, the payment form is shown)
 type Step = 'form' | 'pay' | 'success';
 
 const MAX_RECEIPT_BYTES = 5 * 1024 * 1024;
 const RECEIPT_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
-
-const PAYMENT_METHODS = [
-  { id: 'transfer', icon: '🏦' },
-  { id: 'paypal', icon: '🅿️' },
-  { id: 'whatsapp', icon: '💬' },
-] as const;
 
 export default function CheckoutPage() {
   const { items, total, clearCart } = useCart();
@@ -41,6 +38,8 @@ export default function CheckoutPage() {
     receiptMissing: boolean;
     /** PayPal capture id once the customer paid */
     paypalRef?: string;
+    /** Square payment, confirmed ("Visa •••• 1111", "Apple Pay") */
+    squarePaid?: { method: string; receiptUrl: string | null };
     /** Paid, but a product sold out meanwhile */
     stockShort?: boolean;
   } | null>(null);
@@ -54,15 +53,40 @@ export default function CheckoutPage() {
     paymentMethod: 'transfer',
   });
   const [errors, setErrors] = useState<Partial<Record<keyof CheckoutForm, string>>>({});
-  // PayPal, bank accounts and WhatsApp come from the store settings
+  // PayPal, Square, bank accounts and WhatsApp come from the store settings
   const config = useSiteConfig();
   const paypalOn = config.paypal.enabled;
+  const squareOn = config.square.enabled;
 
-  const methods = PAYMENT_METHODS.filter(({ id }) => id !== 'paypal' || paypalOn);
-  // If PayPal was picked and then turns out to be off, fall back to transfer
+  const applePayHere = useApplePayAvailable();
+
+  // What the customer picked; card, Google Pay and Apple Pay are all charged through Square
+  const [choice, setChoice] = useState<PayChoice>('transfer');
+  const options: PayOption[] = [
+    squareOn && config.square.methods.card && { id: 'card' as const, title: t('checkout.optCard'), subtitle: t('checkout.optCardSub') },
+    squareOn && config.square.methods.googlePay && { id: 'googlePay' as const, title: 'Google Pay', subtitle: t('checkout.optGooglePaySub') },
+    squareOn && config.square.methods.applePay && applePayHere && { id: 'applePay' as const, title: 'Apple Pay', subtitle: t('checkout.optApplePaySub') },
+    paypalOn && { id: 'paypal' as const, title: 'PayPal', subtitle: t('checkout.optPaypalSub') },
+    { id: 'transfer' as const, title: t('checkout.optTransfer'), subtitle: t('checkout.optTransferSub') },
+    { id: 'whatsapp' as const, title: t('checkout.optWhatsapp'), subtitle: t('checkout.optWhatsappSub') },
+  ].filter((o): o is PayOption => Boolean(o));
+  const optionIds = options.map((o) => o.id).join(',');
+
+  const choose = (c: PayChoice) => {
+    setChoice(c);
+    setForm((p) => ({ ...p, paymentMethod: methodOf(c) }));
+  };
+  // Once the store settings load, start on the first option (cards when Square is on);
+  // if the picked one turns out to be off, fall back to the first one too.
+  const [touched, setTouched] = useState(false);
   useEffect(() => {
-    if (!paypalOn && form.paymentMethod === 'paypal') setForm((p) => ({ ...p, paymentMethod: 'transfer' }));
-  }, [paypalOn, form.paymentMethod]);
+    const ids = optionIds.split(',') as PayChoice[];
+    if (!touched || !ids.includes(choice)) {
+      setChoice(ids[0]);
+      setForm((p) => ({ ...p, paymentMethod: methodOf(ids[0]) }));
+    }
+  }, [optionIds, touched, choice]);
+  const paysOnline = form.paymentMethod === 'paypal' || form.paymentMethod === 'square';
 
   const set = <K extends keyof CheckoutForm>(key: K, value: CheckoutForm[K]) =>
     setForm((p) => ({ ...p, [key]: value }));
@@ -108,7 +132,7 @@ export default function CheckoutPage() {
 
       setPlaced({ id: order.id, total: order.total, whatsappUrl, receiptMissing: Boolean(receipt) && !order.receiptUploaded });
       clearCart();
-      setStep(form.paymentMethod === 'paypal' ? 'pay' : 'success');
+      setStep(paysOnline ? 'pay' : 'success');
     } catch (err) {
       // The cart is kept so the customer can try again
       setSubmitError(err instanceof Error && err.message !== 'Failed to fetch' ? err.message : t('checkout.error'));
@@ -141,18 +165,32 @@ export default function CheckoutPage() {
             {t('checkout.payTitle')}
           </h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '0.75rem', lineHeight: 1.6 }}>
-            {t('checkout.payMsg')}
+            {t(form.paymentMethod === 'square' ? 'checkout.squarePayMsg' : 'checkout.payMsg')}
           </p>
         </div>
-        <PayPalPay
-          orderId={placed.id}
-          total={placed.total}
-          phone={form.phone}
-          onPaid={(paypalRef, stockShort) => {
-            setPlaced((p) => (p ? { ...p, paypalRef, stockShort } : p));
-            setStep('success');
-          }}
-        />
+        {form.paymentMethod === 'square' ? (
+          <SquarePay
+            orderId={placed.id}
+            total={placed.total}
+            phone={form.phone}
+            customer={{ name: form.name, email: form.email }}
+            only={isSquareChoice(choice) ? choice : undefined}
+            onPaid={({ method, receiptUrl, stockShort }) => {
+              setPlaced((p) => (p ? { ...p, squarePaid: { method, receiptUrl }, stockShort } : p));
+              setStep('success');
+            }}
+          />
+        ) : (
+          <PayPalPay
+            orderId={placed.id}
+            total={placed.total}
+            phone={form.phone}
+            onPaid={(paypalRef, stockShort) => {
+              setPlaced((p) => (p ? { ...p, paypalRef, stockShort } : p));
+              setStep('success');
+            }}
+          />
+        )}
         <p className="text-center mt-8" style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
           <button type="button" onClick={() => setStep('success')} className="underline hover:text-(--gold)">
             {t('checkout.payLater')}
@@ -194,6 +232,25 @@ export default function CheckoutPage() {
             {placed.paypalRef
               ? `${placed.stockShort ? t('checkout.paypalPaidShort') : t('checkout.paypalPaid')} ${placed.paypalRef}`
               : t('checkout.paypalPending')}
+          </p>
+        )}
+        {form.paymentMethod === 'square' && placed && (
+          <p style={{ fontSize: '0.875rem', marginBottom: '2rem', lineHeight: 1.6, color: placed.squarePaid ? 'var(--text)' : '#b45309' }}>
+            {placed.squarePaid ? (
+              <>
+                {placed.stockShort ? t('checkout.squarePaidShort') : t('checkout.squarePaid')} <strong>{placed.squarePaid.method}</strong>.
+                {placed.squarePaid.receiptUrl && (
+                  <>
+                    {' '}
+                    <a href={placed.squarePaid.receiptUrl} target="_blank" rel="noopener noreferrer" className="underline hover:text-(--gold)">
+                      {t('checkout.squareReceipt')}
+                    </a>
+                  </>
+                )}
+              </>
+            ) : (
+              t('checkout.paypalPending')
+            )}
           </p>
         )}
         {form.paymentMethod === 'transfer' && placed && !transferFile && (
@@ -287,80 +344,53 @@ export default function CheckoutPage() {
                 {t('checkout.paymentMethod')}
               </h2>
 
-              <div className={`grid grid-cols-1 gap-3 ${methods.length === 3 ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
-                {methods.map(({ id, icon }) => (
-                  <button
-                    key={id}
-                    type="button"
-                    aria-pressed={form.paymentMethod === id}
-                    onClick={() => set('paymentMethod', id)}
-                    className="flex flex-col items-center gap-2 py-4 px-3 transition-all"
-                    style={{
-                      border: `1px solid ${form.paymentMethod === id ? 'var(--gold)' : 'var(--border)'}`,
-                      background: form.paymentMethod === id ? 'var(--gold-pale)' : 'var(--bg)',
-                    }}
-                  >
-                    <span style={{ fontSize: '1.5rem' }}>{icon}</span>
-                    <span
-                      style={{
-                        fontSize: '0.6875rem',
-                        fontWeight: 500,
-                        letterSpacing: '0.1em',
-                        textTransform: 'uppercase',
-                        color: form.paymentMethod === id ? 'var(--gold-dark)' : 'var(--text-muted)',
-                      }}
-                    >
-                      {t(`checkout.${id}`)}
-                    </span>
-                  </button>
-                ))}
-              </div>
-
-              {/* Payment detail panels */}
-              <div className="p-6" style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border)' }}>
-                {form.paymentMethod === 'transfer' && (
-                  <div className="flex flex-col gap-4">
-                    {config.bankAccounts.length > 0 && (
-                      <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', lineHeight: 1.7 }}>
-                        Haz la transferencia por el total del pedido a una de estas cuentas y sube aquí la foto o el PDF del comprobante.
-                        Si todavía no pagaste, también puedes subirlo después desde «Sigue tu pedido».
-                      </p>
-                    )}
-                    <BankAccounts accounts={config.bankAccounts} />
-                    <label className="flex flex-col items-center gap-3 py-8 border-2 border-dashed border-(--border) cursor-pointer hover:border-(--gold) transition-colors">
-                      <Upload size={24} style={{ color: transferFile ? 'var(--gold)' : 'var(--text-muted)' }} />
-                      <span style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', textAlign: 'center' }}>
-                        {transferFile ? transferFile.name : t('checkout.transferDrag')}
-                      </span>
-                      <input
-                        type="file"
-                        accept="image/*,.pdf"
-                        className="hidden"
-                        onChange={(e) => handleFile(e.target.files?.[0] ?? null)}
-                      />
-                    </label>
-                    {fileError && <span style={{ fontSize: '0.75rem', color: '#ef4444' }}>{fileError}</span>}
-                  </div>
-                )}
-                {form.paymentMethod === 'paypal' && (
-                  <div className="text-center py-4">
-                    <div style={{ fontSize: '3rem', marginBottom: '0.75rem' }}>🅿️</div>
-                    <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.125rem', marginBottom: '0.5rem' }}>{t('checkout.paypal')}</h3>
-                    <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', maxWidth: '320px', margin: '0 auto' }}>
-                      {t('checkout.paypalMsg')}
-                    </p>
-                  </div>
-                )}
-                {form.paymentMethod === 'whatsapp' && (
-                  <div className="text-center py-4">
-                    <div style={{ fontSize: '3rem', marginBottom: '0.75rem' }}>💬</div>
-                    <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.125rem', marginBottom: '0.5rem' }}>WhatsApp</h3>
-                    <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', maxWidth: '320px', margin: '0 auto' }}>
-                      {t('checkout.whatsappMsg')}
-                    </p>
-                  </div>
-                )}
-              </div>
+              <PaymentOptions
+                options={options}
+                value={choice}
+                onChange={(c) => {
+                  setTouched(true);
+                  choose(c);
+                }}
+                renderDetail={(c) => {
+                  const note = (text: string) => (
+                    <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', lineHeight: 1.7 }}>{text}</p>
+                  );
+                  switch (c) {
+                    case 'card':
+                      return note(t('checkout.cardDetail'));
+                    case 'googlePay':
+                      return note(t('checkout.googlePayDetail'));
+                    case 'applePay':
+                      return note(t('checkout.applePayDetail'));
+                    case 'paypal':
+                      return note(t('checkout.paypalMsg'));
+                    case 'whatsapp':
+                      return note(t('checkout.whatsappMsg'));
+                    case 'transfer':
+                      return (
+                        <div className="flex flex-col gap-4">
+                          {config.bankAccounts.length > 0 && note(
+                            'Haz la transferencia por el total del pedido a una de estas cuentas y sube aquí la foto o el PDF del comprobante. Si todavía no pagaste, también puedes subirlo después desde «Sigue tu pedido».',
+                          )}
+                          <BankAccounts accounts={config.bankAccounts} />
+                          <label className="flex flex-col items-center gap-3 py-6 border border-dashed border-(--border) cursor-pointer hover:border-(--gold) transition-colors" style={{ background: 'var(--bg)' }}>
+                            <Upload size={20} style={{ color: transferFile ? 'var(--gold)' : 'var(--text-muted)' }} />
+                            <span style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', textAlign: 'center' }}>
+                              {transferFile ? transferFile.name : t('checkout.transferDrag')}
+                            </span>
+                            <input
+                              type="file"
+                              accept="image/*,.pdf"
+                              className="hidden"
+                              onChange={(e) => handleFile(e.target.files?.[0] ?? null)}
+                            />
+                          </label>
+                          {fileError && <span style={{ fontSize: '0.75rem', color: '#ef4444' }}>{fileError}</span>}
+                        </div>
+                      );
+                  }
+                }}
+              />
             </section>
           </div>
 
@@ -413,7 +443,7 @@ export default function CheckoutPage() {
                     </p>
                   )}
                   <Button variant="gold" className="w-full justify-center" isLoading={loading} onClick={handleConfirm}>
-                    <Check size={15} /> {t('checkout.confirm')}
+                    <Check size={15} /> {paysOnline ? t('checkout.continueToPay') : t('checkout.confirm')}
                   </Button>
                 </div>
               </div>

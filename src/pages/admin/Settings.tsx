@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
-import { ArrowLeft, ChevronRight, Mail, Wallet, Square, Smartphone, Apple, Store, Landmark, type LucideIcon } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Mail, Wallet, CreditCard, Smartphone, Apple, Store, Landmark, type LucideIcon } from 'lucide-react';
 import { useAdmin } from '../../contexts/AdminContext';
 import { api } from '../../lib/api';
 import { AdminSidebar } from '../../components/admin/AdminSidebar';
 import { MailSection } from './settings/MailSection';
 import { PaypalSection } from './settings/PaypalSection';
-import { ComingSoonSection } from './settings/ComingSoonSection';
+import { SquareSection } from './settings/SquareSection';
 import { StoreSection } from './settings/StoreSection';
 import { BankSection } from './settings/BankSection';
 
@@ -55,59 +55,31 @@ const OPTIONS: Option[] = [
     group: 'Pagos',
     render: () => <PaypalSection />,
   },
+  // Square is the card processor; Google Pay and Apple Pay go through it,
+  // so their cards open the same page.
   {
     key: 'square',
     title: 'Square',
-    description: 'Pagos con tarjeta a través de Square.',
-    Icon: Square,
+    description: 'Procesador de pagos: tarjetas de débito y crédito, Google Pay y Apple Pay.',
+    Icon: CreditCard,
     group: 'Pagos',
-    render: () => (
-      <ComingSoonSection
-        title="Square"
-        description="Permitiría cobrar con tarjeta usando la cuenta Square de la tienda. Si ya cobras con tarjeta por PayPal, no es necesario."
-        needs={[
-          'Application ID y Location ID de la cuenta Square de la tienda (son públicos).',
-          'Un Access Token de producción, que la dueña genera en developer.squareup.com y se guarda cifrado.',
-          'Integrar el formulario de tarjeta de Square en el checkout y el cobro en el servidor.',
-        ]}
-      />
-    ),
+    render: () => <SquareSection />,
   },
   {
     key: 'googlepay',
     title: 'Google Pay',
-    description: 'Pago rápido con Google Pay.',
+    description: 'Pago rápido con Google Pay, procesado por Square.',
     Icon: Smartphone,
     group: 'Pagos',
-    render: () => (
-      <ComingSoonSection
-        title="Google Pay"
-        description="Se puede ofrecer a través de PayPal, sin abrir otra cuenta. Hoy está desactivado en la cuenta PayPal de la tienda."
-        needs={[
-          'Activar Google Pay en la cuenta PayPal de la tienda.',
-          'Que PayPal esté configurado y funcionando en esta tienda.',
-          'Agregar el botón de Google Pay de PayPal al checkout.',
-        ]}
-      />
-    ),
+    render: () => <SquareSection />,
   },
   {
     key: 'applepay',
     title: 'Apple Pay',
-    description: 'Pago rápido con Apple Pay en iPhone, iPad y Mac.',
+    description: 'Pago rápido con Apple Pay en iPhone, iPad y Mac, procesado por Square.',
     Icon: Apple,
     group: 'Pagos',
-    render: () => (
-      <ComingSoonSection
-        title="Apple Pay"
-        description="Se puede ofrecer a través de PayPal. Apple exige verificar el dominio del sitio antes de mostrar el botón."
-        needs={[
-          'Que PayPal esté configurado y funcionando en esta tienda.',
-          'Registrar el dominio del sitio en PayPal (Apple Pay) y publicar el archivo de verificación de Apple.',
-          'Agregar el botón de Apple Pay de PayPal al checkout.',
-        ]}
-      />
-    ),
+    render: () => <SquareSection />,
   },
 ];
 
@@ -116,11 +88,7 @@ const TONE_COLOR: Record<Tone, string> = { ok: '#16a34a', warn: '#b45309', off: 
 /** Current state of each option, for the cards. */
 function useStatuses(): Record<string, Status> {
   const { token } = useAdmin();
-  const [statuses, setStatuses] = useState<Record<string, Status>>({
-    square: { tone: 'off', text: 'Próximamente' },
-    googlepay: { tone: 'off', text: 'Próximamente' },
-    applepay: { tone: 'off', text: 'Próximamente' },
-  });
+  const [statuses, setStatuses] = useState<Record<string, Status>>({});
 
   useEffect(() => {
     if (!token) return;
@@ -138,6 +106,22 @@ function useStatuses(): Record<string, Status> {
     api.admin.settings.getPaypal(token)
       .then((p) => set('paypal', !p.configured ? { tone: 'warn', text: 'Sin configurar' } : p.enabled ? { tone: 'ok', text: 'Activo' } : { tone: 'off', text: 'Desactivado' }))
       .catch(() => set('paypal', { tone: 'warn', text: 'No se pudo leer' }));
+    api.admin.settings.getSquare(token)
+      .then((sq) => {
+        const test = sq.environment === 'sandbox' ? ' (pruebas)' : '';
+        set('square', sq.tokenUnreadable
+          ? { tone: 'warn', text: 'Vuelve a pegar el Access Token' }
+          : sq.live
+            ? { tone: 'ok', text: `Activo${test}${sq.locationName ? ` · ${sq.locationName}` : ''}` }
+            : !sq.configured ? { tone: 'warn', text: 'Sin configurar' } : { tone: 'off', text: 'Desactivado' });
+        const wallet = (on: boolean): Status =>
+          sq.live && on ? { tone: 'ok', text: `Activo vía Square${test}` }
+            : !sq.configured ? { tone: 'warn', text: 'Configura Square primero' }
+            : { tone: 'off', text: 'Desactivado' };
+        set('googlepay', wallet(sq.methods.googlePay));
+        set('applepay', wallet(sq.methods.applePay));
+      })
+      .catch(() => ['square', 'googlepay', 'applepay'].forEach((k) => set(k, { tone: 'warn', text: 'No se pudo leer' })));
     return () => { active = false; };
   }, [token]);
 

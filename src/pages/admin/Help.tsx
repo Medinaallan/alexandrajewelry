@@ -70,6 +70,7 @@ const SECTIONS: Section[] = [
           <>Vuelve al panel y toca <B>«Sí, el pago llegó»</B>. El pedido pasa a «Para enviar».</>,
         ]} />
         <Note>Si el panel dice «El cliente pagó, pero ya no hay stock suficiente», alguien compró la última pieza mientras ese cliente pagaba. Agrega stock (sección 6) y toca «Sí, el pago llegó», o cancela el pedido y devuélvele el dinero desde PayPal.</Note>
+        <P><B>Tarjeta, Google Pay o Apple Pay (Square):</B> esos pagos no hay que verificarlos. Square confirma el cobro al momento y el pedido pasa solo a <B>Para enviar</B>, con las piezas ya descontadas del stock. Los ves en el panel de Square (Ventas → Transacciones); si cancelas uno de esos pedidos, devuélvele el dinero al cliente desde ahí.</P>
       </>
     ),
   },
@@ -183,6 +184,7 @@ const SECTIONS: Section[] = [
           <li><To to="/admin/settings/store">Mi tienda</To>: dirección, teléfono, WhatsApp, horario, correos y el mensaje de la barra de arriba del sitio.</li>
           <li><To to="/admin/settings/bank">Cuentas bancarias</To>: las que ve el cliente que paga por transferencia. Con «Agregar cuenta» sumas más de una.</li>
           <li><To to="/admin/settings/paypal">PayPal</To>: activar o desactivar el pago con PayPal.</li>
+          <li><To to="/admin/settings/square">Square</To>: el procesador de pagos con tarjeta de débito o crédito, Google Pay y Apple Pay. Ahí eliges qué formas de pago se ofrecen y si está en modo de pruebas.</li>
           <li><To to="/admin/settings/mail">Correo</To>: la cuenta de Gmail que envía los avisos.</li>
         </ul>
         <P>Los cambios se ven en el sitio en un minuto.</P>

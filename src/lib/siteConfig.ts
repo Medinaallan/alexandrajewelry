@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { api } from './api';
 import { STORE } from '../utils/store';
+import type { SquareConfig } from './square';
 
 // What the operator set in the panel (Configuración > Mi tienda, Cuentas
-// bancarias, PayPal), read once per visit. Until it loads, or if it fails,
+// bancarias, PayPal, Square), read once per visit. Until it loads, or if it fails,
 // the site uses the defaults in utils/store.ts.
 
 export type StoreInfo = {
@@ -26,6 +27,8 @@ export type SiteConfig = {
   store: StoreInfo;
   bankAccounts: BankAccount[];
   paypal: { enabled: boolean; clientId: string };
+  /** Cards, Google Pay and Apple Pay through Square */
+  square: SquareConfig;
 };
 
 // Used while PayPal was never saved in the panel (set in Vercel)
@@ -44,6 +47,13 @@ export const DEFAULT_CONFIG: SiteConfig = {
   },
   bankAccounts: [],
   paypal: { enabled: Boolean(BUILD_PAYPAL_CLIENT_ID), clientId: BUILD_PAYPAL_CLIENT_ID },
+  square: {
+    enabled: false,
+    environment: 'production',
+    applicationId: '',
+    locationId: '',
+    methods: { card: false, googlePay: false, applePay: false },
+  },
 };
 
 let pending: Promise<SiteConfig> | null = null;
@@ -54,13 +64,14 @@ export function loadSiteConfig(): Promise<SiteConfig> {
   if (!pending) {
     pending = api.config
       .site()
-      .then(({ store, bankAccounts, paypal }) => {
+      .then(({ store, bankAccounts, paypal, square }) => {
         loaded = {
           store: { ...DEFAULT_CONFIG.store, ...store, whatsapp: store.whatsapp || DEFAULT_CONFIG.store.whatsapp },
           bankAccounts,
           paypal: paypal.configured
             ? { enabled: paypal.enabled && Boolean(paypal.clientId), clientId: paypal.clientId }
             : DEFAULT_CONFIG.paypal,
+          square: square?.enabled ? square : DEFAULT_CONFIG.square,
         };
         return loaded;
       })

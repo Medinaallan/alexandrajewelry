@@ -164,7 +164,7 @@ export default function AdminDashboard() {
         {data && data.paypalWaiting > 0 && (
           <p className="flex items-center gap-2 mb-10" style={{ fontSize: '0.9375rem', color: 'var(--text-muted)' }}>
             <Clock size={16} />
-            {data.paypalWaiting === 1 ? '1 pedido con PayPal espera' : `${data.paypalWaiting} pedidos con PayPal esperan`} que el cliente pague. No tienes que hacer nada: si no pagan en 24 horas, se cancelan solos.
+            {data.paypalWaiting === 1 ? '1 pedido con pago en línea (PayPal o Square) espera' : `${data.paypalWaiting} pedidos con pago en línea (PayPal o Square) esperan`} que el cliente pague. No tienes que hacer nada: si no pagan en 24 horas, se cancelan solos.
           </p>
         )}
 

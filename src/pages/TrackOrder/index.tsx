@@ -6,6 +6,7 @@ import { api } from '../../lib/api';
 import { formatPrice } from '../../utils/formatPrice';
 import { Button } from '../../components/ui/Button';
 import { PayPalPay } from '../../components/checkout/PayPalPay';
+import { SquarePay } from '../../components/checkout/SquarePay';
 import { BankAccounts } from '../../components/checkout/BankAccounts';
 import { useSiteConfig } from '../../lib/siteConfig';
 import type { OrderStatus, OrderTracking } from '../../types';
@@ -181,6 +182,25 @@ export default function TrackOrderPage() {
                   )}
                   {uploadMsg && (
                     <p role="status" style={{ fontSize: '0.875rem', marginTop: '0.75rem', color: uploadMsg.ok ? '#16a34a' : '#ef4444' }}>{uploadMsg.text}</p>
+                  )}
+                  {order.paymentMethod === 'square' && (order.status === 'pending' || order.status === 'confirmed') && (
+                    order.paymentReported ? (
+                      <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginTop: '0.75rem' }}>{t('track.squarePaid')}</p>
+                    ) : !order.canPay ? (
+                      <p style={{ fontSize: '0.875rem', color: '#b45309', marginTop: '0.75rem' }}>{t('track.paypalExpired')}</p>
+                    ) : (
+                      <div className="mt-6 max-w-sm mx-auto">
+                        <p style={{ fontSize: '0.875rem', color: '#b45309', marginBottom: '1rem', textAlign: 'center' }}>{t('track.paypalDue')}</p>
+                        <SquarePay
+                          orderId={order.id}
+                          total={order.total}
+                          phone={orderPhone}
+                          onPaid={({ stockShort }) =>
+                            setOrder((o) => (o ? { ...o, paymentReported: true, canPay: false, status: stockShort ? o.status : 'paid' } : o))
+                          }
+                        />
+                      </div>
+                    )
                   )}
                   {order.paymentMethod === 'paypal' && (order.status === 'pending' || order.status === 'confirmed') && (
                     order.paymentReported ? (

@@ -78,7 +78,8 @@ export interface CheckoutForm {
   city: string;
   notes: string;
   // cash: only for orders entered in the panel
-  paymentMethod: 'transfer' | 'googlepay' | 'paypal' | 'whatsapp' | 'cash';
+  // square: card, Google Pay or Apple Pay through Square (charged on the spot)
+  paymentMethod: 'transfer' | 'googlepay' | 'paypal' | 'square' | 'whatsapp' | 'cash';
 }
 
 // `review`: PayPal payment reported by the customer, not verified yet (stock already taken)
@@ -105,7 +106,7 @@ export interface Order {
   items: OrderItem[];
   total: number;
   status: OrderStatus;
-  /** PayPal capture id reported by the customer's browser (not verified) */
+  /** PayPal capture id reported by the customer's browser (not verified), or the Square payment id (confirmed) */
   paymentRef: string | null;
   paymentAmount: number | null;
   /** When the customer attached the transfer receipt */
@@ -126,7 +127,7 @@ export interface OrderTracking {
   createdAt: string;
   /** A PayPal payment was already noted on the order */
   paymentReported: boolean;
-  /** PayPal order still waiting for its payment (within its 24 hours) */
+  /** PayPal / Square order still waiting for its payment (within its 24 hours) */
   canPay: boolean;
   /** Transfer: the customer already attached the receipt */
   receiptSent: boolean;

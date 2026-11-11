@@ -1,4 +1,5 @@
 import type { Product, Category, Subcategory, Testimonial, AdminUser, CheckoutForm, CartItem, ProductImage, StockProduct, StockMovement, Sale, SaleReport, Order, OrderStatus, OrderTracking, ContactMessage, Customer } from '../types';
+import type { SquareConfig, SquareEnvironment, SquareMethods } from './square';
 
 import type { BulkProductRow } from './productExcel';
 
@@ -24,6 +25,7 @@ export type DashboardData = {
   toVerify: number;
   stockShort: number;
   toShip: number;
+  /** Web orders paid online (PayPal or Square) still waiting for the customer */
   paypalWaiting: number;
   ordersToday: number;
   unreadMessages: number;
@@ -45,6 +47,31 @@ export type AdminOrderInput = {
 };
 
 /** The email account the store sends with (the password is never returned) */
+/** Configuración > Square, as the panel sees it (the Access Token never leaves the API). */
+export type SquareSettings = {
+  configured: boolean;
+  enabled: boolean;
+  environment: SquareEnvironment;
+  applicationId: string;
+  locationId: string;
+  locationName: string;
+  methods: SquareMethods;
+  hasToken: boolean;
+  /** Saved, but can't be read anymore (the API's key changed): enter it again */
+  tokenUnreadable: boolean;
+  /** Offered on the checkout right now */
+  live: boolean;
+};
+
+export type SquareSettingsInput = {
+  enabled: boolean;
+  environment: SquareEnvironment;
+  applicationId: string;
+  locationId: string;
+  accessToken: string;
+  methods: SquareMethods;
+};
+
 export type MailSettings = {
   user: string;
   host: string;
@@ -163,16 +190,23 @@ export const api = {
         method: 'POST',
         body: JSON.stringify({ phone, captureId, amount }),
       }),
+    // Charges a Square token (card, Google Pay or Apple Pay); the order is then paid
+    paySquare: (id: number, phone: string, sourceId: string, verificationToken?: string) =>
+      request<{ ok: true; paymentId: string; receiptUrl: string | null; method: string; stockShort: boolean }>(`/api/orders/${id}/square`, {
+        method: 'POST',
+        body: JSON.stringify({ phone, sourceId, ...(verificationToken ? { verificationToken } : {}) }),
+      }),
   },
 
   // Public store settings (nothing secret)
   config: {
-    // Store details, bank accounts and PayPal, as set in the panel
+    // Store details, bank accounts, PayPal and Square, as set in the panel
     site: () =>
       request<{
         store: Omit<StoreSettings, 'notifyEmail'>;
         bankAccounts: BankAccountSetting[];
         paypal: { configured: false } | { configured: true; enabled: boolean; clientId: string };
+        square?: SquareConfig;
       }>('/api/settings/public'),
   },
 
@@ -383,6 +417,22 @@ export const api = {
           method: 'PUT',
           headers: authHeaders(token),
           body: JSON.stringify(data),
+        }),
+      getSquare: (token: string) =>
+        request<SquareSettings>('/api/settings/square', { headers: authHeaders(token) }),
+      // An empty accessToken keeps the one already saved (same mode)
+      saveSquare: (token: string, data: SquareSettingsInput) =>
+        request<{ ok: true; locationName: string }>('/api/settings/square', {
+          method: 'PUT',
+          headers: authHeaders(token),
+          body: JSON.stringify(data),
+        }),
+      deleteSquare: (token: string) =>
+        request<{ ok: true }>('/api/settings/square', { method: 'DELETE', headers: authHeaders(token) }),
+      registerApplePayDomain: (token: string) =>
+        request<{ ok: true; domain: string; status: string }>('/api/settings/square/apple-pay-domain', {
+          method: 'POST',
+          headers: authHeaders(token),
         }),
       testMail: (token: string, to: string) =>
         request<{ ok: true; to: string }>('/api/settings/mail/test', {
